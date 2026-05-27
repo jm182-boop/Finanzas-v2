@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fin. — Finanzas Personales</title>
+    
+    <!-- Librerías Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Enlace a tu nuevo archivo de estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN / REGISTRO -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">fin<span>.</span></div>
+    <div class="auth-sub">Tu administrador de finanzas personales</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Iniciar sesion</button>
+      <button class="auth-tab" onclick="switchTab('register')">Registrarse</button>
+    </div>
+    <div class="fg"><label>Email</label><input type="email" id="ae" placeholder="tu@email.com"></div>
+    <div class="fg"><label>Contrasena</label><input type="password" id="ap" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <button class="btn-p" onclick="doAuth()" id="auth-btn">Iniciar sesion</button>
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="app">
+  
+  <!-- BARRA SUPERIOR -->
+  <div class="topbar">
+    <div><div class="topbar-title">fin<span style="color:var(--accent2)">.</span></div><div class="topbar-user" id="uemail"></div></div>
+    <div class="topbar-right">
+      <button class="btn-icon" onclick="toggleTheme()" id="tbtn" title="Cambiar tema">
+        <svg id="icon-dark" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="icon-light" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="btn-out" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: RESUMEN -->
+  <div id="page-resumen" class="page active">
+    <div style="margin-top:14px">
+      <div class="mn"><button class="mnav" onclick="changeMonth(-1)">‹</button><span class="mlabel" id="mlabel"></span><button class="mnav" onclick="changeMonth(1)">›</button></div>
+      <div id="resumen-content"></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: REGISTRAR -->
+  <div id="page-registrar" class="page">
+    <div style="margin-top:14px">
+      <div class="card">
+        <div class="tt">
+          <button class="tb ag" id="btg" onclick="setTipo('gasto')">Gasto</button>
+          <button class="tb" id="bti" onclick="setTipo('ingreso')">Ingreso</button>
+        </div>
+        <div class="fi"><label>Descripcion</label><input type="text" id="gdesc" placeholder="ej: supermercado, farmacia mama..."></div>
+        <div class="fi"><label>Monto total ($ARS)</label><input type="text" id="gmonto" placeholder="0" oninput="fmtI(this);calcCuota()"></div>
+        
+        <!-- Contenedor Gastos -->
+        <div id="campos-gasto">
+          <div class="tc">
+            <div class="fi"><label>Categoria</label><select id="gcat"></select></div>
+            <div class="fi"><label>Fecha (AAAA-MM-DD)</label><input type="text" id="gfecha" placeholder="2026-05-25" maxlength="10"></div>
+          </div>
+          <div class="tc">
+            <div class="fi"><label>Cuotas (opcional)</label><input type="text" id="gcuotas" placeholder="ej: 6" oninput="fmtI(this);calcCuota()"></div>
+            <div class="fi"><label>N° cuota actual</label><input type="text" id="gcuota-num" placeholder="ej: 1" oninput="fmtI(this)"></div>
+          </div>
+          <div id="cuota-preview" style="display:none;font-size:12px;color:var(--accent2);margin-bottom:10px;padding:8px 10px;background:var(--bg3);border-radius:var(--radius-sm)"></div>
+          <div class="tc">
+            <!-- Campo de Persona Libre (Mejora añadida) -->
+            <div class="fi"><label>Quien gasto (opcional)</label><input type="text" id="gpersona" placeholder="ej: Yo, Sofi, Ambos..."></div>
+            <div class="fi" style="display:flex;align-items:flex-end"><div style="width:100%"></div></div>
+          </div>
+        </div>
+        
+        <!-- Contenedor Ingresos -->
+        <div id="campos-ingreso" style="display:none">
+          <div class="tc">
+            <div class="fi"><label>Tipo</label><select id="gti"><option value="sueldo">Sueldo</option><option value="freelance">Freelance</option><option value="venta">Venta</option><option value="otro">Otro</option></select></div>
+            <div class="fi"><label>Fecha (AAAA-MM-DD)</label><input type="text" id="gfechai" placeholder="2026-05-25" maxlength="10"></div>
+          </div>
+        </div>
+        
+        <div class="fi"><label>Nota (opcional)</label><textarea id="gnota" placeholder="Detalles adicionales..."></textarea></div>
+        <button class="btn-s" onclick="agregarMov()" id="btnagregar">Guardar gasto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: HISTORIAL -->
+  <div id="page-historial" class="page">
+    <div style="margin-top:14px">
+      <div class="mn"><button class="mnav" onclick="changeMonth(-1)">‹</button><span class="mlabel" id="mlabel2"></span><button class="mnav" onclick="changeMonth(1)">›</button></div>
+      <div class="search-wrap">
+        <div class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <input type="text" id="search-input" placeholder="Buscar por descripcion, nota, persona..." oninput="renderHistorial()">
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap" id="hfiltros">
+        <!-- Los filtros se renderizarán dinámicamente aquí -->
+      </div>
+      <div id="historial-content"></div>
+      <div class="card" style="margin-top:12px">
+        <div class="ct">Comparativa 6 meses</div>
+        <div class="chart-wrap"><canvas id="hist-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: AHORROS -->
+  <div id="page-ahorros" class="page">
+    <div style="margin-top:14px">
+      <div id="ahero"></div>
+      <div class="card">
+        <div class="ct">Evolucion</div>
+        <div style="display:flex;gap:5px;margin-bottom:8px">
+          <button class="qbtn" id="cht-tot" onclick="setChartMode('total',this)" style="border-color:var(--accent);color:var(--accent2)">Total</button>
+          <button class="qbtn" id="cht-des" onclick="setChartMode('desglose',this)">Por billetera</button>
+        </div>
+        <div class="chart-wrap"><canvas id="achrt"></canvas></div>
+      </div>
+      <div class="card"><div class="ct">Por billetera</div><div id="bill-list"></div></div>
+      <div class="card">
+        <div class="ct">Registrar deposito</div>
+        <div class="fi"><label>Monto ($ARS)</label><input type="text" id="amonto" placeholder="0" oninput="fmtI(this)"></div>
+        <div class="tc">
+          <div class="fi"><label>Billetera</label>
+            <select id="abilletera">
+              <option>Mercado Pago</option><option>Naranja X</option><option>Binance</option>
+              <option>Wise</option><option>Banco</option><option>Efectivo</option><option value="__custom">Otra...</option>
+            </select>
+          </div>
+          <div class="fi"><label>Fecha (AAAA-MM-DD)</label><input type="text" id="afecha" placeholder="2026-05-25" maxlength="10"></div>
+        </div>
+        <div class="fi" id="custom-bill-wrap" style="display:none"><label>Nombre</label><input type="text" id="acustom" placeholder="ej: Lemon Cash"></div>
+        <div class="fi"><label>Color</label><div class="color-picker" id="cpicker"></div></div>
+        <div class="fi"><label>Nota (opcional)</label><input type="text" id="anota" placeholder="ej: ahorro mayo"></div>
+        <button class="btn-s" onclick="agregarAhorro()" id="btnahorro">Guardar deposito</button>
+      </div>
+      <div class="card"><div class="ct">Historial</div><div id="ahist"></div></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: PRÉSTAMOS -->
+  <div id="page-prestamos" class="page">
+    <div style="margin-top:14px">
+      <div class="mn"><button class="mnav" onclick="changeMonth(-1)">‹</button><span class="mlabel" id="mlabel3"></span><button class="mnav" onclick="changeMonth(1)">›</button></div>
+      
+      <!-- Formulario movido hacia arriba (Mejora añadida) -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="ct">Nuevo prestamo</div>
+        <div class="tc">
+          <div class="fi"><label>Persona / Deudor</label><input type="text" id="pnombre" placeholder="ej: Carlos, Banco..."></div>
+          <div class="fi"><label>Descripcion</label><input type="text" id="pdesc" placeholder="ej: TV, prestamo"></div>
+        </div>
+        <div class="tc">
+          <div class="fi"><label>Monto</label><input type="text" id="pmonto" placeholder="0" oninput="fmtI(this)"></div>
+          <div class="fi"><label>Cuotas (opcional)</label><input type="text" id="pcuotas" placeholder="sin cuotas = monto fijo" oninput="fmtI(this)"></div>
+        </div>
+        <div class="fi"><label>Fecha inicio (AAAA-MM-DD)</label><input type="text" id="pfecha" placeholder="2026-05-25" maxlength="10"></div>
+        <div class="fi"><label>Nota (opcional)</label><input type="text" id="pnota" placeholder="Detalles extra..."></div>
+        <button class="btn-s" onclick="agregarPrestamo()">Agregar prestamo</button>
+      </div>
+
+      <div id="prest-lista"></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: IA -->
+  <div id="page-ia" class="page">
+    <div style="margin-top:14px">
+      <div class="card">
+        <div class="ct">Asistente financiero</div>
+        <div class="qb">
+          <button class="qbtn" onclick="qa('Que gastos tengo en cuotas este mes?')">Gastos en cuotas</button>
+          <button class="qbtn" onclick="qa('Donde gaste mas este mes?')">Donde gaste mas</button>
+          <button class="qbtn" onclick="qa('Como puedo reducir gastos?')">Reducir gastos</button>
+          <button class="qbtn" onclick="qa('Estoy cumpliendo la regla de distribución?')">Estado Regla</button>
+          <button class="qbtn" onclick="qa('Cuanto me queda disponible este mes?')">Cuanto me queda</button>
+          <button class="qbtn" onclick="qa('Como van mis ahorros?')">Mis ahorros</button>
+          <button class="qbtn" onclick="qa('Cuantos prestamos activos tengo?')">Prestamos</button>
+          <button class="qbtn" onclick="qa('Cuales fueron los gastos hormigas de este mes?')">Gastos hormiga</button>
+        </div>
+        <div class="cw" id="chat-msgs">
+          <div class="cm a">Hola! Soy tu asistente financiero. Tengo acceso completo a todos tus registros. Preguntame lo que quieras.</div>
+        </div>
+        <div class="ci">
+          <input type="text" id="cinput" placeholder="Preguntame cualquier cosa..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="csend" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: CONFIGURACIÓN -->
+  <div id="page-config" class="page">
+    <div style="margin-top:14px">
+      <div class="card">
+        <div class="ct">Ingresos base</div>
+        <div class="fi"><label>Sueldo mensual neto</label><input type="text" id="csueldo" oninput="fmtI(this)"></div>
+      </div>
+      <div class="card">
+        <div class="ct">Nombres Principales</div>
+        <div class="tc">
+          <div class="fi"><label>Usuario 1</label><input type="text" id="cnombre1" placeholder="ej: Jesus"></div>
+          <div class="fi"><label>Usuario 2</label><input type="text" id="cnombre2" placeholder="ej: Sofi"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Regla de distribucion</div>
+        <div class="fi"><label>Necesidades — <span id="lnec">50</span>%</label><div class="rr2"><input type="range" min="20" max="80" value="50" id="rnec" oninput="syncR('nec')"><span class="rv" id="rvnec">50%</span></div></div>
+        <div class="fi"><label>Deseos — <span id="ldes">30</span>%</label><div class="rr2"><input type="range" min="10" max="60" value="30" id="rdes" oninput="syncR('des')"><span class="rv" id="rvdes">30%</span></div></div>
+        <div class="fi"><label>Ahorro — <span id="laho">20</span>% (calculado)</label><div class="aho-disp" id="ahoinf">20%</div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Vivienda</div>
+        <div class="tc">
+          <div class="fi"><label>Alquiler (USD)</label><input type="text" id="calq" oninput="fmtI(this);updAlq()"></div>
+          <div class="fi"><label>Tipo de cambio</label><input type="text" id="ctc" oninput="fmtI(this);updAlq()"></div>
+        </div>
+        <div class="fi"><label>Expensas ($ARS)</label><input type="text" id="cexp" oninput="fmtI(this);updAlq()"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px" id="alqinf"></div>
+      </div>
+      
+      <!-- Contenedores dinámicos para Categorías y Tarjetas -->
+      <div id="config-tarjetas"></div>
+      <div id="config-categorias"></div>
+
+      <button class="btn-s" onclick="guardarCfg()">Guardar configuracion</button>
+      <button class="btn-ghost" onclick="genPDF()">Descargar resumen PDF</button>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN INFERIOR -->
+  <nav class="nav">
+    <button class="nb active" onclick="sp('resumen',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Resumen</button>
+    <button class="nb" onclick="sp('registrar',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Registrar</button>
+    <button class="nb" onclick="sp('historial',this)"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Historial</button>
+    <button class="nb" onclick="sp('ahorros',this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Ahorros</button>
+    <button class="nb" onclick="sp('prestamos',this)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Prestamos</button>
+    <button class="nb" onclick="sp('ia',this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>IA</button>
+    <button class="nb" onclick="sp('config',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Config</button>
+  </nav>
+</div>
+
+<!-- MODALES Y ALERTAS -->
+<div class="modal-bg" id="modal-adj">
+  <div class="modal">
+    <div class="modal-title">Ajustar monto de cuota</div>
+    <div class="fi"><label>Nuevo monto ($ARS)</label><input type="text" id="modal-monto" placeholder="0" oninput="fmtI(this)"></div>
+    <div class="fi"><label>Motivo (opcional)</label><input type="text" id="modal-motivo" placeholder="ej: interes por mora"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarAdj()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Enlaces a tus nuevos archivos de lógica -->
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
