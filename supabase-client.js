@@ -1,7 +1,7 @@
 // supabase-client.js - Conexión y operaciones con la base de datos
 
 const SB_URL = 'https://aphycznoynnrnipbtyym.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwaHljem5veW5ucm5pcGJ0eXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzg4MTcsImV4cCI6MjA4OTQ1NDgxN30.R55yB_c13D2FfL0v_5bV0p6z_1d51w9hE3mI5f7a0oQ';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwaHljem5veW5ucm5pcGJ0eXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDY4MzIsImV4cCI6MjA5NTQ4MjgzMn0.aexuHjw2bvMNquv9FKN9kUsPb9pvIO1uHjM6H7e6OOs';
 
 let U = null;
 let authMode = 'login';
