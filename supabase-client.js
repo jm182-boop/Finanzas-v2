@@ -1,110 +1,115 @@
-// ⚠️ IMPORTANTE: REEMPLAZA ESTAS DOS LÍNEAS CON TUS NUEVAS CLAVES DE SUPABASE
+// supabase-client.js - Conexión y operaciones con la base de datos
+
 const SB_URL = 'https://aphycznoynnrnipbtyym.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwaHljem5veW5ucm5pcGJ0eXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDY4MzIsImV4cCI6MjA5NTQ4MjgzMn0.aexuHjw2bvMNquv9FKN9kUsPb9pvIO1uHjM6H7e6OOs';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwaHljem5veW5ucm5pcGJ0eXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzg4MTcsImV4cCI6MjA4OTQ1NDgxN30.R55yB_c13D2FfL0v_5bV0p6z_1d51w9hE3mI5f7a0oQ';
 
 let U = null;
 let authMode = 'login';
 
-// JWT REFRESH — Renovación automática cada 45 min
-async function refreshToken() {
-    const saved = sessionStorage.getItem('fu');
-    if (!saved) return false;
-    const data = JSON.parse(saved);
-    if (!data.refresh_token) return false;
-    try {
-        const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-            body: JSON.stringify({ refresh_token: data.refresh_token })
-        });
-        const res = await r.json();
-        if (res.access_token) {
-            U.token = res.access_token;
-            data.token = res.access_token;
-            if (res.refresh_token) data.refresh_token = res.refresh_token;
-            sessionStorage.setItem('fu', JSON.stringify(data));
-            return true;
-        }
-    } catch (e) {}
-    return false;
+// Función principal para comunicarse con Supabase
+async function sb(path, method = 'GET', body = null) {
+  const headers = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + (U?.token || SB_KEY),
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+  
+  try {
+    const r = await fetch(SB_URL + path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null
+    });
+    
+    // Si el token expiró (Error 401), intentamos renovarlo automáticamente
+    if (r.status === 401 && U) {
+      const refreshed = await refreshToken();
+      if (refreshed) {
+        headers['Authorization'] = 'Bearer ' + U.token;
+        const retry = await fetch(SB_URL + path, { method, headers, body: body ? JSON.stringify(body) : null });
+        const dataRetry = await retry.json().catch(() => null);
+        return { ok: retry.ok, s: retry.status, d: dataRetry };
+      } else {
+        logout(); 
+        return { ok: false, s: 401, d: null };
+      }
+    }
+    
+    const d = await r.json().catch(() => null);
+    return { ok: r.ok, s: r.status, d };
+  } catch (e) {
+    return { ok: false, s: 500, d: null };
+  }
 }
 
-// Renovar cada 45 minutos
-setInterval(() => { if (U) refreshToken(); }, 45 * 60 * 1000);
-
-// SUPABASE Peticiones Base
-const sbAuth = async (ep, email, pass) => {
-    const r = await fetch(SB_URL + '/auth/v1/' + ep, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-        body: JSON.stringify({ email, password: pass })
+// JWT REFRESH - Renovación automática del token
+async function refreshToken() {
+  const saved = sessionStorage.getItem('fu');
+  if (!saved) return false;
+  const data = JSON.parse(saved);
+  
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: data.refresh })
     });
-    return r.json();
-};
-
-const sb = async (path, method = 'GET', body = null, retry = true) => {
-    const h = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + (U?.token || SB_KEY) };
-    if (method === 'POST' || method === 'PATCH') h['Prefer'] = 'return=representation';
-    const o = { method, headers: h };
-    if (body) o.body = JSON.stringify(body);
-    const r = await fetch(SB_URL + path, o);
-    const t = await r.text();
-    let d;
-    try { d = JSON.parse(t); } catch (e) { d = t; }
-    
-    // Si la sesión expiró, intentar refrescar el token
-    if (r.status === 401 && retry) {
-        const ok = await refreshToken();
-        if (ok) return sb(path, method, body, false);
-        else { 
-            if(typeof toast === 'function') toast('Sesión expirada, cerrando...'); 
-            setTimeout(logout, 1500); 
-        }
+    if (r.ok) {
+      const d = await r.json();
+      U = { id: d.user.id, email: d.user.email, token: d.access_token, refresh: d.refresh_token };
+      sessionStorage.setItem('fu', JSON.stringify(U));
+      return true;
     }
-    return { ok: r.ok, s: r.status, d };
-};
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
-// AUTENTICACIÓN UI
-function switchTab(m) {
-    authMode = m;
-    document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (m === 'login' ? i === 0 : i === 1)));
-    document.getElementById('auth-btn').textContent = m === 'login' ? 'Iniciar sesion' : 'Crear cuenta';
-    document.getElementById('auth-msg').textContent = '';
+// Funciones de Autenticación
+function toggleAuth() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('auth-title').textContent = authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta';
+  document.getElementById('auth-btn').textContent = authMode === 'login' ? 'Entrar' : 'Registrarse';
+  document.getElementById('auth-toggle').innerHTML = authMode === 'login' ? '¿No tienes cuenta? <span>Regístrate</span>' : '¿Ya tienes cuenta? <span>Inicia sesión</span>';
 }
 
 async function doAuth() {
-    const email = document.getElementById('ae').value.trim();
-    const pass = document.getElementById('ap').value;
-    const msg = document.getElementById('auth-msg');
-    
-    if (!email || !pass) { 
-        msg.textContent = 'Completa los campos'; 
-        msg.className = 'auth-msg err'; 
-        return; 
-    }
-    
-    document.getElementById('auth-btn').innerHTML = '<span class="sp"></span>Cargando...';
-    const res = await sbAuth(authMode === 'login' ? 'token?grant_type=password' : 'signup', email, pass);
-    document.getElementById('auth-btn').textContent = authMode === 'login' ? 'Iniciar sesion' : 'Crear cuenta';
-    
-    if (res.access_token) {
-        U = { token: res.access_token, email: res.user.email, id: res.user.id, refresh_token: res.refresh_token };
-        sessionStorage.setItem('fu', JSON.stringify(U));
-        if (typeof initApp === 'function') initApp();
-    } else if (authMode === 'register' && res.id) {
-        msg.textContent = 'Cuenta creada! Ya podes iniciar sesion.'; 
-        msg.className = 'auth-msg suc'; 
-        switchTab('login');
-    } else { 
-        msg.textContent = res.error_description || 'Error al autenticar'; 
-        msg.className = 'auth-msg err'; 
-    }
+  const email = document.getElementById('a-email').value.trim();
+  const pwd = document.getElementById('a-pwd').value.trim();
+  const btn = document.getElementById('auth-btn');
+  
+  if (!email || !pwd) { alert('Completa los campos'); return; }
+  
+  btn.innerHTML = '<span class="sp"></span>' + (authMode === 'login' ? 'Entrando...' : 'Registrando...');
+  
+  const path = authMode === 'login' ? '/auth/v1/token?grant_type=password' : '/auth/v1/signup';
+  const r = await fetch(SB_URL + path, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pwd })
+  });
+  
+  btn.textContent = authMode === 'login' ? 'Entrar' : 'Registrarse';
+  
+  if (!r.ok) {
+    const err = await r.json();
+    alert('Error: ' + (err.error_description || err.msg || 'Credenciales inválidas'));
+    return;
+  }
+  
+  const d = await r.json();
+  U = { id: d.user.id, email: d.user.email, token: d.access_token, refresh: d.refresh_token };
+  sessionStorage.setItem('fu', JSON.stringify(U));
+  initApp();
 }
 
-async function logout() {
-    sessionStorage.removeItem('fu');
-    U = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-    if (typeof resetAppData === 'function') resetAppData();
+function logout() {
+  sessionStorage.removeItem('fu');
+  U = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('a-email').value = '';
+  document.getElementById('a-pwd').value = '';
 }
