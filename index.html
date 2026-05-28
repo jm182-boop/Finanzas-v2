@@ -7,8 +7,6 @@
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <div id="toast"></div>
@@ -77,7 +75,6 @@
               <input type="text" id="gcuotas" class="in" placeholder="Total cuotas (Opcional)" onkeyup="fmtI(this)" onchange="calcCuota()">
               <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual" onkeyup="fmtI(this)">
             </div>
-            <div id="cuota-preview" style="display:none;font-size:12px;color:var(--accent);margin:5px 0;"></div>
           </div>
           
           <div id="campos-ingreso" style="display:none;">
@@ -127,20 +124,76 @@
       </div>
 
       <div id="page-prestamos" class="page">
-        <div class="header"><h2>Préstamos y Gastos Compartidos</h2></div>
-        <div class="card">
-          <p style="color:var(--text3); font-size:14px; text-align:center; padding: 40px 0;">
-            Aquí construiremos la nueva sección para gestionar los reintegros (Ej: Prótesis Mamá) y los préstamos. Lo terminaremos en el último paso.
-          </p>
+        <div class="header"><h2>Compartidos y Préstamos</h2></div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          
+          <div class="card">
+            <div class="ct">Nuevo Gasto Compartido (Reintegro)</div>
+            <input type="text" id="cdesc" class="in" placeholder="Ej: Prótesis mamá, Regalo...">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                <input type="text" id="cmonto" class="in" placeholder="Costo Total ($)" onkeyup="fmtI(this)">
+                <input type="number" id="cporcentaje" class="in" placeholder="Tu parte (%) - Ej: 50">
+            </div>
+            <input type="text" id="cdeudor" class="in" placeholder="¿Quién te debe el resto? (Ej: Mi hermano)" style="margin-top:10px;">
+            <button class="btn" id="btn-comp" onclick="agregarCompartido()" style="margin-top:15px;">Guardar y calcular reintegro</button>
+            <div id="lista-compartidos" style="margin-top:25px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="ct">Nuevo Préstamo de Dinero</div>
+            <input type="text" id="pdesc" class="in" placeholder="Motivo del préstamo...">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                <input type="text" id="pmonto" class="in" placeholder="Monto prestado ($)" onkeyup="fmtI(this)">
+                <input type="date" id="pfecha" class="in">
+            </div>
+            <input type="text" id="ppersona" class="in" placeholder="¿A quién le prestaste?" style="margin-top:10px;">
+            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Registrar Préstamo</button>
+            <div id="lista-prestamos" style="margin-top:25px;"></div>
+          </div>
         </div>
       </div>
 
       <div id="page-config" class="page">
-        <div class="header"><h2>Configuración y Sobres</h2></div>
-        <div class="card">
-          <p style="color:var(--text3); font-size:14px; text-align:center; padding: 40px 0;">
-            Aquí crearemos el panel para que des de alta tus Sobres dinámicos (Supermercado, Alquiler, etc.) y Billeteras. Lo terminaremos en el último paso.
-          </p>
+        <div class="header"><h2>Configuración y Estructura</h2></div>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <div class="ct">Reglas y Parámetros Base</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
+            <div><label style="font-size:12px;color:var(--text3)">Sueldo Base ($)</label><input type="text" id="cfg-sueldo" class="in" onkeyup="fmtI(this)"></div>
+            <div><label style="font-size:12px;color:var(--text3)">Regla (%) Nec/Des/Aho</label><input type="text" id="cfg-regla" class="in" placeholder="Ej: 50/30/20"></div>
+            <div><label style="font-size:12px;color:var(--text3)">Nombres (Tú / Pareja)</label><input type="text" id="cfg-nombres" class="in" placeholder="Ej: Yo / Sofi"></div>
+          </div>
+          <button class="btn" onclick="guardarCfg()" style="margin-top:15px;width:auto;padding:0 20px;">Guardar Parámetros</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          
+          <div class="card">
+            <div class="ct">Tus Sobres (Presupuestos)</div>
+            <input type="text" id="sob-nombre" class="in" placeholder="Nombre (Ej: Supermercado)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+              <select id="sob-bucket" class="in">
+                <option value="necesidades">Necesidad</option>
+                <option value="deseos">Deseo</option>
+                <option value="ahorro">Ahorro / Extra</option>
+              </select>
+              <input type="text" id="sob-limite" class="in" placeholder="Tope mensual ($)" onkeyup="fmtI(this)">
+            </div>
+            <button class="btn" onclick="agregarSobre()" style="margin-top:15px;">Crear Sobre</button>
+            <div id="lista-sobres" style="margin-top:25px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="ct">Tus Billeteras</div>
+            <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
+              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Binance, Lemon...)">
+              <input type="color" id="bill-color" class="in" style="padding:0;height:42px;width:100%;cursor:pointer;border:none;border-radius:8px;" value="#f59e0b">
+            </div>
+            <button class="btn" onclick="agregarBilletera()" style="margin-top:15px;">Crear Billetera</button>
+            <div id="lista-billeteras" style="margin-top:25px;"></div>
+          </div>
+
         </div>
       </div>
 
