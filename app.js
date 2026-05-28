@@ -346,7 +346,218 @@ function setChartMode(m, btn) {
   renderAhorros();
 }
 
-// Funciones vacías para evitar errores temporales de consola hasta que hagamos la vista de préstamos/compartidos
-function renderPrestamos() {} 
-function initCfgUI() {}
-async function guardarCfg() {}
+// ================= PRÉSTAMOS Y COMPARTIDOS =================
+function renderPrestamos() {
+  // 1. Reintegros (Compartidos)
+  const lc = document.getElementById('lista-compartidos');
+  if (lc) {
+    lc.innerHTML = compartidos.length ? compartidos.map(c => `
+      <div class="gi">
+        <div class="gt">
+          <div class="gd">${c.descripcion}</div>
+          <div class="gm2" style="color:var(--orange)">Te debe: ${c.deudor}</div>
+        </div>
+        <div class="gright">
+          <div class="gmonto ing">+${fmt(c.monto_pendiente)}</div>
+          <div style="display:flex;gap:5px;margin-top:5px;">
+            <button class="btn" style="padding:2px 8px;font-size:10px;width:auto;" onclick="marcarPagado(${c.id})">Cobrado</button>
+            <button class="bdel" onclick="eliminarCompartido(${c.id})">×</button>
+          </div>
+        </div>
+      </div>
+    `).join('') : '<div class="empty">Nada pendiente a cobrar</div>';
+  }
+
+  // 2. Préstamos de Dinero
+  const lp = document.getElementById('lista-prestamos');
+  if (lp) {
+    lp.innerHTML = prestamos.length ? prestamos.map(p => `
+      <div class="gi">
+        <div class="gt">
+          <div class="gd">${p.descripcion}</div>
+          <div class="gm2">A: ${p.persona} · ${p.fecha}</div>
+        </div>
+        <div class="gright">
+          <div class="gmonto gas">${fmt(p.monto)}</div>
+          <button class="bdel" onclick="eliminarPrestamo(${p.id})">×</button>
+        </div>
+      </div>
+    `).join('') : '<div class="empty">No has registrado préstamos</div>';
+  }
+}
+
+async function agregarCompartido() {
+  const desc = document.getElementById('cdesc').value.trim();
+  const total = parsM(document.getElementById('cmonto').value);
+  const pct = parseFloat(document.getElementById('cporcentaje').value);
+  const deudor = document.getElementById('cdeudor').value.trim();
+  
+  if (!desc || !total || !pct || !deudor) { toast('Completa todos los campos'); return; }
+  
+  const miParte = total * (pct / 100);
+  const pendiente = total - miParte;
+  
+  const btn = document.getElementById('btn-comp');
+  btn.innerHTML = 'Guardando...';
+  
+  const rComp = await sb('/rest/v1/gastos_compartidos', 'POST', {
+    user_id: U.id, descripcion: desc, monto_total: total, mi_porcentaje: pct, monto_pendiente: pendiente, deudor: deudor, pagado: false
+  });
+  
+  if (rComp.ok || rComp.s === 201) {
+    await loadCompartidos();
+    ['cdesc', 'cmonto', 'cporcentaje', 'cdeudor'].forEach(id => document.getElementById(id).value = '');
+    toast('Gasto compartido registrado');
+    renderPrestamos();
+  } else toast('Error al guardar');
+  btn.textContent = 'Guardar y calcular reintegro';
+}
+
+async function marcarPagado(id) {
+  await sb('/rest/v1/gastos_compartidos?id=eq.' + id, 'PATCH', { pagado: true });
+  await loadCompartidos();
+  renderPrestamos();
+  toast('Marcado como cobrado');
+}
+
+async function eliminarCompartido(id) {
+  await sb('/rest/v1/gastos_compartidos?id=eq.' + id, 'DELETE');
+  compartidos = compartidos.filter(c => c.id !== id);
+  renderPrestamos(); toast('Eliminado');
+}
+
+async function agregarPrestamo() {
+  const desc = document.getElementById('pdesc').value.trim();
+  const monto = parsM(document.getElementById('pmonto').value);
+  const fecha = document.getElementById('pfecha').value;
+  const pers = document.getElementById('ppersona').value.trim();
+  
+  if (!desc || !monto || !fecha || !pers) { toast('Completa todos los campos'); return; }
+  
+  const btn = document.getElementById('btn-prestamo');
+  btn.innerHTML = 'Guardando...';
+  
+  const r = await sb('/rest/v1/prestamos', 'POST', { user_id: U.id, descripcion: desc, monto, fecha, persona: pers });
+  if (r.ok || r.s === 201) {
+    await loadPrestamos();
+    ['pdesc', 'pmonto', 'ppersona'].forEach(id => document.getElementById(id).value = '');
+    toast('Préstamo guardado');
+    renderPrestamos();
+  } else toast('Error al guardar');
+  btn.textContent = 'Registrar Préstamo';
+}
+
+async function eliminarPrestamo(id) {
+  await sb('/rest/v1/prestamos?id=eq.' + id, 'DELETE');
+  prestamos = prestamos.filter(p => p.id !== id);
+  renderPrestamos(); toast('Eliminado');
+}
+
+// ================= CONFIGURACIÓN Y SOBRES =================
+function initCfgUI() {
+  const s = document.getElementById('cfg-sueldo'); if(s) s.value = fmt(cfg.sueldo).replace('$', '').trim();
+  const r = document.getElementById('cfg-regla'); if(r) r.value = `${cfg.nec}/${cfg.des}/${cfg.aho}`;
+  const n = document.getElementById('cfg-nombres'); if(n) n.value = `${cfg.nombre1} / ${cfg.nombre2}`;
+  renderConfigLists();
+}
+
+function renderConfigLists() {
+  const ls = document.getElementById('lista-sobres');
+  if (ls) {
+    ls.innerHTML = sobres.length ? sobres.map(s => `
+      <div class="gi">
+        <div class="gt">
+          <div class="gd">${s.nombre} <span style="font-size:11px;color:var(--text3)">(${s.bucket})</span></div>
+          <div class="gm2">Tope: ${fmt(s.monto_limite)}</div>
+        </div>
+        <button class="bdel" onclick="eliminarSobre(${s.id})">×</button>
+      </div>
+    `).join('') : '<div class="empty">No has creado ningún sobre aún</div>';
+  }
+
+  const lb = document.getElementById('lista-billeteras');
+  if (lb) {
+    lb.innerHTML = billeteras.length ? billeteras.map(b => `
+      <div class="gi">
+        <div class="gt">
+          <div class="gd" style="display:flex;align-items:center;gap:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${b.color_hex};"></div>
+            ${b.nombre}
+          </div>
+        </div>
+        <button class="bdel" onclick="eliminarBilletera(${b.id})">×</button>
+      </div>
+    `).join('') : '<div class="empty">No tienes billeteras activas</div>';
+  }
+}
+
+async function guardarCfg() {
+  const sueldo = parsM(document.getElementById('cfg-sueldo').value);
+  const r = document.getElementById('cfg-regla').value.split('/');
+  const n = document.getElementById('cfg-nombres').value.split('/');
+  
+  const nec = parseInt(r[0]) || 50, des = parseInt(r[1]) || 30, aho = parseInt(r[2]) || 20;
+  const nom1 = (n[0] || 'Yo').trim(), nom2 = (n[1] || 'Pareja').trim();
+  
+  if (nec + des + aho !== 100) { toast('La regla debe sumar 100%'); return; }
+  
+  const payload = { sueldo, nec, des, aho, nombre1: nom1, nombre2: nom2 };
+  
+  let resp = await sb('/rest/v1/configuracion?user_id=eq.'+U.id);
+  if (resp.d && resp.d.length > 0) {
+    await sb('/rest/v1/configuracion?user_id=eq.'+U.id, 'PATCH', payload);
+  } else {
+    payload.user_id = U.id;
+    await sb('/rest/v1/configuracion', 'POST', payload);
+  }
+  
+  cfg = { ...cfg, ...payload };
+  toast('Configuración guardada');
+  renderResumen();
+}
+
+async function agregarSobre() {
+  const nombre = document.getElementById('sob-nombre').value.trim();
+  const bucket = document.getElementById('sob-bucket').value;
+  const limite = parsM(document.getElementById('sob-limite').value);
+  
+  if (!nombre || !limite) { toast('Completa nombre y límite'); return; }
+  
+  const r = await sb('/rest/v1/sobres', 'POST', { user_id: U.id, nombre, bucket, monto_limite: limite });
+  if (r.ok || r.s === 201) {
+    await loadSobres();
+    document.getElementById('sob-nombre').value = '';
+    document.getElementById('sob-limite').value = '';
+    toast('Sobre creado');
+    populateSelects(); renderConfigLists(); renderResumen();
+  } else toast('Error al crear sobre');
+}
+
+async function eliminarSobre(id) {
+  await sb('/rest/v1/sobres?id=eq.' + id, 'DELETE');
+  await loadSobres();
+  toast('Sobre eliminado');
+  populateSelects(); renderConfigLists(); renderResumen();
+}
+
+async function agregarBilletera() {
+  const nombre = document.getElementById('bill-nombre').value.trim();
+  const color = document.getElementById('bill-color').value;
+  
+  if (!nombre) { toast('Ingresa el nombre'); return; }
+  
+  const r = await sb('/rest/v1/billeteras', 'POST', { user_id: U.id, nombre, color_hex: color, activa: true });
+  if (r.ok || r.s === 201) {
+    await loadBilleteras();
+    document.getElementById('bill-nombre').value = '';
+    toast('Billetera creada');
+    populateSelects(); renderConfigLists();
+  } else toast('Error al crear billetera');
+}
+
+async function eliminarBilletera(id) {
+  await sb('/rest/v1/billeteras?id=eq.' + id, 'PATCH', { activa: false });
+  await loadBilleteras();
+  toast('Billetera ocultada');
+  populateSelects(); renderConfigLists(); renderAhorros();
+}
