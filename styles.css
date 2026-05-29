@@ -169,6 +169,21 @@
   #toast.show { bottom: 20px; }
   
   /* =========================================
+     EXTRAS DE LOGIN (Ojo y Recuperar Clave)
+     ========================================= */
+  .btn-eye {
+    position: absolute; right: 12px; top: 12px; background: transparent; 
+    border: none; cursor: pointer; color: var(--text3); transition: 0.3s;
+  }
+  .btn-eye svg { width: 20px; height: 20px; }
+  .btn-eye:hover { color: var(--text); }
+  
+  .auth-forgot {
+    font-size: 12px; color: var(--text3); cursor: pointer; transition: 0.2s;
+  }
+  .auth-forgot:hover { color: var(--accent); text-decoration: underline; }
+
+  /* =========================================
      ADAPTACIÓN MÓVIL (MENÚ INFERIOR)
      ========================================= */
   @media (max-width: 768px) {
