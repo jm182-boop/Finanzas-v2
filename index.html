@@ -32,14 +32,13 @@
       <div class="nav">
         <button class="nb active" onclick="sp('resumen', this)">Resumen</button>
         <button class="nb" onclick="sp('historial', this)">Movimientos</button>
-        <button class="nb" onclick="sp('ahorros', this)">Ahorro e Inversión</button>
-        <button class="nb" onclick="sp('prestamos', this)">Compartidos & Préstamos</button>
-        <button class="nb" onclick="sp('config', this)">Configuración (Sobres)</button>
+        <button class="nb" onclick="sp('ahorros', this)">Ahorros</button>
+        <button class="nb" onclick="sp('prestamos', this)">Préstamos</button>
+        <button class="nb" onclick="sp('config', this)">Config</button>
+        <button class="nb" onclick="sp('ia', this)">Asistente IA</button>
       </div>
       <div style="display:flex;gap:10px;">
-        <button class="btn-icon" onclick="toggleTheme()">
-          <span id="icon-dark">🌙</span><span id="icon-light" style="display:none">☀️</span>
-        </button>
+        <button class="btn-icon" onclick="toggleTheme()"><span id="icon-dark">🌙</span><span id="icon-light" style="display:none">☀️</span></button>
         <button class="btn-icon" onclick="logout()" style="flex:1">Salir</button>
       </div>
     </div>
@@ -52,7 +51,27 @@
           <h2 id="mlabel">Mes</h2>
           <button class="btn-icon" onclick="changeMonth(1)">›</button>
         </div>
-        <div id="resumen-content"></div>
+        <div class="mg">
+          <div class="met"><div class="ml">Ingresos</div><div class="mv" id="r-ingresos">$0</div></div>
+          <div class="met"><div class="ml">Gastado</div><div class="mv bad" id="r-gastos">$0</div></div>
+          <div class="met"><div class="ml">Disponible</div><div class="mv ok" id="r-disponible">$0</div></div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
+          <div class="card" id="resumen-barras">
+            </div>
+          
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="card" id="resumen-checklist">
+               <div class="ct">Checklist de Pagos</div>
+               <div id="lista-checklist"></div>
+            </div>
+            <div class="card" id="resumen-tarjetas">
+               <div class="ct">Por Tarjeta / Billetera</div>
+               <div id="lista-tarjetas"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="page-historial" class="page">
@@ -60,20 +79,34 @@
         
         <div class="card" style="margin-bottom:20px;">
           <div class="tabs">
-            <button id="btg" class="tb ag" onclick="setTipo('gasto')">Gasto</button>
-            <button id="bti" class="tb" onclick="setTipo('ingreso')">Ingreso</button>
+            <button id="btg" class="tb active b-rojo" onclick="setTipo('gasto')">Gasto</button>
+            <button id="bti" class="tb b-verde" onclick="setTipo('ingreso')">Ingreso</button>
           </div>
-          <input type="text" id="gdesc" class="in" placeholder="Ej: Supermercado, Sueldo...">
-          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this)" onchange="calcCuota()">
+          
+          <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado, Sueldo...)">
+          <input type="text" id="gmonto" class="in" placeholder="Monto total ($) - Ej: 1500,50" onkeyup="fmtI(this)">
           
           <div id="campos-gasto">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <select id="gcat" class="in"></select> 
+              <select id="gcat" class="in">
+                <option value="">Selecciona Billetera/Tarjeta</option>
+              </select> 
               <input type="date" id="gfecha" class="in">
             </div>
+            
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-              <input type="text" id="gcuotas" class="in" placeholder="Total cuotas (Opcional)" onkeyup="fmtI(this)" onchange="calcCuota()">
-              <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual" onkeyup="fmtI(this)">
+              <input type="text" id="gcuotas" class="in" placeholder="Total cuotas (Opcional)" onkeyup="fmtI(this)">
+              <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual (Opcional)" onkeyup="fmtI(this)">
+            </div>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-top:15px;font-size:13px;cursor:pointer;">
+              <input type="checkbox" id="chk-compartido" onchange="toggleCompartido()">
+              Marcar como Gasto Compartido (Reintegro)
+            </label>
+            
+            <div id="caja-compartido" style="display:none;background:var(--bg);padding:15px;border-radius:8px;margin-top:10px;border:1px solid var(--border);">
+              <input type="text" id="comp-quien" class="in" placeholder="¿Con quién? (Ej: Mi hermano, Sofi...)">
+              <input type="number" id="comp-pct" class="in" placeholder="Tu porcentaje a pagar (Ej: 50)" style="margin-bottom:0;">
             </div>
           </div>
           
@@ -82,38 +115,29 @@
           </div>
           
           <input type="text" id="gnota" class="in" placeholder="Notas adicionales (Opcional)..." style="margin-top:10px;">
-          <button class="btn" id="btnagregar" onclick="agregarMov()" style="margin-top:15px;">Guardar gasto</button>
+          <button class="btn" id="btnagregar" onclick="agregarMov()" style="margin-top:15px;background:var(--red);">Guardar gasto</button>
         </div>
 
-        <div class="card" style="height:200px;margin-bottom:20px;"><canvas id="hist-chart"></canvas></div>
         <div id="historial-content"></div>
       </div>
 
       <div id="page-ahorros" class="page">
         <div id="ahero"></div>
-        <div class="card" style="margin:20px 0;">
-          <div class="tabs">
-            <button id="cht-tot" class="tb" style="border-color:var(--accent);color:var(--accent2)" onclick="setChartMode('total', this)">Total</button>
-            <button id="cht-des" class="tb" onclick="setChartMode('billetera', this)">Por billetera</button>
-          </div>
-          <div style="height:200px;margin-top:15px;"><canvas id="achrt"></canvas></div>
-        </div>
-        
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="ahorros-grid">
           <div>
             <div class="card" style="margin-bottom:20px;">
               <div class="ct">Por billetera</div>
               <div id="bill-list"></div>
             </div>
             <div class="card">
-              <div class="ct">Registrar Depósito</div>
+              <div class="ct">Registrar Depósito / Retiro</div>
               <input type="text" id="amonto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <select id="abilletera" class="in"></select>
                 <input type="date" id="afecha" class="in">
               </div>
               <input type="text" id="anota" class="in" placeholder="Ej: Compra de MEP, Plazo Fijo...">
-              <button class="btn" id="btnahorro" onclick="agregarAhorro()" style="margin-top:15px;">Guardar depósito</button>
+              <button class="btn" id="btnahorro" onclick="agregarAhorro()" style="margin-top:15px;">Guardar registro</button>
             </div>
           </div>
           <div class="card">
@@ -124,33 +148,23 @@
       </div>
 
       <div id="page-prestamos" class="page">
-        <div class="header"><h2>Compartidos y Préstamos</h2></div>
+        <div class="header"><h2>Control de Préstamos</h2></div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-          
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="prestamos-grid">
           <div class="card">
-            <div class="ct">Nuevo Gasto Compartido (Reintegro)</div>
-            <input type="text" id="cdesc" class="in" placeholder="Ej: Prótesis mamá, Regalo...">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-                <input type="text" id="cmonto" class="in" placeholder="Costo Total ($)" onkeyup="fmtI(this)">
-                <input type="number" id="cporcentaje" class="in" placeholder="Tu parte (%) - Ej: 50">
+            <div class="ct">Nuevo Préstamo</div>
+            <input type="text" id="ppersona" class="in" placeholder="Persona / Deudor (Ej: Carlos)">
+            <input type="text" id="pdesc" class="in" placeholder="Motivo (Ej: TV, Dinero...)">
+            <input type="text" id="pmonto" class="in" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <input type="date" id="pfecha" class="in">
+                <input type="text" id="pcuotas" class="in" placeholder="Cuotas (Dejar vacío si es 1)" onkeyup="fmtI(this)">
             </div>
-            <input type="text" id="cdeudor" class="in" placeholder="¿Quién te debe el resto? (Ej: Mi hermano)" style="margin-top:10px;">
-            <button class="btn" id="btn-comp" onclick="agregarCompartido()" style="margin-top:15px;">Guardar y calcular reintegro</button>
-            <div id="lista-compartidos" style="margin-top:25px;"></div>
+            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Agregar Préstamo</button>
           </div>
 
-          <div class="card">
-            <div class="ct">Nuevo Préstamo de Dinero</div>
-            <input type="text" id="pdesc" class="in" placeholder="Motivo del préstamo...">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-                <input type="text" id="pmonto" class="in" placeholder="Monto prestado ($)" onkeyup="fmtI(this)">
-                <input type="date" id="pfecha" class="in">
+          <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
             </div>
-            <input type="text" id="ppersona" class="in" placeholder="¿A quién le prestaste?" style="margin-top:10px;">
-            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Registrar Préstamo</button>
-            <div id="lista-prestamos" style="margin-top:25px;"></div>
-          </div>
         </div>
       </div>
 
@@ -159,19 +173,21 @@
         
         <div class="card" style="margin-bottom:20px;">
           <div class="ct">Reglas y Parámetros Base</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;" class="cfg-grid">
             <div><label style="font-size:12px;color:var(--text3)">Sueldo Base ($)</label><input type="text" id="cfg-sueldo" class="in" onkeyup="fmtI(this)"></div>
-            <div><label style="font-size:12px;color:var(--text3)">Regla (%) Nec/Des/Aho</label><input type="text" id="cfg-regla" class="in" placeholder="Ej: 50/30/20"></div>
+            <div>
+              <label style="font-size:12px;color:var(--text3)">Regla (%) Nec/Des/Aho</label>
+              <input type="text" id="cfg-regla" class="in" placeholder="Ej: 50/30/20">
+            </div>
             <div><label style="font-size:12px;color:var(--text3)">Nombres (Tú / Pareja)</label><input type="text" id="cfg-nombres" class="in" placeholder="Ej: Yo / Sofi"></div>
           </div>
           <button class="btn" onclick="guardarCfg()" style="margin-top:15px;width:auto;padding:0 20px;">Guardar Parámetros</button>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-          
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="cfg-grid-2">
           <div class="card">
             <div class="ct">Tus Sobres (Presupuestos)</div>
-            <input type="text" id="sob-nombre" class="in" placeholder="Nombre (Ej: Supermercado)">
+            <input type="text" id="sob-nombre" class="in" placeholder="Nombre (Ej: Comida casa)">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
               <select id="sob-bucket" class="in">
                 <option value="necesidades">Necesidad</option>
@@ -185,26 +201,37 @@
           </div>
 
           <div class="card">
-            <div class="ct">Tus Billeteras</div>
+            <div class="ct">Tus Billeteras / Tarjetas</div>
             <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Binance, Lemon...)">
-              <input type="color" id="bill-color" class="in" style="padding:0;height:42px;width:100%;cursor:pointer;border:none;border-radius:8px;" value="#f59e0b">
+              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Binance, Tarjeta Casa...)">
+              <input type="color" id="bill-color" class="in" style="padding:0;height:42px;width:100%;cursor:pointer;border:none;border-radius:8px;" value="#7c6dfa">
             </div>
             <button class="btn" onclick="agregarBilletera()" style="margin-top:15px;">Crear Billetera</button>
             <div id="lista-billeteras" style="margin-top:25px;"></div>
           </div>
-
         </div>
       </div>
 
-    </div>
-    
-    <div id="chat-widget">
-      <div id="chat-msgs"></div>
-      <div style="display:flex;gap:8px;padding:12px;background:var(--bg2);border-top:1px solid var(--border)">
-        <input type="text" id="cinput" placeholder="Pregúntale a Gemini..." onkeypress="if(event.key==='Enter')sendChat()">
-        <button onclick="sendChat()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 15px;cursor:pointer">➔</button>
+      <div id="page-ia" class="page">
+        <div class="header"><h2>Asistente Financiero</h2></div>
+        <div class="card" style="display:flex;flex-direction:column;height:65vh;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
+            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Gastos en cuotas';">Gastos en cuotas</button>
+            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Estado de mi regla';">Estado de regla</button>
+            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Mis ahorros';">Mis ahorros</button>
+          </div>
+          
+          <div id="chat-msgs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px;padding-right:10px;margin-bottom:15px;">
+             <div class="cm a">¡Hola! Soy tu asistente financiero. Tengo acceso completo a tus registros. Pregúntame lo que quieras.</div>
+          </div>
+          
+          <div style="display:flex;gap:10px;margin-top:auto;">
+            <input type="text" id="cinput" class="in" style="margin-bottom:0;" placeholder="Pregúntame cualquier cosa..." onkeypress="if(event.key==='Enter')sendChat()">
+            <button class="btn" style="width:50px;flex-shrink:0;" onclick="sendChat()">➔</button>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 
