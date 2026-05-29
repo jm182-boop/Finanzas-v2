@@ -178,7 +178,6 @@
     transition: 0.3s;
   }
   .btn-eye svg { width: 20px; height: 20px; stroke: var(--text3); }
-  .btn-eye:hover svg { stroke: var(--text); }
   
   .auth-forgot {
     font-size: 12px; color: var(--text3); cursor: pointer; transition: 0.2s;
