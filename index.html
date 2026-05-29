@@ -15,8 +15,23 @@
     <div class="auth-box">
       <h1 class="logo">fin.</h1>
       <h2 id="auth-title">Iniciar Sesión</h2>
+      
       <input type="email" id="a-email" class="in" placeholder="Tu correo electrónico">
-      <input type="password" id="a-pwd" class="in" placeholder="Tu contraseña">
+      
+      <div style="position: relative;">
+        <input type="password" id="a-pwd" class="in" placeholder="Tu contraseña" style="padding-right: 40px;">
+        <button type="button" class="btn-eye" onclick="togglePwd()">
+          <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+      
+      <div style="text-align: right; margin-top: -5px; margin-bottom: 15px;">
+        <span class="auth-forgot" onclick="recuperarPwd()">¿Olvidaste tu contraseña?</span>
+      </div>
+
       <button class="btn" id="auth-btn" onclick="doAuth()">Entrar</button>
       <div class="auth-switch" id="auth-toggle" onclick="toggleAuth()">¿No tienes cuenta? <span>Regístrate</span></div>
     </div>
@@ -104,141 +119,4 @@
               Marcar como Gasto Compartido (Reintegro)
             </label>
             
-            <div id="caja-compartido" style="display:none;background:var(--bg);padding:15px;border-radius:8px;margin-top:10px;border:1px solid var(--border);">
-              <input type="text" id="comp-quien" class="in" placeholder="¿Con quién? (Ej: Mi hermano, Sofi...)">
-              <input type="number" id="comp-pct" class="in" placeholder="Tu porcentaje a pagar (Ej: 50)" style="margin-bottom:0;">
-            </div>
-          </div>
-          
-          <div id="campos-ingreso" style="display:none;">
-            <input type="date" id="gfechai" class="in">
-          </div>
-          
-          <input type="text" id="gnota" class="in" placeholder="Notas adicionales (Opcional)..." style="margin-top:10px;">
-          <button class="btn" id="btnagregar" onclick="agregarMov()" style="margin-top:15px;background:var(--red);">Guardar gasto</button>
-        </div>
-
-        <div id="historial-content"></div>
-      </div>
-
-      <div id="page-ahorros" class="page">
-        <div id="ahero"></div>
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="ahorros-grid">
-          <div>
-            <div class="card" style="margin-bottom:20px;">
-              <div class="ct">Por billetera</div>
-              <div id="bill-list"></div>
-            </div>
-            <div class="card">
-              <div class="ct">Registrar Depósito / Retiro</div>
-              <input type="text" id="amonto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <select id="abilletera" class="in"></select>
-                <input type="date" id="afecha" class="in">
-              </div>
-              <input type="text" id="anota" class="in" placeholder="Ej: Compra de MEP, Plazo Fijo...">
-              <button class="btn" id="btnahorro" onclick="agregarAhorro()" style="margin-top:15px;">Guardar registro</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="ct">Historial</div>
-            <div id="ahist"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="page-prestamos" class="page">
-        <div class="header"><h2>Control de Préstamos</h2></div>
-        
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="prestamos-grid">
-          <div class="card">
-            <div class="ct">Nuevo Préstamo</div>
-            <input type="text" id="ppersona" class="in" placeholder="Persona / Deudor (Ej: Carlos)">
-            <input type="text" id="pdesc" class="in" placeholder="Motivo (Ej: TV, Dinero...)">
-            <input type="text" id="pmonto" class="in" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <input type="date" id="pfecha" class="in">
-                <input type="text" id="pcuotas" class="in" placeholder="Cuotas (Dejar vacío si es 1)" onkeyup="fmtI(this)">
-            </div>
-            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Agregar Préstamo</button>
-          </div>
-
-          <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
-            </div>
-        </div>
-      </div>
-
-      <div id="page-config" class="page">
-        <div class="header"><h2>Configuración y Estructura</h2></div>
-        
-        <div class="card" style="margin-bottom:20px;">
-          <div class="ct">Reglas y Parámetros Base</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;" class="cfg-grid">
-            <div><label style="font-size:12px;color:var(--text3)">Sueldo Base ($)</label><input type="text" id="cfg-sueldo" class="in" onkeyup="fmtI(this)"></div>
-            <div>
-              <label style="font-size:12px;color:var(--text3)">Regla (%) Nec/Des/Aho</label>
-              <input type="text" id="cfg-regla" class="in" placeholder="Ej: 50/30/20">
-            </div>
-            <div><label style="font-size:12px;color:var(--text3)">Nombres (Tú / Pareja)</label><input type="text" id="cfg-nombres" class="in" placeholder="Ej: Yo / Sofi"></div>
-          </div>
-          <button class="btn" onclick="guardarCfg()" style="margin-top:15px;width:auto;padding:0 20px;">Guardar Parámetros</button>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="cfg-grid-2">
-          <div class="card">
-            <div class="ct">Tus Sobres (Presupuestos)</div>
-            <input type="text" id="sob-nombre" class="in" placeholder="Nombre (Ej: Comida casa)">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-              <select id="sob-bucket" class="in">
-                <option value="necesidades">Necesidad</option>
-                <option value="deseos">Deseo</option>
-                <option value="ahorro">Ahorro / Extra</option>
-              </select>
-              <input type="text" id="sob-limite" class="in" placeholder="Tope mensual ($)" onkeyup="fmtI(this)">
-            </div>
-            <button class="btn" onclick="agregarSobre()" style="margin-top:15px;">Crear Sobre</button>
-            <div id="lista-sobres" style="margin-top:25px;"></div>
-          </div>
-
-          <div class="card">
-            <div class="ct">Tus Billeteras / Tarjetas</div>
-            <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Binance, Tarjeta Casa...)">
-              <input type="color" id="bill-color" class="in" style="padding:0;height:42px;width:100%;cursor:pointer;border:none;border-radius:8px;" value="#7c6dfa">
-            </div>
-            <button class="btn" onclick="agregarBilletera()" style="margin-top:15px;">Crear Billetera</button>
-            <div id="lista-billeteras" style="margin-top:25px;"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="page-ia" class="page">
-        <div class="header"><h2>Asistente Financiero</h2></div>
-        <div class="card" style="display:flex;flex-direction:column;height:65vh;">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
-            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Gastos en cuotas';">Gastos en cuotas</button>
-            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Estado de mi regla';">Estado de regla</button>
-            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Mis ahorros';">Mis ahorros</button>
-          </div>
-          
-          <div id="chat-msgs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px;padding-right:10px;margin-bottom:15px;">
-             <div class="cm a">¡Hola! Soy tu asistente financiero. Tengo acceso completo a tus registros. Pregúntame lo que quieras.</div>
-          </div>
-          
-          <div style="display:flex;gap:10px;margin-top:auto;">
-            <input type="text" id="cinput" class="in" style="margin-bottom:0;" placeholder="Pregúntame cualquier cosa..." onkeypress="if(event.key==='Enter')sendChat()">
-            <button class="btn" style="width:50px;flex-shrink:0;" onclick="sendChat()">➔</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <script src="utils.js"></script>
-  <script src="supabase-client.js"></script>
-  <script src="gemini.js"></script>
-  <script src="charts.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+            <div id="caja-compartido" style="display:none;background:var
