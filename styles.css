@@ -172,11 +172,13 @@
      EXTRAS DE LOGIN (Ojo y Recuperar Clave)
      ========================================= */
   .btn-eye {
-    position: absolute; right: 12px; top: 12px; background: transparent; 
-    border: none; cursor: pointer; color: var(--text3); transition: 0.3s;
+    position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; cursor: pointer; color: var(--text3); 
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    transition: 0.3s;
   }
-  .btn-eye svg { width: 20px; height: 20px; }
-  .btn-eye:hover { color: var(--text); }
+  .btn-eye svg { width: 20px; height: 20px; stroke: var(--text3); }
+  .btn-eye:hover svg { stroke: var(--text); }
   
   .auth-forgot {
     font-size: 12px; color: var(--text3); cursor: pointer; transition: 0.2s;
