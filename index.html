@@ -84,11 +84,12 @@
             <div class="progress-wrap"><div class="progress-header"><span>Ahorro (20%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
             
             <div style="border-top: 1px solid var(--border); margin-top: 30px; padding-top: 25px;">
-                <div class="ct" style="margin-bottom: 15px;">⚠️ Alertas y Recordatorios</div>
-                <div style="display:flex; flex-direction:column; gap:14px;">
-                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-red"></span> <span style="color:var(--text); font-weight:500;">Has superado el presupuesto de Vivienda por $18.500.</span></div>
-                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-warning"></span> <span style="color:var(--text); font-weight:500;">Transporte alcanzó el 80% del presupuesto.</span></div>
-                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-neutral"></span> <span style="color:var(--text); font-weight:500;">Tarjeta Casa vence en 3 días.</span></div>
+                <div class="ct" style="margin-bottom: 15px;">Alertas y Recordatorios</div>
+                <div id="alertas-list">
+                   <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
+                     <svg class="alert-icon neutral" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> 
+                     <span>Sin alertas activas.</span>
+                   </div>
                 </div>
             </div>
           </div>
@@ -96,14 +97,13 @@
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-checklist">
               <div class="ct">CHECKLIST DE PAGOS</div>
-              <div class="li" id="chk-item-1"><span class="li-desc"><input type="checkbox" onchange="toggleCheck(this, 'chk-item-1')"> Alquiler / Hipoteca</span><span class="li-monto">$0</span></div>
-              <div class="li" id="chk-item-2"><span class="li-desc"><input type="checkbox" onchange="toggleCheck(this, 'chk-item-2')"> Expensas / Servicios</span><span class="li-monto">$0</span></div>
+              <p style="color:var(--text3); font-size:13px;">Sin obligaciones registradas.</p>
             </div>
             <div class="card">
               <div class="ct">POR MEDIO DE PAGO</div>
               <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Sin movimientos</span><span class="li-monto" style="font-size:14px;">$0</span></div>
             </div>
-            <div class="card">
+            <div class="card" id="resumen-distribucion">
               <div class="ct">DISTRIBUCIÓN</div>
               <div style="display:flex; align-items:center; gap:20px;">
                 <div class="dona-placeholder">Sin datos</div>
@@ -136,7 +136,7 @@
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Medio de Pago (Origen)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino Presupuestario (En qué)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
             </div>
-            <input type="date" id="gfecha" class="in">
+            <input type="date" class="in input-fecha">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
               <input type="text" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)">
               <input type="text" class="in" id="gcuota-num" placeholder="N° Cuota actual">
@@ -145,14 +145,14 @@
               <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
             </label>
             <div id="caja-compartido" style="display:none;background:var(--bg);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid var(--border);">
-              <input type="text" class="in" id="comp-quien" placeholder="Persona (Ej: Amigo...)">
+              <input type="text" class="in" id="comp-quien" placeholder="Persona">
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
                 <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
               <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;">
             </div>
           </div>
-          <div id="campos-ingreso" style="display:none;"><input type="date" id="gfechai" class="in"></div>
+          <div id="campos-ingreso" style="display:none;"><input type="date" class="in input-fecha"></div>
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
         </div>
 
@@ -173,29 +173,67 @@
       </div>
 
       <div id="page-ahorros" class="page">
-        <div class="hero-metric"><p>Total Ahorrado</p><h1 id="txt-ahorro-total">$0</h1></div>
+        <div class="header">
+          <h2>Ahorros</h2>
+        </div>
+        
+        <div class="mg-ahorro">
+          <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv">$0</div></div>
+          <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);">0</div></div>
+          <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
+        </div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
+          
           <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card">
+              <div class="ct" style="display:flex; justify-content:space-between;">
+                <span>Mis Billeteras</span>
+                <button style="background:none; border:none; color:var(--accent); font-size:12px; font-weight:700; cursor:pointer;" onclick="togglePanel('panel-nueva-billetera')">+ Nueva billetera</button>
+              </div>
+              
+              <div id="panel-nueva-billetera" style="display:none; background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px;">
+                <input type="text" class="in" placeholder="Nombre (Ej: Binance, USD...)" style="margin-bottom:10px; padding:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                  <input type="color" class="in" value="#f5a623" style="padding:0; height:38px; width:40px; border:none; border-radius:8px; cursor:pointer;">
+                  <button class="btn" style="padding:10px; font-size:12px; flex:1;">Guardar Billetera</button>
+                </div>
+              </div>
+              
+              <p style="color:var(--text3); font-size:13px; text-align:center; padding:10px;">Sin billeteras creadas.</p>
+            </div>
+            
             <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin datos</div></div>
             <div class="card">
-              <div class="ct">POR BILLETERA</div>
-              <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Sin movimientos</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+              <div class="ct">Distribución</div>
+              <div style="display:flex; align-items:center; gap:20px;">
+                <div class="dona-placeholder" style="width:120px; height:120px;">Sin datos</div>
+              </div>
             </div>
           </div>
           
           <div style="display:flex; flex-direction:column; gap:20px;">
-            <div class="card">
+            <div class="card" style="border-color:var(--accent);">
               <div class="ct">Registrar Movimiento</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <input type="text" id="amonto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)" style="margin:0;">
-                <select id="abilletera" class="in" style="margin:0;"><option value="">Seleccionar...</option></select>
+              <select id="ahorro-tipo" class="in" onchange="setAhorroTipo()">
+                <option value="aporte">Aporte de ahorro</option>
+                <option value="retiro">Retiro de ahorro</option>
+                <option value="transferencia">Transferencia entre billeteras</option>
+              </select>
+              
+              <input type="text" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
+              
+              <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
+                <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen (Medio de pago)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
+                <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
               </div>
-              <input type="date" id="afecha" class="in" style="margin-top:15px;">
-              <input type="text" id="anota" class="in" placeholder="Nota (Ej: Compra Dólares...)">
-              <button class="btn" style="background:var(--accent);">Guardar registro</button>
+              
+              <input type="date" class="in input-fecha">
+              <input type="text" class="in" placeholder="Nota (Opcional)">
+              <button class="btn" style="background:var(--accent);">Guardar Movimiento</button>
             </div>
-            <div class="card"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos.</p></div>
+            
+            <div class="card"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
           </div>
         </div>
       </div>
@@ -220,39 +258,18 @@
             <button id="p-btn-yodebo" class="tb b-rojo" onclick="setTipoPrestamo('yodebo')">Yo debo</button>
           </div>
           <input type="text" class="in" id="ppersona" placeholder="Persona o Entidad">
-          <input type="text" class="in" id="pdesc" placeholder="Concepto (Ej: Efectivo, TV)">
+          <input type="text" class="in" id="pdesc" placeholder="Concepto (Ej: Efectivo, Reparación...)">
           <input type="text" class="in" id="pmonto" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" id="pfecha" class="in"></div>
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" id="pfechacompromiso" class="in"></div>
+          <div id="campos-prestamo-fechas" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" class="in input-fecha"></div>
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" class="in"></div>
           </div>
           <button class="btn" id="btn-submit-prestamo" style="background:var(--green); color:#fff;">Guardar Préstamo</button>
         </div>
 
         <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
-           <div class="card">
-             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
-               <div>
-                 <h3 style="font-size: 18px; font-weight: 700;">Nombre Persona</h3>
-                 <span class="badge badge-green" style="margin-top:6px;">Me deben</span>
-               </div>
-               <div style="text-align: right;">
-                 <p style="font-size: 11px; color: var(--text3); font-weight: 700; text-transform: uppercase;">Saldo Pendiente</p>
-                 <p style="font-size: 22px; font-weight: 800; color: var(--green); letter-spacing:-1px;">$0</p>
-               </div>
-             </div>
-             <div style="border-top: 1px solid var(--border); padding-top: 15px;">
-               <button onclick="toggleAccordion('det-1', 'icon-1')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                 Ver detalle (0 préstamos)
-                 <svg id="icon-1" class="icon-chevron" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
-               </button>
-               <div id="det-1" class="accordion-content">
-                  <div style="background: var(--bg); padding: 15px; border-radius: 10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><p style="font-size:14px; font-weight:600;">Sin datos</p><p style="font-size:12px; color:var(--text3);">--/--/----</p></div>
-                    <div style="text-align:right;"><p style="font-size:15px; font-weight:700;">$0</p><span class="badge badge-neutral" style="margin-top:4px;">Pendiente</span></div>
-                  </div>
-               </div>
-             </div>
+           <div class="card" style="display:flex; align-items:center; justify-content:center; height:120px; border-style:dashed;">
+             <p style="color:var(--text3); font-size:14px; font-weight:500;">No tienes préstamos registrados.</p>
            </div>
         </div>
       </div>
@@ -293,7 +310,7 @@
           <div style="display:flex; flex-direction:column; gap:25px;">
             <div class="card">
               <div class="ct">Formato Regional</div>
-              <select class="in" style="margin-bottom: 10px;">
+              <select class="in" style="margin-bottom: 0;">
                 <option value="AR">Argentina</option>
                 <option value="UY">Uruguay</option>
                 <option value="CL">Chile</option>
@@ -301,7 +318,7 @@
               </select>
             </div>
             <div class="card">
-              <div class="ct">Tus Medios de Pago</div>
+              <div class="ct">Medios de Pago (Corriente)</div>
               <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
                 <input type="text" class="in" placeholder="Ej: Efectivo, Naranja X...">
                 <input type="color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;" value="#12e091">
@@ -323,11 +340,6 @@
                 <p style="font-size:13px; color:var(--text3); text-align:center; padding:10px;">Sin destinos creados</p>
                 <button class="btn-icon" style="width:100%; font-size: 12px; margin-top:10px;">+ Crear Destino</button>
               </div>
-              <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-                <h4 style="color: var(--green); margin-bottom: 15px; font-size: 14px;">Ahorro</h4>
-                <p style="font-size:13px; color:var(--text3); text-align:center; padding:10px;">Sin destinos creados</p>
-                <button class="btn-icon" style="width:100%; font-size: 12px; margin-top:10px;">+ Crear Destino</button>
-              </div>
             </div>
           </div>
         </div>
@@ -336,6 +348,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
