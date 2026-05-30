@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hoy = new Date();
     document.getElementById('mlabel').innerText = `${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
 
-    // Fecha Automática Correcta a todos los inputs date
     const fechaHoyString = hoy.toISOString().split('T')[0];
     document.querySelectorAll('input[type="date"], .input-fecha').forEach(input => {
         if (!input.value) input.value = fechaHoyString;
@@ -40,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(slDes) slDes.addEventListener('input', updateRegla);
 });
 
-// LOGOUT / SALIR (Devuelve al inicio de sesión)
+// LOGOUT / SALIR
 function logout() {
     document.getElementById('app').style.display = 'none';
     document.getElementById('auth-screen').style.display = 'flex';
@@ -118,7 +117,9 @@ function toggleCheck(checkbox, rowId) {
     else row.classList.remove('item-completado');
 }
 
-// AHORROS (Cambio de Títulos según el Tipo)
+// ==========================================
+// AHORROS - LÓGICA INLINE BILLETERAS
+// ==========================================
 function setAhorroTipo() {
     const tipo = document.getElementById('ahorro-tipo').value;
     const lblOrigen = document.getElementById('lbl-origen');
@@ -136,7 +137,34 @@ function setAhorroTipo() {
     }
 }
 
+function abrirModalNuevaBilletera() {
+    document.getElementById('modal-nueva-billetera').style.display = 'block';
+}
+
+function verificarNuevaBilletera(selectObj) {
+    if(selectObj.value === 'nueva') {
+        selectObj.value = ""; // Resetea el select
+        abrirModalNuevaBilletera();
+    }
+}
+
+function cerrarNuevaBilletera() {
+    document.getElementById('modal-nueva-billetera').style.display = 'none';
+    document.getElementById('nueva-bill-nombre').value = '';
+}
+
+function guardarNuevaBilletera() {
+    // Almacenamiento en DB irá aquí luego. Por ahora cerramos el modal.
+    cerrarNuevaBilletera();
+    // Simular que apareció
+    document.getElementById('toast').innerText = "Billetera creada con éxito";
+    document.getElementById('toast').classList.add('show');
+    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+}
+
+// ==========================================
 // PRÉSTAMOS
+// ==========================================
 function setTipoPrestamo(tipo) {
     const btnMedeben = document.getElementById('p-btn-medeben');
     const btnYodebo = document.getElementById('p-btn-yodebo');
