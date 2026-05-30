@@ -60,24 +60,33 @@ input[type="checkbox"].check-rojo:checked::after { color: #ffffff; }
 .badge-red { background: var(--red); color: #ffffff; }
 .badge-neutral { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
 
-/* Puntos de Color para Alertas e Historial */
+/* Puntos de Color para Billeteras y Alertas */
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .dot-red { background: var(--red); }
 .dot-warning { background: var(--warning); }
 .dot-neutral { background: var(--text2); }
 
+/* Íconos Lineales para UI (Eliminar/Editar) */
+.ui-icon-btn { background: transparent; border: none; cursor: pointer; color: var(--text3); display: flex; align-items: center; justify-content: center; padding: 5px; border-radius: 4px; transition: 0.2s; }
+.ui-icon-btn:hover { color: var(--text); background: var(--bg); }
+.ui-icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Acordeón */
 .accordion-content { display: none; margin-top: 15px; flex-direction: column; gap: 10px; opacity: 0; transition: opacity 0.3s ease; }
 .accordion-content.show { display: flex; opacity: 1; }
 .icon-chevron { transition: transform 0.3s ease; }
 .icon-chevron.open { transform: rotate(180deg); }
 
+/* Sliders y Dona Centrada */
 input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: var(--border); border-radius: 4px; outline: none; margin: 15px 0; }
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg2); box-shadow: 0 0 0 4px rgba(124, 109, 250, 0.1); transition: 0.2s; }
 .dona-placeholder { width: 140px; height: 140px; border-radius: 50%; border: 18px solid var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text3); font-weight: 600; flex-shrink: 0; margin: 0 auto; }
 .chart-empty { background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 13px; font-weight: 500; border: 1px dashed var(--border); padding: 20px; text-align: center; }
 
+/* Formularios Colapsables y Modales Inline */
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .form-panel { display: none; animation: slideDown 0.3s ease; margin-bottom: 30px; border: 1px solid var(--accent) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+.modal-inline { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 10; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: slideDown 0.3s ease; }
 
 /* =========================================
    ESTRUCTURA DASHBOARD WEB (Escritorio)
@@ -149,14 +158,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
    ========================================= */
 @media (max-width: 768px) {
   #app { flex-direction: column !important; }
-  
-  /* Cabecera Móvil Limpia */
   .mobile-header { display: flex !important; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-  
-  /* Ocultar Barra Lateral Desktop */
   .sidebar > div:not(.nav) { display: none !important; } 
   
-  /* Navegación Inferior Nativa */
   .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; padding: 0; background: rgba(30, 30, 36, 0.98); backdrop-filter: blur(15px); border-right: none; border-top: 1px solid var(--border); flex-direction: row; justify-content: center; z-index: 1000; }
   [data-theme="light"] .sidebar { background: rgba(255, 255, 255, 0.98); }
   
@@ -167,24 +171,16 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
   .nb.active { color: var(--accent) !important; }
   .nb.active svg { stroke: var(--accent); }
   
-  /* Contenedor Principal Adaptado */
   .main-content { padding: 15px; padding-bottom: 100px; height: calc(100vh - 75px); overflow-y: auto; }
-  
-  /* Tarjetas ocupan todo el ancho, sin márgenes laterales extra */
   .card { padding: 20px 15px; border-radius: 16px; margin-bottom: 15px; }
   
-  /* Forzamos 1 sola columna para TODO */
   .mg, .mg-ahorro, .resumen-grid, .ahorros-grid, .prestamos-grid, .cfg-grid-2 { grid-template-columns: 1fr !important; gap: 15px; display: flex; flex-direction: column; }
-  
-  /* Formularios en 1 columna */
   #campos-gasto > div, #campos-prestamo-fechas, #grid-billetera-sobre, #grid-ahorro-mov { grid-template-columns: 1fr !important; gap: 0; }
-  .in { margin-bottom: 15px !important; } /* Asegura separación entre inputs apilados */
+  .in { margin-bottom: 15px !important; }
   
-  /* Títulos más amigables */
   .header h2 { font-size: 22px; }
   .met .mv { font-size: 22px; }
   
-  /* Evitar flex direccional en Distribución */
   #resumen-distribucion > div { flex-direction: column; text-align: center; }
   .dona-placeholder { margin: 0 auto 20px auto; }
 }
