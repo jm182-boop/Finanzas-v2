@@ -1,5 +1,5 @@
 /* =========================================
-   VARIABLES GLOBALES (Modo Oscuro)
+   VARIABLES GLOBALES (Fieles al PDF)
    ========================================= */
 :root {
   --bg: #141416;
@@ -11,7 +11,7 @@
   --accent: #7c6dfa;
   --accent-hover: #9285ff;
   --red: #ff5757;
-  --green: #00e676;
+  --green: #12e091; /* Verde Exacto Solicitado */
   --font: 'Poppins', sans-serif;
 }
 
@@ -23,76 +23,37 @@
   --border: #e0e0e0;
 }
 
-/* =========================================
-   RESET Y BASE
-   ========================================= */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
 body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-/* Eliminar flechas de inputs numéricos */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
-
-/* Calendario */
 input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; filter: invert(1); }
 [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
 
-/* Inputs y Botones Generales */
 .in { width: 100%; padding: 12px 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; outline: none; transition: 0.3s; }
 .in:focus { border-color: var(--accent); }
 
 .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
 .btn:hover { background: var(--accent-hover); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 16px; gap: 8px; }
 .btn-icon:hover { background: var(--bg2); }
 
-/* =========================================
-   COMPONENTES PERSONALIZADOS (Diseño Fiel)
-   ========================================= */
-
-/* Checkbox Verde Cuadrado (Reemplaza el nativo feo) */
+/* Checkbox Personalizado Fiel al Diseño */
 input[type="checkbox"] {
-  appearance: none; -webkit-appearance: none;
-  width: 20px; height: 20px;
-  background-color: transparent;
-  border: 2px solid var(--border);
-  border-radius: 5px;
-  cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  appearance: none; -webkit-appearance: none; width: 20px; height: 20px; background-color: transparent; border: 2px solid var(--border); border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s ease; flex-shrink: 0;
 }
-input[type="checkbox"]:checked {
-  background-color: var(--green);
-  border-color: var(--green);
-}
-input[type="checkbox"]:checked::after {
-  content: '✔'; color: #141416; font-size: 12px; font-weight: 900;
-}
+input[type="checkbox"]:checked { background-color: var(--green); border-color: var(--green); }
+input[type="checkbox"]:checked::after { content: '✔'; color: #141416; font-size: 12px; font-weight: 900; }
 
-/* Sliders de Configuración (Línea blanca, control morado) */
+/* Sliders de Configuración */
 input[type="range"] {
-  -webkit-appearance: none; width: 100%; height: 6px;
-  background: #ffffff; border-radius: 4px; outline: none; margin: 15px 0;
+  -webkit-appearance: none; width: 100%; height: 4px; background: var(--border); border-radius: 4px; outline: none; margin: 10px 0;
 }
 input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--accent); cursor: pointer;
-  border: 3px solid var(--bg2); box-shadow: 0 0 5px rgba(0,0,0,0.3);
-}
-input[type="range"]::-moz-range-thumb {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--accent); cursor: pointer;
-  border: 3px solid var(--bg2); box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--bg2); box-shadow: 0 0 0 4px rgba(124, 109, 250, 0.2);
 }
 
-/* =========================================
-   PANTALLAS Y ESTRUCTURA LOGIN
-   ========================================= */
 .auth-wrap { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
 .auth-box { background: var(--bg2); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; border: 1px solid var(--border); }
 .auth-box h1 { color: var(--accent); margin-bottom: 5px; font-size: 32px; font-weight: 700; }
@@ -101,41 +62,42 @@ input[type="range"]::-moz-range-thumb {
 .auth-switch span { color: var(--accent); font-weight: 600; }
 .btn-eye { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--text3); display: flex; align-items: center; justify-content: center; padding: 0; transition: 0.3s; }
 .btn-eye svg { width: 20px; height: 20px; stroke: var(--text3); }
-.auth-forgot { font-size: 12px; color: var(--text3); cursor: pointer; transition: 0.2s; }
-.auth-forgot:hover { color: var(--accent); text-decoration: underline; }
 
 .page { display: none; padding-bottom: 40px; animation: fadeIn 0.3s ease; }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* =========================================
-   ESTRUCTURA PRINCIPAL DE LA APP
-   ========================================= */
 #app { display: flex; width: 100%; height: 100vh; overflow: hidden; }
+.mobile-header { display: none; }
 
-/* Sidebar (Escritorio) */
+/* Barra Lateral (Escritorio) */
 .sidebar { width: 250px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; z-index: 100; }
 .sidebar .logo { color: var(--accent); font-size: 28px; font-weight: 700; }
 .uemail { font-size: 12px; color: var(--text2); margin-bottom: 30px; word-break: break-all; }
 .nav { display: flex; flex-direction: column; gap: 5px; margin-bottom: auto; }
 .nb { background: transparent; border: none; color: var(--text2); padding: 12px 15px; text-align: left; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 12px; }
-.nb svg { display: none; } /* En PC ocultamos el SVG por ahora, solo texto */
+.nb svg { display: none; }
 .nb:hover { color: var(--text); background: rgba(255,255,255,0.03); }
 .nb.active { background: var(--accent); color: #fff; }
 
-/* Contenido Central */
 .main-content { flex: 1; overflow-y: auto; padding: 30px; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
 .header h2 { font-size: 20px; font-weight: 600; margin: 0; }
 
-/* Tarjetas y UI General */
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
 .ct { font-size: 12px; color: var(--text3); font-weight: 700; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
 
+/* Tabs y Filtros (Préstamos y Movimientos) */
 .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
 .tb { flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.3s; }
 .tb.b-rojo.active { background: var(--red); color: white; border-color: var(--red); }
-.tb.b-verde.active { background: var(--green); color: white; border-color: var(--green); }
+.tb.b-verde.active { background: var(--green); color: var(--bg); border-color: var(--green); } /* Texto oscuro sobre verde para legibilidad */
+.tb.b-neutro.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+.filter-scroll::-webkit-scrollbar { display: none; }
+.pill { padding: 6px 16px; background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+.pill.active { background: var(--bg); color: var(--text); border-color: var(--accent); }
 
 .mg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
 .met { background: var(--bg2); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; }
@@ -144,65 +106,34 @@ input[type="range"]::-moz-range-thumb {
 .mv.bad { color: var(--red); }
 .mv.ok { color: var(--green); }
 
-/* Listas (Checklist y Tarjetas) */
-.li { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); }
-.li:last-child { border-bottom: none; padding-bottom: 0; }
-.li-desc { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 12px; }
-.li-monto { font-size: 15px; font-weight: 600; }
-
-/* Barras de Progreso 50/30/20 */
 .progress-wrap { margin-bottom: 18px; }
 .progress-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; font-weight: 500; color: var(--text2); }
 .progress-bar { width: 100%; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
 
-.cm { padding: 12px 16px; border-radius: 12px; max-width: 85%; line-height: 1.4; font-size: 14px; margin-bottom: 10px; }
-.cm.u { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-.cm.a { background: var(--bg); color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-
 #toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; transition: 0.3s; font-weight: 500; }
 #toast.show { bottom: 20px; }
 
 /* =========================================
-   ADAPTACIÓN MÓVIL PERFECTA (Estilo App)
+   ADAPTACIÓN MÓVIL (Barra inferior ajustada para 6 ítems)
    ========================================= */
 @media (max-width: 768px) {
   #app { flex-direction: column !important; }
-  
-  /* Área central con espacio abajo para que no tape el menú */
-  .main-content { padding: 20px 15px; padding-bottom: 100px; height: 100vh; overflow-y: auto; }
-  
-  /* Menú Inferior Fijo, Flotante y Elegante */
-  .sidebar {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-    padding: 0 10px; border-right: none; border-top: 1px solid var(--border);
-    flex-direction: row; justify-content: space-around; align-items: center;
-    background: rgba(30, 30, 36, 0.95); backdrop-filter: blur(10px); z-index: 1000;
-  }
-  
-  /* Esconder el Logo y los botones del Tema/Salir de la barra inferior */
+  .mobile-header { display: flex !important; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
   .sidebar > div:first-child, .sidebar > div:last-child { display: none; }
   
-  /* Contenedor de Botones de Navegación */
-  .nav { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; margin: 0; gap: 0; }
+  .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; padding: 0; background: rgba(30, 30, 36, 0.98); backdrop-filter: blur(10px); border-right: none; border-top: 1px solid var(--border); flex-direction: row; justify-content: center; z-index: 1000; }
+  [data-theme="light"] .sidebar { background: rgba(255, 255, 255, 0.98); }
   
-  /* Botón individual del menú móvil */
-  .nb {
-    flex: 1; padding: 5px 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; font-size: 10px; border-radius: 0; background: transparent !important; color: var(--text3);
-  }
+  .nav { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; gap: 0; margin: 0; padding: 0 5px; }
+  .nb { flex: 1; padding: 8px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 9px; border-radius: 0; background: transparent !important; color: var(--text3); }
+  .nb svg { display: block; width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; margin-bottom: 2px; }
+  .nb span { display: block; font-weight: 600; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; }
   
-  /* Obligamos a que los iconos SVG aparezcan en celular */
-  .nb svg { display: block; width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
-  
-  /* Texto debajo del icono */
-  .nb span { display: block; font-weight: 600; letter-spacing: 0.3px; }
-  
-  /* Estados Activos en Celular */
   .nb.active { color: var(--accent) !important; }
   .nb.active svg { stroke: var(--accent); }
   
-  /* Convertir Grillas a una sola columna para que no se amontone nada */
+  .main-content { padding: 15px 15px; padding-bottom: 90px; height: calc(100vh - 65px); overflow-y: auto; }
   .mg, .resumen-grid, .ahorros-grid, .prestamos-grid, .cfg-grid, .cfg-grid-2 { grid-template-columns: 1fr !important; gap: 15px; }
-  #campos-gasto > div { grid-template-columns: 1fr !important; }
+  #campos-gasto > div, #campos-prestamo-fechas { grid-template-columns: 1fr !important; }
 }
