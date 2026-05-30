@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div id="toast"></div>
@@ -45,12 +46,30 @@
         <div class="uemail" id="uemail"></div>
       </div>
       <div class="nav">
-        <button class="nb active" onclick="sp('resumen', this)">Resumen</button>
-        <button class="nb" onclick="sp('historial', this)">Movimientos</button>
-        <button class="nb" onclick="sp('ahorros', this)">Ahorros</button>
-        <button class="nb" onclick="sp('prestamos', this)">Préstamos</button>
-        <button class="nb" onclick="sp('config', this)">Config</button>
-        <button class="nb" onclick="sp('ia', this)">Asistente IA</button>
+        <button class="nb active" onclick="sp('resumen', this)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Resumen</span>
+        </button>
+        <button class="nb" onclick="sp('historial', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          <span>Movimientos</span>
+        </button>
+        <button class="nb" onclick="sp('ahorros', this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span>Ahorros</span>
+        </button>
+        <button class="nb" onclick="sp('prestamos', this)">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Préstamos</span>
+        </button>
+        <button class="nb" onclick="sp('ia', this)">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span>IA</span>
+        </button>
+        <button class="nb" onclick="sp('config', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Config</span>
+        </button>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn-icon" onclick="toggleTheme()"><span id="icon-dark">🌙</span><span id="icon-light" style="display:none">☀️</span></button>
@@ -58,14 +77,20 @@
       </div>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" id="area-imprimible">
       
       <div id="page-resumen" class="page active">
-        <div class="header">
-          <button class="btn-icon" onclick="changeMonth(-1)">‹</button>
-          <h2 id="mlabel">Mes</h2>
-          <button class="btn-icon" onclick="changeMonth(1)">›</button>
+        <div class="header" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:15px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn-icon" onclick="changeMonth(-1)">‹</button>
+            <h2 id="mlabel">Mes</h2>
+            <button class="btn-icon" onclick="changeMonth(1)">›</button>
+          </div>
+          <button class="btn-icon" onclick="descargarPDF()" style="font-size: 13px; padding: 8px 15px; border-color: var(--accent); color: var(--accent); font-weight: 600;">
+            📄 Descargar PDF
+          </button>
         </div>
+        
         <div class="mg">
           <div class="met"><div class="ml">Ingresos</div><div class="mv" id="r-ingresos">$0</div></div>
           <div class="met"><div class="ml">Gastado</div><div class="mv bad" id="r-gastos">$0</div></div>
@@ -73,18 +98,10 @@
         </div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
-          <div class="card" id="resumen-barras">
-            </div>
-          
+          <div class="card" id="resumen-barras"></div>
           <div style="display:flex;flex-direction:column;gap:20px;">
-            <div class="card" id="resumen-checklist">
-               <div class="ct">Checklist de Pagos</div>
-               <div id="lista-checklist"></div>
-            </div>
-            <div class="card" id="resumen-tarjetas">
-               <div class="ct">Por Tarjeta / Billetera</div>
-               <div id="lista-tarjetas"></div>
-            </div>
+            <div class="card" id="resumen-checklist"></div>
+            <div class="card" id="resumen-tarjetas"></div>
           </div>
         </div>
       </div>
@@ -98,38 +115,34 @@
             <button id="bti" class="tb b-verde" onclick="setTipo('ingreso')">Ingreso</button>
           </div>
           
-          <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado, Sueldo...)">
-          <input type="text" id="gmonto" class="in" placeholder="Monto total ($) - Ej: 1500,50" onkeyup="fmtI(this)">
+          <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado, Alquiler...)">
+          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this)">
           
           <div id="campos-gasto">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <select id="gcat" class="in">
-                <option value="">Selecciona Billetera/Tarjeta</option>
-              </select> 
+              <select id="gcat" class="in"><option value="">Selecciona Billetera/Tarjeta</option></select> 
               <input type="date" id="gfecha" class="in">
             </div>
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-              <input type="text" id="gcuotas" class="in" placeholder="Total cuotas (Opcional)" onkeyup="fmtI(this)">
-              <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual (Opcional)" onkeyup="fmtI(this)">
+              <input type="text" id="gcuotas" class="in" placeholder="Total cuotas" onkeyup="fmtI(this)">
+              <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual" onkeyup="fmtI(this)">
             </div>
 
             <label style="display:flex;align-items:center;gap:8px;margin-top:15px;font-size:13px;cursor:pointer;">
               <input type="checkbox" id="chk-compartido" onchange="toggleCompartido()">
-              Marcar como Gasto Compartido (Reintegro)
+              Marcar como Gasto Compartido
             </label>
             
             <div id="caja-compartido" style="display:none;background:var(--bg);padding:15px;border-radius:8px;margin-top:10px;border:1px solid var(--border);">
-              <input type="text" id="comp-quien" class="in" placeholder="¿Con quién? (Ej: Mi hermano, Sofi...)">
+              <input type="text" id="comp-quien" class="in" placeholder="¿Con quién? (Ej: Familiar, Compañero...)">
               <input type="number" id="comp-pct" class="in" placeholder="Tu porcentaje a pagar (Ej: 50)" style="margin-bottom:0;">
             </div>
           </div>
           
-          <div id="campos-ingreso" style="display:none;">
-            <input type="date" id="gfechai" class="in">
-          </div>
+          <div id="campos-ingreso" style="display:none;"><input type="date" id="gfechai" class="in"></div>
           
-          <input type="text" id="gnota" class="in" placeholder="Notas adicionales (Opcional)..." style="margin-top:10px;">
+          <input type="text" id="gnota" class="in" placeholder="Notas adicionales..." style="margin-top:10px;">
           <button class="btn" id="btnagregar" onclick="agregarMov()" style="margin-top:15px;background:var(--red);">Guardar gasto</button>
         </div>
 
@@ -140,85 +153,72 @@
         <div id="ahero"></div>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="ahorros-grid">
           <div>
-            <div class="card" style="margin-bottom:20px;">
-              <div class="ct">Por billetera</div>
-              <div id="bill-list"></div>
-            </div>
+            <div class="card" style="margin-bottom:20px;"><div class="ct">Por billetera</div><div id="bill-list"></div></div>
             <div class="card">
               <div class="ct">Registrar Depósito / Retiro</div>
               <input type="text" id="amonto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <select id="abilletera" class="in"></select>
-                <input type="date" id="afecha" class="in">
-              </div>
-              <input type="text" id="anota" class="in" placeholder="Ej: Compra de MEP, Plazo Fijo...">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><select id="abilletera" class="in"></select><input type="date" id="afecha" class="in"></div>
+              <input type="text" id="anota" class="in" placeholder="Ej: Compra Dólares...">
               <button class="btn" id="btnahorro" onclick="agregarAhorro()" style="margin-top:15px;">Guardar registro</button>
             </div>
           </div>
-          <div class="card">
-            <div class="ct">Historial</div>
-            <div id="ahist"></div>
-          </div>
+          <div class="card"><div class="ct">Historial</div><div id="ahist"></div></div>
         </div>
       </div>
 
       <div id="page-prestamos" class="page">
         <div class="header"><h2>Control de Préstamos</h2></div>
-        
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="prestamos-grid">
           <div class="card">
             <div class="ct">Nuevo Préstamo</div>
-            <input type="text" id="ppersona" class="in" placeholder="Persona / Deudor (Ej: Carlos)">
-            <input type="text" id="pdesc" class="in" placeholder="Motivo (Ej: TV, Dinero...)">
-            <input type="text" id="pmonto" class="in" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <input type="date" id="pfecha" class="in">
-                <input type="text" id="pcuotas" class="in" placeholder="Cuotas (Dejar vacío si es 1)" onkeyup="fmtI(this)">
-            </div>
-            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Agregar Préstamo</button>
+            <input type="text" id="ppersona" class="in" placeholder="Persona / Deudor">
+            <input type="text" id="pdesc" class="in" placeholder="Motivo">
+            <input type="text" id="pmonto" class="in" placeholder="Monto Total" onkeyup="fmtI(this)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><input type="date" id="pfecha" class="in"><input type="text" id="pcuotas" class="in" placeholder="Cuotas" onkeyup="fmtI(this)"></div>
+            <button class="btn" id="btn-prestamo" onclick="agregarPrestamo()" style="margin-top:15px;">Agregar</button>
           </div>
-
-          <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
-            </div>
+          <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;"></div>
         </div>
       </div>
 
       <div id="page-config" class="page">
         <div class="header"><h2>Configuración y Estructura</h2></div>
         
-        <div class="card" style="margin-bottom:20px;">
-          <div class="ct">Reglas y Parámetros Base</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;" class="cfg-grid">
-            <div><label style="font-size:12px;color:var(--text3)">Sueldo Base ($)</label><input type="text" id="cfg-sueldo" class="in" onkeyup="fmtI(this)"></div>
-            <div>
-              <label style="font-size:12px;color:var(--text3)">Regla (%) Nec/Des/Aho</label>
-              <input type="text" id="cfg-regla" class="in" placeholder="Ej: 50/30/20">
-            </div>
-            <div><label style="font-size:12px;color:var(--text3)">Nombres (Tú / Pareja)</label><input type="text" id="cfg-nombres" class="in" placeholder="Ej: Yo / Sofi"></div>
-          </div>
-          <button class="btn" onclick="guardarCfg()" style="margin-top:15px;width:auto;padding:0 20px;">Guardar Parámetros</button>
-        </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="cfg-grid-2">
+          
           <div class="card">
-            <div class="ct">Tus Sobres (Presupuestos)</div>
-            <input type="text" id="sob-nombre" class="in" placeholder="Nombre (Ej: Comida casa)">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-              <select id="sob-bucket" class="in">
-                <option value="necesidades">Necesidad</option>
-                <option value="deseos">Deseo</option>
-                <option value="ahorro">Ahorro / Extra</option>
-              </select>
-              <input type="text" id="sob-limite" class="in" placeholder="Tope mensual ($)" onkeyup="fmtI(this)">
+            <div class="ct">Regla de Distribución</div>
+            
+            <div style="margin-bottom:15px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:var(--text3); margin-bottom:5px; text-transform:uppercase;">
+                <span>Necesidades — <span id="v-nec">50</span>%</span>
+                <span style="color:var(--text); font-size:14px;">50%</span>
+              </div>
+              <input type="range" id="cfg-nec" min="0" max="100" value="50">
             </div>
-            <button class="btn" onclick="agregarSobre()" style="margin-top:15px;">Crear Sobre</button>
-            <div id="lista-sobres" style="margin-top:25px;"></div>
+            
+            <div style="margin-bottom:15px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:var(--text3); margin-bottom:5px; text-transform:uppercase;">
+                <span>Deseos — <span id="v-des">30</span>%</span>
+                <span style="color:var(--text); font-size:14px;">30%</span>
+              </div>
+              <input type="range" id="cfg-des" min="0" max="100" value="30">
+            </div>
+            
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text3); margin-bottom:10px; text-transform:uppercase;">Ahorro — <span id="v-aho">20</span>% (Calculado)</div>
+              <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px solid var(--border); font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px;">
+                <span id="txt-aho" style="color:var(--accent);">20%</span> <span style="color:var(--text2);">→</span> $<span id="txt-aho-monto">0</span> <span style="color:var(--text2); font-weight:400;">/ mes</span>
+              </div>
+            </div>
+            
+            <button class="btn" onclick="guardarCfg()" style="margin-top:20px;">Guardar Configuración</button>
           </div>
 
           <div class="card">
             <div class="ct">Tus Billeteras / Tarjetas</div>
             <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Binance, Tarjeta Casa...)">
+              <input type="text" id="bill-nombre" class="in" placeholder="Nombre (Ej: Efectivo, Tarjeta...)">
               <input type="color" id="bill-color" class="in" style="padding:0;height:42px;width:100%;cursor:pointer;border:none;border-radius:8px;" value="#7c6dfa">
             </div>
             <button class="btn" onclick="agregarBilletera()" style="margin-top:15px;">Crear Billetera</button>
@@ -233,29 +233,24 @@
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
             <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Gastos en cuotas';">Gastos en cuotas</button>
             <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Estado de mi regla';">Estado de regla</button>
-            <button class="btn-icon" style="width:auto;padding:5px 12px;font-size:12px;border-radius:15px;" onclick="document.getElementById('cinput').value='Mis ahorros';">Mis ahorros</button>
           </div>
-          
           <div id="chat-msgs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px;padding-right:10px;margin-bottom:15px;">
              <div class="cm a">¡Hola! Soy tu asistente financiero. Tengo acceso completo a tus registros. Pregúntame lo que quieras.</div>
           </div>
-          
           <div style="display:flex;gap:10px;margin-top:auto;">
             <input type="text" id="cinput" class="in" style="margin-bottom:0;" placeholder="Pregúntame cualquier cosa..." onkeypress="if(event.key==='Enter')sendChat()">
             <button class="btn" style="width:50px;flex-shrink:0;" onclick="sendChat()">➔</button>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <script src="utils.js?v=2"></script>
-  <script src="supabase-client.js?v=2"></script>
-  <script src="gemini.js?v=2"></script>
-  <script src="charts.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="utils.js?v=4"></script>
+  <script src="supabase-client.js?v=4"></script>
+  <script src="gemini.js?v=4"></script>
+  <script src="charts.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
