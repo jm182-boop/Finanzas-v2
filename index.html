@@ -87,8 +87,8 @@
                 <div class="ct" style="margin-bottom: 15px;">Alertas y Recordatorios</div>
                 <div id="alertas-list">
                    <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
-                     <svg class="alert-icon neutral" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> 
-                     <span>Sin alertas activas.</span>
+                     <span class="dot dot-neutral"></span>
+                     <span>Sin alertas activas en este periodo.</span>
                    </div>
                 </div>
             </div>
@@ -103,9 +103,9 @@
               <div class="ct">POR MEDIO DE PAGO</div>
               <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Sin movimientos</span><span class="li-monto" style="font-size:14px;">$0</span></div>
             </div>
-            <div class="card" id="resumen-distribucion">
+            <div class="card" style="flex-grow: 1;">
               <div class="ct">DISTRIBUCIÓN</div>
-              <div style="display:flex; align-items:center; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:center; flex-grow: 1; min-height: 150px;">
                 <div class="dona-placeholder">Sin datos</div>
               </div>
             </div>
@@ -156,16 +156,16 @@
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
         </div>
 
-        <input type="text" class="in" placeholder="Buscar por descripción, nota, persona..." style="max-width: 500px; background: var(--bg2);">
+        <input type="text" class="in" placeholder="Buscar por descripción..." style="max-width: 500px; background: var(--bg2);">
         <div class="filter-scroll">
           <button class="pill active">Todo</button><button class="pill">Gastos</button><button class="pill">Ingresos</button><button class="pill">En cuotas</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
-          <div class="card">
+          <div class="card" style="flex-grow: 1;">
             <div class="ct">Registros del Mes</div>
             <p style="color:var(--text3); font-size:13px; text-align:center; padding: 20px;">No hay registros aún.</p>
           </div>
-          <div class="card">
+          <div class="card" style="flex-grow: 1;">
             <div class="ct">Comparativa 6 Meses</div>
             <div class="chart-empty" style="height:250px;">Sin datos suficientes</div>
           </div>
@@ -187,29 +187,24 @@
           
           <div style="display:flex; flex-direction:column; gap:20px;">
             <div class="card">
-              <div class="ct" style="display:flex; justify-content:space-between;">
+              <div class="ct" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Mis Billeteras</span>
-                <button style="background:none; border:none; color:var(--accent); font-size:12px; font-weight:700; cursor:pointer;" onclick="togglePanel('panel-nueva-billetera')">+ Nueva billetera</button>
+                <button class="btn-icon" style="padding:4px 10px; font-size:11px; border:none; color:var(--accent);" onclick="togglePanel('panel-nueva-billetera')">+ Nueva billetera</button>
               </div>
               
               <div id="panel-nueva-billetera" style="display:none; background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px;">
-                <input type="text" class="in" placeholder="Nombre (Ej: Binance, USD...)" style="margin-bottom:10px; padding:10px;">
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                  <input type="color" class="in" value="#f5a623" style="padding:0; height:38px; width:40px; border:none; border-radius:8px; cursor:pointer;">
-                  <button class="btn" style="padding:10px; font-size:12px; flex:1;">Guardar Billetera</button>
+                <input type="text" class="in" placeholder="Nombre (Ej: Binance, Efectivo USD...)" style="margin-bottom:10px; padding:10px;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <input type="color" class="in" value="#f5a623" style="padding:0; height:38px; width:45px; border:none; border-radius:8px; cursor:pointer; margin-bottom:0;">
+                  <button class="btn" style="padding:10px; font-size:12px; flex:1; margin-bottom:0;">Guardar</button>
                 </div>
               </div>
               
-              <p style="color:var(--text3); font-size:13px; text-align:center; padding:10px;">Sin billeteras creadas.</p>
+              <p style="color:var(--text3); font-size:13px; text-align:center; padding:10px;">Aún no has creado ninguna billetera.</p>
             </div>
             
-            <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin datos</div></div>
-            <div class="card">
-              <div class="ct">Distribución</div>
-              <div style="display:flex; align-items:center; gap:20px;">
-                <div class="dona-placeholder" style="width:120px; height:120px;">Sin datos</div>
-              </div>
-            </div>
+            <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin movimientos de ahorro</div></div>
+            <div class="card" style="flex-grow: 1;"><div class="ct">Distribución</div><div class="chart-empty" style="height:150px; border:none; background:transparent;">Añade fondos para ver la distribución</div></div>
           </div>
           
           <div style="display:flex; flex-direction:column; gap:20px;">
@@ -224,8 +219,15 @@
               <input type="text" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
-                <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen (Medio de pago)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
-                <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
+                <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen (Medio de pago)</label>
+                  <select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
+                </div>
+                <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label>
+                  <select class="in" style="margin-bottom:0;">
+                    <option value="">Seleccionar...</option>
+                    <option value="nueva" style="font-weight:600; color:var(--accent);">+ Crear nueva billetera...</option>
+                  </select>
+                </div>
               </div>
               
               <input type="date" class="in input-fecha">
@@ -233,7 +235,7 @@
               <button class="btn" style="background:var(--accent);">Guardar Movimiento</button>
             </div>
             
-            <div class="card"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
+            <div class="card" style="flex-grow: 1;"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
           </div>
         </div>
       </div>
@@ -282,7 +284,7 @@
           </div>
           <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px;padding-right:10px;margin-bottom:20px;">
              <div style="background:var(--bg); color:var(--text); padding:16px; border-radius:16px; border-bottom-left-radius:4px; max-width:85%; border:1px solid var(--border); font-size:14px; line-height:1.5;">
-                ¡Hola! Soy tu asistente financiero. Tengo acceso a tus registros y presupuestos para generar reportes visuales.
+                ¡Hola! Soy tu asistente financiero. Tengo acceso a tus registros y presupuestos.
              </div>
           </div>
           <div style="display:flex;gap:12px;margin-top:auto;">
@@ -320,8 +322,8 @@
             <div class="card">
               <div class="ct">Medios de Pago (Corriente)</div>
               <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-                <input type="text" class="in" placeholder="Ej: Efectivo, Naranja X...">
-                <input type="color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;" value="#12e091">
+                <input type="text" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
+                <input type="color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#12e091">
               </div>
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);">+ Añadir Medio de Pago</button>
             </div>
@@ -348,6 +350,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
