@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Establecer la fecha de hoy automáticamente en los inputs de fecha
     const fechaHoyString = hoy.toISOString().split('T')[0];
-    document.querySelectorAll('input[type="date"]').forEach(input => {
+    document.querySelectorAll('.input-fecha').forEach(input => {
         if (!input.value) input.value = fechaHoyString;
     });
 
@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         lblDes.innerText = `${d}%`;
         lblAho.innerText = `${a}%`;
     }
-    slNec.addEventListener('input', updateRegla);
-    slDes.addEventListener('input', updateRegla);
+    if(slNec) slNec.addEventListener('input', updateRegla);
+    if(slDes) slDes.addEventListener('input', updateRegla);
 });
 
 // NAVEGACIÓN Y PANELES
@@ -68,11 +68,11 @@ function toggleAccordion(contentId, iconId) {
     }
 }
 
-// FORMATEO DE MILES VISUAL ("2200000" -> "2.200.000")
+// FORMATEO DE MILES VISUAL
 function fmtI(input) {
-    let val = input.value.replace(/\D/g, ''); // Limpiar no-números
+    let val = input.value.replace(/\D/g, '');
     if(val === '') { input.value = ''; return; }
-    input.value = new Intl.NumberFormat('es-AR').format(val); // Formatear a vista argentina
+    input.value = new Intl.NumberFormat('es-AR').format(val);
 }
 
 function limpiarInputs(contenedorId) {
@@ -82,30 +82,26 @@ function limpiarInputs(contenedorId) {
     }
 }
 
-// LÓGICA DE MOVIMIENTOS Y CHECKBOX ROJO
+// LÓGICA DE MOVIMIENTOS
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active');
     document.getElementById('bti').classList.remove('active');
     const btnAgregar = document.getElementById('btnagregar');
     const chkCompartido = document.getElementById('chk-compartido');
     
-    limpiarInputs('panel-registro'); // Limpiar para no cruzar datos
+    limpiarInputs('panel-registro'); 
     
     if(tipo === 'gasto') {
         document.getElementById('btg').classList.add('active');
         document.getElementById('campos-gasto').style.display = 'block';
         document.getElementById('campos-ingreso').style.display = 'none';
         btnAgregar.style.background = 'var(--red)';
-        
-        // Poner checkbox rojo
         if (chkCompartido) chkCompartido.classList.add('check-rojo');
     } else {
         document.getElementById('bti').classList.add('active');
         document.getElementById('campos-gasto').style.display = 'none';
         document.getElementById('campos-ingreso').style.display = 'block';
         btnAgregar.style.background = 'var(--green)';
-        
-        // Quitar rojo para ingreso
         if (chkCompartido) chkCompartido.classList.remove('check-rojo');
     }
 }
@@ -119,6 +115,24 @@ function toggleCheck(checkbox, rowId) {
     const row = document.getElementById(rowId);
     if (checkbox.checked) row.classList.add('item-completado');
     else row.classList.remove('item-completado');
+}
+
+// LÓGICA DE AHORROS (Doble Partida Dinámica)
+function setAhorroTipo() {
+    const tipo = document.getElementById('ahorro-tipo').value;
+    const lblOrigen = document.getElementById('lbl-origen');
+    const lblDestino = document.getElementById('lbl-destino');
+    
+    if(tipo === 'aporte') {
+        lblOrigen.innerText = 'Origen (Medio de pago)';
+        lblDestino.innerText = 'Destino (Billetera Ahorro)';
+    } else if(tipo === 'retiro') {
+        lblOrigen.innerText = 'Origen (Billetera Ahorro)';
+        lblDestino.innerText = 'Destino (Medio de pago)';
+    } else {
+        lblOrigen.innerText = 'Origen (Billetera Ahorro)';
+        lblDestino.innerText = 'Destino (Billetera Ahorro)';
+    }
 }
 
 // LÓGICA DE PRÉSTAMOS
@@ -159,5 +173,17 @@ function toggleTheme(forceLight = false) {
         document.querySelector('.icon-dark-m').style.display = 'inline'; 
         document.querySelector('.icon-light-m').style.display = 'none';
         localStorage.setItem('theme', 'dark');
+    }
+}
+
+function togglePwd() {
+    const pwd = document.getElementById('a-pwd');
+    const svg = document.querySelector('.btn-eye svg');
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+        pwd.type = 'password';
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
     }
 }
