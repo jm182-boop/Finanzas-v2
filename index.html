@@ -11,6 +11,7 @@
 <body>
   <div id="toast"></div>
 
+  <!-- LOGIN -->
   <div id="auth-screen" class="auth-wrap">
     <div class="auth-box">
       <h1 class="logo">fin.</h1>
@@ -26,16 +27,22 @@
     </div>
   </div>
 
+  <!-- APP PRINCIPAL -->
   <div id="app" style="display:none;">
     
+    <!-- CABECERA MÓVIL (SVG Correcto, Sin Emojis) -->
     <div class="mobile-header">
       <div class="logo" style="font-size:26px; color:var(--accent); font-weight:800; letter-spacing:-1px;">fin.</div>
       <div style="display:flex; gap:12px;">
-        <button class="btn-icon" onclick="toggleTheme()" style="padding:8px;"><span class="icon-dark-m">🌙</span><span class="icon-light-m" style="display:none">☀️</span></button>
+        <button class="btn-icon" onclick="toggleTheme()" style="padding:8px;">
+          <svg class="icon-dark-m" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-light-m" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
         <button class="btn-icon" onclick="logout()" style="padding:8px 12px; font-size: 12px; border:none; background:var(--bg3);">Salir</button>
       </div>
     </div>
 
+    <!-- MENÚ -->
     <div class="sidebar">
       <div>
         <div class="logo">fin.</div>
@@ -50,16 +57,21 @@
         <button class="nb" onclick="sp('config', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configuración</span></button>
       </div>
       <div style="display:flex;gap:10px;">
-        <button class="btn-icon" onclick="toggleTheme()"><span id="icon-dark">🌙</span><span id="icon-light" style="display:none">☀️</span></button>
+        <button class="btn-icon" onclick="toggleTheme()">
+          <svg id="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg id="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
         <button class="btn-icon" onclick="logout()" style="flex:1">Salir</button>
       </div>
     </div>
 
+    <!-- CONTENIDO CENTRAL -->
     <div class="main-content" id="area-imprimible">
       
+      <!-- 1. RESUMEN MAQUETADO DESDE EL INICIO (IDÉNTICO AL PDF) -->
       <div id="page-resumen" class="page active">
         <div class="header">
-          <div style="display:flex; align-items:center; gap:10px;"><button class="btn-icon" onclick="changeMonth(-1)">‹</button><h2 class="mlabel">Mes</h2><button class="btn-icon" onclick="changeMonth(1)">›</button></div>
+          <div style="display:flex; align-items:center; gap:10px;"><button class="btn-icon" onclick="changeMonth(-1)">‹</button><h2 class="mlabel">Mayo 2026</h2><button class="btn-icon" onclick="changeMonth(1)">›</button></div>
           <button class="btn-icon" onclick="descargarPDF()" style="font-size: 13px; color: var(--accent); border-color:var(--accent);">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Descargar PDF
           </button>
@@ -69,15 +81,48 @@
           <div class="met"><div class="ml">Gastado</div><div class="mv bad" id="r-gastos">$0</div></div>
           <div class="met"><div class="ml">Disponible</div><div class="mv ok" id="r-disponible">$0</div></div>
         </div>
+        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
-          <div class="card" id="resumen-barras"></div>
+          <div class="card" id="resumen-barras">
+            <div class="ct">REGLA 50/30/20</div>
+            <div class="progress-wrap"><div class="progress-header"><span>Necesidades (50%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
+            <div class="progress-wrap"><div class="progress-header"><span>Deseos (30%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--accent);"></div></div></div>
+            <div class="progress-wrap"><div class="progress-header"><span>Ahorro (20%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
+          </div>
           <div style="display:flex;flex-direction:column;gap:20px;">
-            <div class="card" id="resumen-checklist"></div>
-            <div class="card" id="resumen-tarjetas"></div>
+            <div class="card" id="resumen-checklist">
+              <div class="ct">CHECKLIST DE PAGOS</div>
+              <div class="li"><span class="li-desc"><input type="checkbox"> Alquiler / Hipoteca</span><span class="li-monto">$0</span></div>
+              <div class="li"><span class="li-desc"><input type="checkbox"> Expensas / Servicios</span><span class="li-monto">$0</span></div>
+              <div class="li"><span class="li-desc"><input type="checkbox"> Tarjeta de Crédito</span><span class="li-monto">$0</span></div>
+              <div class="li" style="border:none; padding-bottom:0;"><span class="li-desc"><input type="checkbox"> Préstamo (Cuota)</span><span class="li-monto">$0</span></div>
+            </div>
+            
+            <!-- TARJETAS Y DISTRIBUCIÓN -->
+            <div class="card" id="resumen-tarjetas">
+              <div class="ct">POR TARJETA</div>
+              <div class="li" style="padding:10px 0;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Billetera Principal</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+              <div class="li" style="padding:10px 0;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Tarjeta 1</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+              <div class="li" style="padding:10px 0;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Vivienda + Servicios</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+              <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Ahorro del mes</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+            </div>
+            <div class="card" id="resumen-distribucion">
+              <div class="ct">DISTRIBUCIÓN</div>
+              <div style="display:flex; align-items:center; gap:20px;">
+                <div class="dona-placeholder"></div>
+                <div style="flex:1;">
+                   <div class="li" style="padding:5px 0; border:none;"><span class="li-desc" style="font-size:13px; color:var(--text2);">• Billetera Principal</span><span class="li-monto" style="font-size:13px;">$0</span></div>
+                   <div class="li" style="padding:5px 0; border:none;"><span class="li-desc" style="font-size:13px; color:var(--text2);">• Tarjeta 1</span><span class="li-monto" style="font-size:13px;">$0</span></div>
+                   <div class="li" style="padding:5px 0; border:none;"><span class="li-desc" style="font-size:13px; color:var(--text2);">• Vivienda</span><span class="li-monto" style="font-size:13px;">$0</span></div>
+                   <div class="li" style="padding:5px 0; border:none;"><span class="li-desc" style="font-size:13px; color:var(--text2);">• Ahorro</span><span class="li-monto" style="font-size:13px;">$0</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- 2. MOVIMIENTOS -->
       <div id="page-movimientos" class="page">
         <div class="header">
           <h2>Movimientos</h2>
@@ -108,10 +153,10 @@
               <input type="text" id="gcuota-num" class="in" placeholder="N° Cuota actual" onkeyup="fmtI(this)">
             </div>
             <label style="display:flex;align-items:center;gap:10px;margin:10px 0 20px 0;font-size:14px;cursor:pointer;font-weight:500;">
-              <input type="checkbox" id="chk-compartido" onchange="toggleCompartido()"> Gasto compartido
+              <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
             </label>
             <div id="caja-compartido" style="display:none;background:var(--bg);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid var(--border);">
-              <input type="text" id="comp-quien" class="in" placeholder="Persona (Ej: Mamá, Amigo...)">
+              <input type="text" id="comp-quien" class="in" placeholder="Persona (Ej: Amigo...)">
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
                 <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
@@ -139,6 +184,7 @@
         </div>
       </div>
 
+      <!-- 3. AHORROS -->
       <div id="page-ahorros" class="page">
         <div class="hero-metric"><p>Total Ahorrado</p><h1 id="txt-ahorro-total">$0</h1></div>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="ahorros-grid">
@@ -158,6 +204,7 @@
         </div>
       </div>
 
+      <!-- 4. PRÉSTAMOS (Genérico y Limpio) -->
       <div id="page-prestamos" class="page">
         <div class="header">
           <h2>Préstamos</h2>
@@ -189,29 +236,26 @@
         </div>
 
         <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
+           <!-- PLANTILLA GENÉRICA DE PRÉSTAMO VACÍO -->
            <div class="card">
              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
                <div>
-                 <h3 style="font-size: 18px; font-weight: 700;">Carlos</h3>
+                 <h3 style="font-size: 18px; font-weight: 700;">Nombre de Persona</h3>
                  <span class="badge badge-green" style="margin-top:6px;">Me deben</span>
                </div>
                <div style="text-align: right;">
                  <p style="font-size: 11px; color: var(--text3); font-weight: 700; text-transform: uppercase;">Saldo Pendiente</p>
-                 <p style="font-size: 22px; font-weight: 800; color: var(--green); letter-spacing:-1px;">$210.000</p>
+                 <p style="font-size: 22px; font-weight: 800; color: var(--green); letter-spacing:-1px;">$0</p>
                </div>
              </div>
              <div style="border-top: 1px solid var(--border); padding-top: 15px;">
                <button style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center;">
-                 ▼ Ver detalle (2 préstamos)
+                 ▼ Ver detalle (1 préstamo)
                </button>
                <div style="margin-top: 15px; display:flex; flex-direction:column; gap:10px;">
                   <div style="background: var(--bg); padding: 15px; border-radius: 10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><p style="font-size:14px; font-weight:600;">Efectivo</p><p style="font-size:12px; color:var(--text3);">15/01/2026</p></div>
-                    <div style="text-align:right;"><p style="font-size:15px; font-weight:700;">$150.000</p><span class="badge badge-neutral" style="margin-top:4px;">Pendiente</span></div>
-                  </div>
-                  <div style="background: var(--bg); padding: 15px; border-radius: 10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><p style="font-size:14px; font-weight:600;">Electrodoméstico</p><p style="font-size:12px; color:var(--text3);">03/02/2026</p></div>
-                    <div style="text-align:right;"><p style="font-size:15px; font-weight:700;">$60.000</p><span class="badge badge-neutral" style="margin-top:4px;">Pendiente</span></div>
+                    <div><p style="font-size:14px; font-weight:600;">Concepto</p><p style="font-size:12px; color:var(--text3);">DD/MM/AAAA</p></div>
+                    <div style="text-align:right;"><p style="font-size:15px; font-weight:700;">$0</p><span class="badge badge-neutral" style="margin-top:4px;">Pendiente</span></div>
                   </div>
                </div>
              </div>
@@ -219,6 +263,7 @@
         </div>
       </div>
 
+      <!-- 5. IA ASISTENTE -->
       <div id="page-ia" class="page">
         <div class="header"><h2>Asistente Financiero</h2></div>
         <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 200px); max-height: 800px;">
@@ -239,6 +284,7 @@
         </div>
       </div>
 
+      <!-- 6. CONFIGURACIÓN -->
       <div id="page-config" class="page">
         <div class="header"><h2>Configuración y Estructura</h2></div>
         
@@ -312,8 +358,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="utils.js?v=11"></script>
-  <script src="supabase-client.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="utils.js?v=12"></script>
+  <script src="supabase-client.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
