@@ -1,22 +1,28 @@
 // ==========================================
-// app.js - MOTOR UI Y NAVEGACIÓN (100% FIEL AL PDF)
+// app.js - MOTOR UI (Formateo, Limpieza y Fechas)
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Establecer el Mes Actual automáticamente
+    // 1. Establecer el Mes Actual en la cabecera
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const hoy = new Date();
     document.getElementById('mlabel').innerText = `${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
 
-    // 2. Tema Oscuro/Claro
+    // 2. Establecer la fecha de hoy automáticamente en los inputs de fecha
+    const fechaHoyString = hoy.toISOString().split('T')[0];
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        if (!input.value) input.value = fechaHoyString;
+    });
+
+    // 3. Tema Oscuro/Claro
     if(localStorage.getItem('theme') === 'light') toggleTheme(true);
 
-    // 3. Inicializar App Visual (Temporalmente sin Auth hasta conectar Supabase)
+    // 4. Iniciar App (Mockup antes de Supabase)
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('uemail').innerText = 'gysusran@gmail.com';
 
-    // 4. Lógica Matemática de la Regla 50/30/20 (Recálculo Automático)
+    // 5. Lógica de la Regla 50/30/20
     const slNec = document.getElementById('sl-nec');
     const slDes = document.getElementById('sl-des');
     const lblNec = document.getElementById('lbl-nec');
@@ -26,21 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateRegla() {
         let n = parseInt(slNec.value);
         let d = parseInt(slDes.value);
-        // Evitar que superen el 100% entre ambos
         if (n + d > 100) { d = 100 - n; slDes.value = d; }
-        
-        let a = 100 - (n + d); // Ahorro es siempre el remanente matemático
+        let a = 100 - (n + d); 
         
         lblNec.innerText = `${n}%`;
         lblDes.innerText = `${d}%`;
         lblAho.innerText = `${a}%`;
     }
-
     slNec.addEventListener('input', updateRegla);
     slDes.addEventListener('input', updateRegla);
 });
 
-// Navegación Principal
+// NAVEGACIÓN Y PANELES
 function sp(id, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
@@ -48,27 +51,14 @@ function sp(id, btn) {
     if(btn) btn.classList.add('active');
 }
 
-// Abrir/Cerrar Formularios Colapsables
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
     panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 }
 
-// Interacción del Checklist (Tachar y atenuar)
-function toggleCheck(checkbox, rowId) {
-    const row = document.getElementById(rowId);
-    if (checkbox.checked) {
-        row.classList.add('item-completado');
-    } else {
-        row.classList.remove('item-completado');
-    }
-}
-
-// Acordeones para Préstamos Agrupados (Ícono Rotativo)
 function toggleAccordion(contentId, iconId) {
     const content = document.getElementById(contentId);
     const icon = document.getElementById(iconId);
-    
     if (content.classList.contains('show')) {
         content.classList.remove('show');
         icon.classList.remove('open');
@@ -78,26 +68,60 @@ function toggleAccordion(contentId, iconId) {
     }
 }
 
-// Pestañas Formulario Movimientos
+// FORMATEO DE MILES VISUAL ("2200000" -> "2.200.000")
+function fmtI(input) {
+    let val = input.value.replace(/\D/g, ''); // Limpiar no-números
+    if(val === '') { input.value = ''; return; }
+    input.value = new Intl.NumberFormat('es-AR').format(val); // Formatear a vista argentina
+}
+
+function limpiarInputs(contenedorId) {
+    const contenedor = document.getElementById(contenedorId);
+    if (contenedor) {
+        contenedor.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => el.value = '');
+    }
+}
+
+// LÓGICA DE MOVIMIENTOS Y CHECKBOX ROJO
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active');
     document.getElementById('bti').classList.remove('active');
     const btnAgregar = document.getElementById('btnagregar');
+    const chkCompartido = document.getElementById('chk-compartido');
+    
+    limpiarInputs('panel-registro'); // Limpiar para no cruzar datos
     
     if(tipo === 'gasto') {
         document.getElementById('btg').classList.add('active');
         document.getElementById('campos-gasto').style.display = 'block';
         document.getElementById('campos-ingreso').style.display = 'none';
         btnAgregar.style.background = 'var(--red)';
+        
+        // Poner checkbox rojo
+        if (chkCompartido) chkCompartido.classList.add('check-rojo');
     } else {
         document.getElementById('bti').classList.add('active');
         document.getElementById('campos-gasto').style.display = 'none';
         document.getElementById('campos-ingreso').style.display = 'block';
         btnAgregar.style.background = 'var(--green)';
+        
+        // Quitar rojo para ingreso
+        if (chkCompartido) chkCompartido.classList.remove('check-rojo');
     }
 }
 
-// Pestañas Formulario Préstamos (Me Deben / Yo Debo)
+function toggleCompartido() {
+    const isChecked = document.getElementById('chk-compartido').checked;
+    document.getElementById('caja-compartido').style.display = isChecked ? 'block' : 'none';
+}
+
+function toggleCheck(checkbox, rowId) {
+    const row = document.getElementById(rowId);
+    if (checkbox.checked) row.classList.add('item-completado');
+    else row.classList.remove('item-completado');
+}
+
+// LÓGICA DE PRÉSTAMOS
 function setTipoPrestamo(tipo) {
     const btnMedeben = document.getElementById('p-btn-medeben');
     const btnYodebo = document.getElementById('p-btn-yodebo');
@@ -105,6 +129,7 @@ function setTipoPrestamo(tipo) {
 
     btnMedeben.classList.remove('active');
     btnYodebo.classList.remove('active');
+    limpiarInputs('panel-prestamo');
 
     if(tipo === 'medeben') {
         btnMedeben.classList.add('active');
@@ -115,7 +140,7 @@ function setTipoPrestamo(tipo) {
     }
 }
 
-// Tema Claro/Oscuro
+// TEMA
 function toggleTheme(forceLight = false) {
     const body = document.body;
     const isLight = forceLight || body.getAttribute('data-theme') !== 'light';
@@ -135,9 +160,4 @@ function toggleTheme(forceLight = false) {
         document.querySelector('.icon-light-m').style.display = 'none';
         localStorage.setItem('theme', 'dark');
     }
-}
-
-function toggleCompartido() {
-    const isChecked = document.querySelector('.check-rojo').checked;
-    document.getElementById('caja-compartido').style.display = isChecked ? 'block' : 'none';
 }
