@@ -186,29 +186,29 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
           
           <div style="display:flex; flex-direction:column; gap:20px;">
-            <div class="card">
-              <div class="ct" style="display:flex; justify-content:space-between; align-items:center;">
-                <span>Mis Billeteras</span>
-                <button class="btn-icon" style="padding:4px 10px; font-size:11px; border:none; color:var(--accent);" onclick="togglePanel('panel-nueva-billetera')">+ Nueva billetera</button>
-              </div>
-              
-              <div id="panel-nueva-billetera" style="display:none; background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px;">
-                <input type="text" class="in" placeholder="Nombre (Ej: Binance, Efectivo USD...)" style="margin-bottom:10px; padding:10px;">
-                <div style="display:flex; gap:10px; align-items:center;">
-                  <input type="color" class="in" value="#f5a623" style="padding:0; height:38px; width:45px; border:none; border-radius:8px; cursor:pointer; margin-bottom:0;">
-                  <button class="btn" style="padding:10px; font-size:12px; flex:1; margin-bottom:0;">Guardar</button>
-                </div>
-              </div>
-              
-              <p style="color:var(--text3); font-size:13px; text-align:center; padding:10px;">Aún no has creado ninguna billetera.</p>
-            </div>
+            <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:250px;">Sin movimientos de ahorro</div></div>
             
-            <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin movimientos de ahorro</div></div>
-            <div class="card" style="flex-grow: 1;"><div class="ct">Distribución</div><div class="chart-empty" style="height:150px; border:none; background:transparent;">Añade fondos para ver la distribución</div></div>
+            <div class="card" style="flex-grow: 1;">
+              <div class="ct">Distribución y Billeteras</div>
+              
+              <div id="ahorros-empty-billeteras" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 30px 10px; gap: 15px; height: 100%;">
+                 <p style="color:var(--text3); font-size:14px; text-align:center;">Aún no has creado billeteras de ahorro.</p>
+                 <button class="btn" style="width:auto; padding:10px 20px;" onclick="abrirModalNuevaBilletera()">+ Crear primera billetera</button>
+              </div>
+
+              <div id="ahorros-con-billeteras" style="display:none; flex-direction:column; gap:20px; height:100%; justify-content:center;">
+                 <div style="display:flex; align-items:center; justify-content:center; gap:30px;">
+                   <div class="dona-placeholder" style="width:130px; height:130px; border-color:var(--bg3);">Sin datos</div>
+                   <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+                     </div>
+                 </div>
+              </div>
+
+            </div>
           </div>
           
           <div style="display:flex; flex-direction:column; gap:20px;">
-            <div class="card" style="border-color:var(--accent);">
+            <div class="card" style="border-color:var(--accent); position:relative;">
               <div class="ct">Registrar Movimiento</div>
               <select id="ahorro-tipo" class="in" onchange="setAhorroTipo()">
                 <option value="aporte">Aporte de ahorro</option>
@@ -223,9 +223,9 @@
                   <select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
                 </div>
                 <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label>
-                  <select class="in" style="margin-bottom:0;">
+                  <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)">
                     <option value="">Seleccionar...</option>
-                    <option value="nueva" style="font-weight:600; color:var(--accent);">+ Crear nueva billetera...</option>
+                    <option value="nueva" style="font-weight:600; color:var(--accent);">+ Crear nueva billetera</option>
                   </select>
                 </div>
               </div>
@@ -233,6 +233,19 @@
               <input type="date" class="in input-fecha">
               <input type="text" class="in" placeholder="Nota (Opcional)">
               <button class="btn" style="background:var(--accent);">Guardar Movimiento</button>
+
+              <div id="modal-nueva-billetera" class="modal-inline" style="display:none;">
+                <h3 style="font-size:16px; font-weight:700; margin-bottom:15px;">Nueva billetera de ahorro</h3>
+                <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Nombre</label>
+                <input type="text" id="nueva-bill-nombre" class="in" placeholder="Ej: Binance, Nexo..." style="margin-bottom:10px;">
+                <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Color</label>
+                <input type="color" id="nueva-bill-color" class="in" value="#f5a623" style="padding:0; height:48px; border:none; cursor:pointer;">
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                  <button class="btn" style="background:var(--bg3); color:var(--text);" onclick="cerrarNuevaBilletera()">Cancelar</button>
+                  <button class="btn" style="background:var(--accent);" onclick="guardarNuevaBilletera()">Guardar</button>
+                </div>
+              </div>
+
             </div>
             
             <div class="card" style="flex-grow: 1;"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
@@ -284,7 +297,7 @@
           </div>
           <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px;padding-right:10px;margin-bottom:20px;">
              <div style="background:var(--bg); color:var(--text); padding:16px; border-radius:16px; border-bottom-left-radius:4px; max-width:85%; border:1px solid var(--border); font-size:14px; line-height:1.5;">
-                ¡Hola! Soy tu asistente financiero. Tengo acceso a tus registros y presupuestos.
+                ¡Hola! Soy tu asistente financiero. Tengo acceso a tus registros y presupuestos para generar reportes visuales.
              </div>
           </div>
           <div style="display:flex;gap:12px;margin-top:auto;">
@@ -350,6 +363,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
