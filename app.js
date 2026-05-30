@@ -1,28 +1,25 @@
 // ==========================================
-// app.js - MOTOR UI (Formateo, Limpieza y Fechas)
+// app.js - MOTOR UI 
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Establecer el Mes Actual en la cabecera
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const hoy = new Date();
     document.getElementById('mlabel').innerText = `${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
 
-    // 2. Establecer la fecha de hoy automáticamente en los inputs de fecha
+    // Fecha Automática Correcta a todos los inputs date
     const fechaHoyString = hoy.toISOString().split('T')[0];
-    document.querySelectorAll('.input-fecha').forEach(input => {
+    document.querySelectorAll('input[type="date"], .input-fecha').forEach(input => {
         if (!input.value) input.value = fechaHoyString;
     });
 
-    // 3. Tema Oscuro/Claro
     if(localStorage.getItem('theme') === 'light') toggleTheme(true);
 
-    // 4. Iniciar App (Mockup antes de Supabase)
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('uemail').innerText = 'gysusran@gmail.com';
 
-    // 5. Lógica de la Regla 50/30/20
+    // Regla 50/30/20
     const slNec = document.getElementById('sl-nec');
     const slDes = document.getElementById('sl-des');
     const lblNec = document.getElementById('lbl-nec');
@@ -43,7 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if(slDes) slDes.addEventListener('input', updateRegla);
 });
 
-// NAVEGACIÓN Y PANELES
+// LOGOUT / SALIR (Devuelve al inicio de sesión)
+function logout() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+}
+
 function sp(id, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
@@ -68,7 +70,6 @@ function toggleAccordion(contentId, iconId) {
     }
 }
 
-// FORMATEO DE MILES VISUAL
 function fmtI(input) {
     let val = input.value.replace(/\D/g, '');
     if(val === '') { input.value = ''; return; }
@@ -82,7 +83,7 @@ function limpiarInputs(contenedorId) {
     }
 }
 
-// LÓGICA DE MOVIMIENTOS
+// MOVIMIENTOS
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active');
     document.getElementById('bti').classList.remove('active');
@@ -117,7 +118,7 @@ function toggleCheck(checkbox, rowId) {
     else row.classList.remove('item-completado');
 }
 
-// LÓGICA DE AHORROS (Doble Partida Dinámica)
+// AHORROS (Cambio de Títulos según el Tipo)
 function setAhorroTipo() {
     const tipo = document.getElementById('ahorro-tipo').value;
     const lblOrigen = document.getElementById('lbl-origen');
@@ -135,7 +136,7 @@ function setAhorroTipo() {
     }
 }
 
-// LÓGICA DE PRÉSTAMOS
+// PRÉSTAMOS
 function setTipoPrestamo(tipo) {
     const btnMedeben = document.getElementById('p-btn-medeben');
     const btnYodebo = document.getElementById('p-btn-yodebo');
@@ -154,7 +155,7 @@ function setTipoPrestamo(tipo) {
     }
 }
 
-// TEMA
+// TEMA Y LOGIN
 function toggleTheme(forceLight = false) {
     const body = document.body;
     const isLight = forceLight || body.getAttribute('data-theme') !== 'light';
@@ -178,12 +179,13 @@ function toggleTheme(forceLight = false) {
 
 function togglePwd() {
     const pwd = document.getElementById('a-pwd');
-    const svg = document.querySelector('.btn-eye svg');
     if (pwd.type === 'password') {
         pwd.type = 'text';
-        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle><line x1="1" y1="1" x2="23" y2="23"></line>';
     } else {
         pwd.type = 'password';
-        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
     }
+}
+function doAuth() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
 }
