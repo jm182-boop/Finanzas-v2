@@ -6,6 +6,7 @@
   <title>fin. - Dashboard Financiero</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div id="toast"></div>
@@ -15,7 +16,13 @@
       <h1 class="logo">fin.</h1>
       <h2 id="auth-title">Iniciar Sesión</h2>
       <input type="email" id="a-email" class="in" placeholder="Tu correo electrónico">
-      <input type="password" id="a-pwd" class="in" placeholder="Tu contraseña">
+      <div style="position: relative; margin-bottom: 15px;">
+        <input type="password" id="a-pwd" class="in" placeholder="Tu contraseña" style="padding-right: 45px; margin-bottom: 0;">
+        <button type="button" class="btn-eye" onclick="togglePwd()" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--text3)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <div style="text-align: right; margin-top: -5px; margin-bottom: 25px;"><span class="auth-forgot" onclick="recuperarPwd()" style="font-size:12px; color:var(--text3); font-weight:500; cursor:pointer;">¿Olvidaste tu contraseña?</span></div>
       <button class="btn" id="auth-btn" onclick="doAuth()">Entrar</button>
       <div class="auth-switch" id="auth-toggle" onclick="toggleAuth()">¿No tienes cuenta? <span>Regístrate</span></div>
     </div>
@@ -70,15 +77,25 @@
         </div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
-          <div class="card">
+          <div class="card" id="resumen-barras">
             <div class="ct">REGLA 50/30/20</div>
             <div class="progress-wrap"><div class="progress-header"><span>Necesidades (50%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
             <div class="progress-wrap"><div class="progress-header"><span>Deseos (30%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--accent);"></div></div></div>
             <div class="progress-wrap"><div class="progress-header"><span>Ahorro (20%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
+            
+            <div style="border-top: 1px solid var(--border); margin-top: 30px; padding-top: 25px;">
+                <div class="ct" style="margin-bottom: 15px;">⚠️ Alertas y Recordatorios</div>
+                <div style="display:flex; flex-direction:column; gap:14px;">
+                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-red"></span> <span style="color:var(--text); font-weight:500;">Has superado el presupuesto de Vivienda por $18.500.</span></div>
+                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-warning"></span> <span style="color:var(--text); font-weight:500;">Transporte alcanzó el 80% del presupuesto.</span></div>
+                    <div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-neutral"></span> <span style="color:var(--text); font-weight:500;">Tarjeta Casa vence en 3 días.</span></div>
+                </div>
+            </div>
           </div>
+
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-checklist">
-              <div class="ct">CHECKLIST DE PAGOS (Plantilla)</div>
+              <div class="ct">CHECKLIST DE PAGOS</div>
               <div class="li" id="chk-item-1"><span class="li-desc"><input type="checkbox" onchange="toggleCheck(this, 'chk-item-1')"> Alquiler / Hipoteca</span><span class="li-monto">$0</span></div>
               <div class="li" id="chk-item-2"><span class="li-desc"><input type="checkbox" onchange="toggleCheck(this, 'chk-item-2')"> Expensas / Servicios</span><span class="li-monto">$0</span></div>
             </div>
@@ -89,7 +106,7 @@
             <div class="card">
               <div class="ct">DISTRIBUCIÓN</div>
               <div style="display:flex; align-items:center; gap:20px;">
-                <div class="dona-placeholder chart-empty">Sin datos</div>
+                <div class="dona-placeholder">Sin datos</div>
               </div>
             </div>
           </div>
@@ -112,30 +129,30 @@
             <button id="bti" class="tb b-verde" onclick="setTipoMov('ingreso')">Ingreso</button>
           </div>
           <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado...)">
-          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)">
+          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this)">
           
           <div id="campos-gasto">
             <div id="grid-billetera-sobre" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Medio de Pago (Origen)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino Presupuestario (En qué)</label><select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select></div>
             </div>
-            <input type="date" class="in">
+            <input type="date" id="gfecha" class="in">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-              <input type="text" class="in" placeholder="Total cuotas (Opcional)">
-              <input type="text" class="in" placeholder="N° Cuota actual">
+              <input type="text" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)">
+              <input type="text" class="in" id="gcuota-num" placeholder="N° Cuota actual">
             </div>
             <label style="display:flex;align-items:center;gap:10px;margin:10px 0 20px 0;font-size:14px;cursor:pointer;font-weight:500;">
-              <input type="checkbox" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
+              <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
             </label>
             <div id="caja-compartido" style="display:none;background:var(--bg);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid var(--border);">
-              <input type="text" class="in" placeholder="Persona (Ej: Amigo...)">
+              <input type="text" class="in" id="comp-quien" placeholder="Persona (Ej: Amigo...)">
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
-                <input type="checkbox"> Guardar persona para el futuro
+                <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
-              <input type="number" class="in" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;">
+              <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;">
             </div>
           </div>
-          <div id="campos-ingreso" style="display:none;"><input type="date" class="in"></div>
+          <div id="campos-ingreso" style="display:none;"><input type="date" id="gfechai" class="in"></div>
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
         </div>
 
@@ -156,10 +173,30 @@
       </div>
 
       <div id="page-ahorros" class="page">
-        <div class="header"><h2>Ahorros</h2></div>
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;" class="ahorros-grid">
-          <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin datos</div></div>
-          <div class="card"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; padding:20px; text-align:center;">Sin movimientos.</p></div>
+        <div class="hero-metric"><p>Total Ahorrado</p><h1 id="txt-ahorro-total">$0</h1></div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:150px;">Sin datos</div></div>
+            <div class="card">
+              <div class="ct">POR BILLETERA</div>
+              <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Sin movimientos</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+            </div>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card">
+              <div class="ct">Registrar Movimiento</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <input type="text" id="amonto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)" style="margin:0;">
+                <select id="abilletera" class="in" style="margin:0;"><option value="">Seleccionar...</option></select>
+              </div>
+              <input type="date" id="afecha" class="in" style="margin-top:15px;">
+              <input type="text" id="anota" class="in" placeholder="Nota (Ej: Compra Dólares...)">
+              <button class="btn" style="background:var(--accent);">Guardar registro</button>
+            </div>
+            <div class="card"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos.</p></div>
+          </div>
         </div>
       </div>
 
@@ -182,18 +219,18 @@
             <button id="p-btn-medeben" class="tb active b-verde" onclick="setTipoPrestamo('medeben')">Me deben</button>
             <button id="p-btn-yodebo" class="tb b-rojo" onclick="setTipoPrestamo('yodebo')">Yo debo</button>
           </div>
-          <input type="text" class="in" placeholder="Persona o Entidad">
-          <input type="text" class="in" placeholder="Concepto (Ej: Efectivo, TV)">
-          <input type="text" class="in" placeholder="Monto Total ($)">
+          <input type="text" class="in" id="ppersona" placeholder="Persona o Entidad">
+          <input type="text" class="in" id="pdesc" placeholder="Concepto (Ej: Efectivo, TV)">
+          <input type="text" class="in" id="pmonto" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" class="in"></div>
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" class="in"></div>
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" id="pfecha" class="in"></div>
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" id="pfechacompromiso" class="in"></div>
           </div>
           <button class="btn" id="btn-submit-prestamo" style="background:var(--green); color:#fff;">Guardar Préstamo</button>
         </div>
 
         <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
-           <div class="card" style="border-left: 4px solid var(--green);">
+           <div class="card">
              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
                <div>
                  <h3 style="font-size: 18px; font-weight: 700;">Nombre Persona</h3>
@@ -299,6 +336,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
