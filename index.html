@@ -37,7 +37,7 @@
           <svg class="icon-dark-m" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           <svg class="icon-light-m" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
         </button>
-        <button class="btn-icon" onclick="logout()" style="padding:8px 12px; font-size: 12px; border:none; background:var(--bg3);">Salir</button>
+        <button class="btn-icon" onclick="logout()" style="padding:8px 12px; font-size:12px; border:none; background:var(--bg3);">Salir</button>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
         <button class="nb" onclick="sp('ahorros', this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>Ahorros</span></button>
         <button class="nb" onclick="sp('prestamos', this)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Préstamos</span></button>
         <button class="nb" onclick="sp('ia', this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>IA</span></button>
-        <button class="nb" onclick="sp('config', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configuración</span></button>
+        <button class="nb" onclick="sp('config', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configuración</span></button>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn-icon" onclick="toggleTheme()">
@@ -174,37 +174,28 @@
 
       <div id="page-ahorros" class="page">
         <div class="header"><h2>Ahorros</h2></div>
-        
         <div class="mg-ahorro">
           <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv">$0</div></div>
           <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
           <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
         </div>
-        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
-          
           <div style="display:flex; flex-direction:column; gap:20px;">
             <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:250px;">Sin movimientos de ahorro</div></div>
-            
             <div class="card" style="flex-grow: 1;">
               <div class="ct">Distribución y Billeteras</div>
-              
               <div id="ahorros-empty-billeteras" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 30px 10px; gap: 15px; height: 100%;">
                  <p style="color:var(--text3); font-size:14px; text-align:center;">Aún no has creado billeteras de ahorro.</p>
                  <button class="btn" style="width:auto; padding:10px 20px;" onclick="abrirModalNuevaBilletera()">+ Crear primera billetera</button>
               </div>
-
               <div id="ahorros-con-billeteras" style="display:none; flex-direction:column; gap:20px; height:100%; justify-content:center;">
                  <div style="display:flex; align-items:center; justify-content:center; gap:30px; flex-wrap: wrap;">
                    <div class="dona-placeholder" style="width:130px; height:130px; border-color:var(--bg3);">Sin datos</div>
-                   <div id="lista-billeteras-ui" style="flex:1; display:flex; flex-direction:column; gap:12px; min-width: 200px;">
-                     </div>
+                   <div id="lista-billeteras-ui" style="flex:1; display:flex; flex-direction:column; gap:12px; min-width: 200px;"></div>
                  </div>
               </div>
-
             </div>
           </div>
-          
           <div style="display:flex; flex-direction:column; gap:20px;">
             <div class="card" style="border-color:var(--accent); position:relative;">
               <div class="ct">Registrar Movimiento</div>
@@ -213,19 +204,15 @@
                 <option value="retiro">Retiro de ahorro</option>
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
-              
               <input type="text" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
-              
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen (Medio de pago)</label>
                   <select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
                 </div>
                 <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label>
-                  <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)">
-                    </select>
+                  <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)"></select>
                 </div>
               </div>
-              
               <input type="date" class="in input-fecha">
               <input type="text" class="in" placeholder="Nota (Opcional)">
               <button class="btn" style="background:var(--accent);">Guardar Movimiento</button>
@@ -241,9 +228,7 @@
                   <button class="btn" style="background:var(--accent);" onclick="guardarNuevaBilletera()">Guardar</button>
                 </div>
               </div>
-
             </div>
-            
             <div class="card" style="flex-grow: 1;"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
           </div>
         </div>
@@ -268,14 +253,28 @@
             <button id="p-btn-medeben" class="tb active b-verde" onclick="setTipoPrestamo('medeben')">Me deben</button>
             <button id="p-btn-yodebo" class="tb b-rojo" onclick="setTipoPrestamo('yodebo')">Yo debo</button>
           </div>
+          
           <input type="text" class="in" id="ppersona" placeholder="Persona o Entidad">
           <input type="text" class="in" id="pdesc" placeholder="Concepto (Ej: Efectivo, Reparación...)">
-          <input type="text" class="in" id="pmonto" placeholder="Monto Total ($)" onkeyup="fmtI(this)">
-          <div id="campos-prestamo-fechas" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" class="in input-fecha"></div>
-            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" class="in"></div>
+          <input type="text" class="in" id="pmonto" placeholder="Monto Total ($)" onkeyup="fmtI(this); calcularPrestamoInfo()" onchange="calcularPrestamoInfo()">
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
+            <div>
+              <input type="number" class="in" id="pcuotas" placeholder="Total de cuotas (Opcional)" onkeyup="calcularPrestamoInfo()" onchange="calcularPrestamoInfo()" style="margin-bottom:5px;">
+            </div>
+            <div>
+              <input type="number" class="in" id="pcuota-actual" placeholder="Cuota actual pagada (Opcional)" style="margin-bottom:5px;">
+            </div>
           </div>
-          <button class="btn" id="btn-submit-prestamo" style="background:var(--green); color:#fff;">Guardar Préstamo</button>
+          <p id="p-info-cuota" style="font-size:12px; color:var(--accent); font-weight:600; margin-left:5px; height:18px; margin-top:-10px; margin-bottom:15px;"></p>
+
+          <div id="campos-prestamo-fechas" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:5px;">
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Inicio</label><input type="date" class="in input-fecha" id="pfecha" onchange="calcularPrestamoInfo()"></div>
+            <div><label style="font-size:12px;color:var(--text3);font-weight:600;">Compromiso</label><input type="date" class="in" id="pfechacompromiso"></div>
+          </div>
+          <p id="p-helper-fecha" style="font-size:11px; color:var(--text3); text-align:right; display:none; margin-top:-10px; margin-bottom:15px;">Fecha calculada automáticamente</p>
+          
+          <button class="btn" id="btn-submit-prestamo" style="background:var(--green); color:#fff;" onclick="guardarPrestamo()">Guardar Préstamo</button>
         </div>
 
         <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
@@ -306,7 +305,6 @@
       <div id="page-config" class="page">
         <div class="header"><h2>Configuración y Estructura</h2></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;" class="cfg-grid-2">
-          
           <div class="card">
             <div class="ct">Regla de Distribución</div>
             <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Necesidades</span><span style="color:var(--text); font-size:14px;" id="lbl-nec">50%</span></div><input type="range" id="sl-nec" min="0" max="100" value="50"></div>
@@ -317,7 +315,6 @@
             </div>
             <button class="btn" style="margin-top:25px;">Guardar Configuración</button>
           </div>
-
           <div style="display:flex; flex-direction:column; gap:25px;">
             <div class="card">
               <div class="ct">Formato Regional</div>
@@ -337,7 +334,6 @@
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);">+ Añadir Medio de Pago</button>
             </div>
           </div>
-          
           <div class="card" style="grid-column: 1 / -1;">
             <div class="ct">Tus Destinos Presupuestarios</div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -359,6 +355,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>
