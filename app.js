@@ -212,7 +212,6 @@ function setTipoPrestamo(tipo) {
     }
 }
 
-// Expuesto a Window para que onkeyup lo detecte siempre
 window.calcularPrestamoInfo = function() {
     const montoStr = document.getElementById('pmonto').value.replace(/\D/g, '');
     const cuotasStr = document.getElementById('pcuotas').value;
@@ -228,7 +227,7 @@ window.calcularPrestamoInfo = function() {
         infoText.innerText = `Cuota estimada: $${formatearDinero(cuotaEstimada.toFixed(0))}`;
 
         if(fechaInicioStr) {
-            let d = new Date(fechaInicioStr + 'T12:00:00'); // T12 para evitar desfase de zona horaria
+            let d = new Date(fechaInicioStr + 'T12:00:00');
             d.setMonth(d.getMonth() + (cuotas - 1)); 
             fechaFinInput.value = d.toISOString().split('T')[0];
             helperText.style.display = 'block';
@@ -342,8 +341,28 @@ function renderPrestamos() {
             </div>`;
     }
 
+    // MEMORIA VISUAL: Guardar qué acordeones están abiertos antes de actualizar el DOM
+    let acordeonesAbiertos = [];
+    document.querySelectorAll('#lista-prestamos-cards .accordion-content.show').forEach(acc => {
+        acordeonesAbiertos.push(acc.id);
+    });
+
     if(html === '') html = `<div class="card" style="display:flex; align-items:center; justify-content:center; height:120px; border-style:dashed;"><p style="color:var(--text3); font-size:14px; font-weight:500;">No tienes préstamos registrados.</p></div>`;
+    
+    // Actualizar el DOM
     document.getElementById('lista-prestamos-cards').innerHTML = html;
+
+    // MEMORIA VISUAL: Restaurar los acordeones abiertos
+    acordeonesAbiertos.forEach(id => {
+        const content = document.getElementById(id);
+        if (content) {
+            content.classList.add('show');
+            const iconId = id.replace('det-', 'icon-');
+            const icon = document.getElementById(iconId);
+            if (icon) icon.classList.add('open');
+        }
+    });
+
     actualizarAlertasGlobales();
 }
 
