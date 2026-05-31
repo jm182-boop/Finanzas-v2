@@ -1,6 +1,9 @@
 // ==========================================
-// app.js - MOTOR UI 
+// app.js - MOTOR UI Y LÓGICA DE ESTADOS
 // ==========================================
+
+// Base de datos temporal para la UI
+let misBilleteras = []; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -17,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('uemail').innerText = 'gysusran@gmail.com';
+
+    // Inicializar Motor UX de Ahorros
+    renderBilleterasUI();
 
     // Regla 50/30/20
     const slNec = document.getElementById('sl-nec');
@@ -118,7 +124,7 @@ function toggleCheck(checkbox, rowId) {
 }
 
 // ==========================================
-// AHORROS - LÓGICA INLINE BILLETERAS
+// AHORROS - LÓGICA DE ESTADOS UX/UI
 // ==========================================
 function setAhorroTipo() {
     const tipo = document.getElementById('ahorro-tipo').value;
@@ -137,13 +143,66 @@ function setAhorroTipo() {
     }
 }
 
+function renderBilleterasUI() {
+    const emptyState = document.getElementById('ahorros-empty-billeteras');
+    const dataState = document.getElementById('ahorros-con-billeteras');
+    const selectDestino = document.getElementById('ahorro-destino');
+    const listaUI = document.getElementById('lista-billeteras-ui');
+    const countBilleteras = document.getElementById('ahorro-billeteras-count');
+    
+    if(countBilleteras) countBilleteras.innerText = misBilleteras.length;
+
+    if (misBilleteras.length === 0) {
+        // ESTADO 1: SIN BILLETERAS
+        if(emptyState) emptyState.style.display = 'flex';
+        if(dataState) dataState.style.display = 'none';
+        if(selectDestino) selectDestino.innerHTML = '<option value="" disabled selected>Primero crea una billetera de ahorro</option>';
+    } else {
+        // ESTADO 2: CON BILLETERAS
+        if(emptyState) emptyState.style.display = 'none';
+        if(dataState) dataState.style.display = 'flex';
+
+        // Llenar Selector
+        if(selectDestino) {
+            let opcionesHTML = '<option value="" selected>Seleccionar...</option>';
+            misBilleteras.forEach(b => {
+                opcionesHTML += `<option value="${b.id}">${b.nombre}</option>`;
+            });
+            opcionesHTML += '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>';
+            selectDestino.innerHTML = opcionesHTML;
+        }
+
+        // Llenar Lista de Distribución
+        if(listaUI) {
+            let listaHTML = '';
+            misBilleteras.forEach(b => {
+                listaHTML += `
+                <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                   <div style="display:flex; align-items:center; gap:10px;">
+                     <span class="dot" style="background:${b.color};"></span>
+                     <span style="font-size:14px; font-weight:600;">${b.nombre}</span>
+                   </div>
+                   <div style="display:flex; align-items:center; gap:15px;">
+                     <span style="font-weight:700; font-size:15px;">$0</span>
+                     <div style="display:flex; gap:5px;">
+                       <button class="ui-icon-btn"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
+                       <button class="ui-icon-btn"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                     </div>
+                   </div>
+                 </div>`;
+            });
+            listaUI.innerHTML = listaHTML;
+        }
+    }
+}
+
 function abrirModalNuevaBilletera() {
     document.getElementById('modal-nueva-billetera').style.display = 'block';
 }
 
 function verificarNuevaBilletera(selectObj) {
     if(selectObj.value === 'nueva') {
-        selectObj.value = ""; // Resetea el select
+        selectObj.value = ""; // Resetea la opción visual
         abrirModalNuevaBilletera();
     }
 }
@@ -154,9 +213,21 @@ function cerrarNuevaBilletera() {
 }
 
 function guardarNuevaBilletera() {
-    // Almacenamiento en DB irá aquí luego. Por ahora cerramos el modal.
+    const nombre = document.getElementById('nueva-bill-nombre').value;
+    const color = document.getElementById('nueva-bill-color').value;
+    
+    if(nombre.trim() === '') return; // Validación simple
+
+    // Guardar en la base de datos temporal
+    misBilleteras.push({
+        id: 'b_' + Date.now(),
+        nombre: nombre,
+        color: color
+    });
+
     cerrarNuevaBilletera();
-    // Simular que apareció
+    renderBilleterasUI(); // La app cambia a Estado 2 automáticamente
+
     document.getElementById('toast').innerText = "Billetera creada con éxito";
     document.getElementById('toast').classList.add('show');
     setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
