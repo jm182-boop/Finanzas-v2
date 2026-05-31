@@ -212,6 +212,7 @@ function setTipoPrestamo(tipo) {
     }
 }
 
+// Expuesto a Window para que onkeyup lo detecte siempre
 window.calcularPrestamoInfo = function() {
     const montoStr = document.getElementById('pmonto').value.replace(/\D/g, '');
     const cuotasStr = document.getElementById('pcuotas').value;
@@ -227,8 +228,8 @@ window.calcularPrestamoInfo = function() {
         infoText.innerText = `Cuota estimada: $${formatearDinero(cuotaEstimada.toFixed(0))}`;
 
         if(fechaInicioStr) {
-            let d = new Date(fechaInicioStr + 'T12:00:00');
-            d.setMonth(d.getMonth() + (cuotas - 1)); // Cálculo de Fecha Compromiso
+            let d = new Date(fechaInicioStr + 'T12:00:00'); // T12 para evitar desfase de zona horaria
+            d.setMonth(d.getMonth() + (cuotas - 1)); 
             fechaFinInput.value = d.toISOString().split('T')[0];
             helperText.style.display = 'block';
         }
