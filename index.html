@@ -52,7 +52,7 @@
         <button class="nb" onclick="sp('ahorros', this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>Ahorros</span></button>
         <button class="nb" onclick="sp('prestamos', this)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Préstamos</span></button>
         <button class="nb" onclick="sp('ia', this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>IA</span></button>
-        <button class="nb" onclick="sp('config', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configuración</span></button>
+        <button class="nb" onclick="sp('config', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configuración</span></button>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn-icon" onclick="toggleTheme()">
@@ -174,14 +174,17 @@
 
       <div id="page-ahorros" class="page">
         <div class="header"><h2>Ahorros</h2></div>
+        
         <div class="mg-ahorro">
           <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv">$0</div></div>
           <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
           <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
         </div>
+        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
           <div style="display:flex; flex-direction:column; gap:20px;">
             <div class="card"><div class="ct">Evolución</div><div class="chart-empty" style="height:250px;">Sin movimientos de ahorro</div></div>
+            
             <div class="card" style="flex-grow: 1;">
               <div class="ct">Distribución y Billeteras</div>
               <div id="ahorros-empty-billeteras" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 30px 10px; gap: 15px; height: 100%;">
@@ -196,6 +199,7 @@
               </div>
             </div>
           </div>
+          
           <div style="display:flex; flex-direction:column; gap:20px;">
             <div class="card" style="border-color:var(--accent); position:relative;">
               <div class="ct">Registrar Movimiento</div>
@@ -205,6 +209,7 @@
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
               <input type="text" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
+              
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen (Medio de pago)</label>
                   <select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
@@ -305,6 +310,7 @@
       <div id="page-config" class="page">
         <div class="header"><h2>Configuración y Estructura</h2></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;" class="cfg-grid-2">
+          
           <div class="card">
             <div class="ct">Regla de Distribución</div>
             <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Necesidades</span><span style="color:var(--text); font-size:14px;" id="lbl-nec">50%</span></div><input type="range" id="sl-nec" min="0" max="100" value="50"></div>
@@ -315,6 +321,7 @@
             </div>
             <button class="btn" style="margin-top:25px;">Guardar Configuración</button>
           </div>
+
           <div style="display:flex; flex-direction:column; gap:25px;">
             <div class="card">
               <div class="ct">Formato Regional</div>
@@ -334,6 +341,7 @@
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);">+ Añadir Medio de Pago</button>
             </div>
           </div>
+          
           <div class="card" style="grid-column: 1 / -1;">
             <div class="ct">Tus Destinos Presupuestarios</div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -355,6 +363,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=19"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>
