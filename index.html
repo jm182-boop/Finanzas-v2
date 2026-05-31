@@ -173,13 +173,11 @@
       </div>
 
       <div id="page-ahorros" class="page">
-        <div class="header">
-          <h2>Ahorros</h2>
-        </div>
+        <div class="header"><h2>Ahorros</h2></div>
         
         <div class="mg-ahorro">
           <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv">$0</div></div>
-          <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);">0</div></div>
+          <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
           <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
         </div>
         
@@ -197,9 +195,9 @@
               </div>
 
               <div id="ahorros-con-billeteras" style="display:none; flex-direction:column; gap:20px; height:100%; justify-content:center;">
-                 <div style="display:flex; align-items:center; justify-content:center; gap:30px;">
+                 <div style="display:flex; align-items:center; justify-content:center; gap:30px; flex-wrap: wrap;">
                    <div class="dona-placeholder" style="width:130px; height:130px; border-color:var(--bg3);">Sin datos</div>
-                   <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+                   <div id="lista-billeteras-ui" style="flex:1; display:flex; flex-direction:column; gap:12px; min-width: 200px;">
                      </div>
                  </div>
               </div>
@@ -224,9 +222,7 @@
                 </div>
                 <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino (Billetera Ahorro)</label>
                   <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)">
-                    <option value="">Seleccionar...</option>
-                    <option value="nueva" style="font-weight:600; color:var(--accent);">+ Crear nueva billetera</option>
-                  </select>
+                    </select>
                 </div>
               </div>
               
@@ -363,6 +359,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
