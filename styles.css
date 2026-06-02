@@ -140,4 +140,46 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 .met.compact { padding: 15px; }
 .met.compact .mv { font-size: 22px; }
 .mv.bad { color: var(--red); }
-.mv
+.mv.ok { color: var(--green); }
+
+.progress-wrap { margin-bottom: 22px; }
+.progress-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; font-weight: 600; color: var(--text2); }
+.progress-bar { width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+.li { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.li:last-child { border-bottom: none; padding-bottom: 0; }
+.li-desc { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 12px; color: var(--text); }
+.li-monto { font-size: 15px; font-weight: 700; color: var(--text); }
+
+#toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-size: 14px; z-index: 9999; transition: 0.4s; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+#toast.show { bottom: 30px; }
+
+/* =========================================
+   MÓVIL RESPONSIVE REAL (App Nativa)
+   ========================================= */
+@media (max-width: 768px) {
+  #app { flex-direction: column !important; }
+  .mobile-header { display: flex !important; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .sidebar > div:not(.nav) { display: none !important; } 
+  .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; padding: 0; background: rgba(30, 30, 36, 0.98); backdrop-filter: blur(15px); border-right: none; border-top: 1px solid var(--border); flex-direction: row; justify-content: center; z-index: 1000; }
+  [data-theme="light"] .sidebar { background: rgba(255, 255, 255, 0.98); }
+  .nav { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; gap: 0; margin: 0; padding: 0 5px; }
+  .nb { flex: 1; padding: 10px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 10px; border-radius: 0; background: transparent !important; color: var(--text3); }
+  .nb svg { display: block; width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .nb span { display: block; font-weight: 600; letter-spacing: -0.2px; }
+  .nb.active { color: var(--accent) !important; }
+  .nb.active svg { stroke: var(--accent); }
+  .main-content { padding: 15px; padding-bottom: 100px; height: calc(100vh - 75px); overflow-y: auto; }
+  .card { padding: 20px 15px; border-radius: 16px; margin-bottom: 15px; }
+  
+  .mg, .mg-ahorro, .resumen-grid, .ahorros-grid, .prestamos-grid, .cfg-grid-2 { grid-template-columns: 1fr !important; gap: 15px; display: flex; flex-direction: column; }
+  .mg-4 { grid-template-columns: 1fr 1fr !important; gap: 10px; } /* Tarjetas 2x2 en móvil para Historial */
+  
+  #campos-gasto > div, #campos-prestamo-fechas, #grid-billetera-sobre, #grid-ahorro-mov { grid-template-columns: 1fr !important; gap: 0; }
+  .in { margin-bottom: 15px !important; }
+  .header h2 { font-size: 22px; }
+  .met .mv { font-size: 22px; }
+  #resumen-distribucion > div { flex-direction: column; text-align: center; }
+  .dona-placeholder { margin: 0 auto 20px auto; }
+}
