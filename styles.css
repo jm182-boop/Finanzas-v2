@@ -12,8 +12,10 @@
   --accent: #7c6dfa;
   --accent-hover: #9285ff;
   --red: #ff5757;
+  --red-dark: #cc3333;
   --green: #12e091;
   --warning: #ffb74d;
+  --blue: #4da6ff;
   --font: 'Poppins', sans-serif;
 }
 
@@ -59,7 +61,9 @@ input[type="checkbox"].check-rojo:checked::after { color: #ffffff; }
 .badge { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; }
 .badge-green { background: var(--green); color: #ffffff; }
 .badge-red { background: var(--red); color: #ffffff; }
+.badge-darkred { background: var(--red-dark); color: #ffffff; }
 .badge-warning { background: var(--warning); color: #141416; }
+.badge-blue { background: var(--blue); color: #141416; }
 .badge-gray { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
 .badge-neutral { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
 
@@ -141,6 +145,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 .met.compact .mv { font-size: 22px; }
 .mv.bad { color: var(--red); }
 .mv.ok { color: var(--green); }
+.mv.blue { color: var(--blue); }
 
 .progress-wrap { margin-bottom: 22px; }
 .progress-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; font-weight: 600; color: var(--text2); }
@@ -174,7 +179,8 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
   .card { padding: 20px 15px; border-radius: 16px; margin-bottom: 15px; }
   
   .mg, .mg-ahorro, .resumen-grid, .ahorros-grid, .prestamos-grid, .cfg-grid-2 { grid-template-columns: 1fr !important; gap: 15px; display: flex; flex-direction: column; }
-  .mg-4 { grid-template-columns: 1fr 1fr !important; gap: 10px; } /* Tarjetas 2x2 en móvil para Historial */
+  .mg-4 { grid-template-columns: 1fr 1fr !important; gap: 10px; } 
+  .grid-filtros { grid-template-columns: 1fr !important; }
   
   #campos-gasto > div, #campos-prestamo-fechas, #grid-billetera-sobre, #grid-ahorro-mov { grid-template-columns: 1fr !important; gap: 0; }
   .in { margin-bottom: 15px !important; }
