@@ -1,9 +1,18 @@
 // ==========================================
-// app.js - MOTOR UI, AHORROS Y PRÉSTAMOS
+// app.js - MOTOR UI, AHORROS, PRÉSTAMOS E HISTORIAL
 // ==========================================
 
 let misBilleteras = []; 
 let misPrestamos = [];
+
+// Base de datos Mock para demostrar el Historial Global con todos los casos requeridos
+const historialGlobal = [
+    { id: 'h1', fecha: '2026-06-15', hora: '18:30', desc: 'Supermercado', monto: 35000, tipo: 'gasto', medio: 'Naranja X', destino: 'Necesidades', estado: 'pagado', compartido: { persona: 'Sofi', pct: 50 } },
+    { id: 'h2', fecha: '2026-06-01', hora: '09:00', desc: 'Ingreso sueldo', monto: 2000000, tipo: 'ingreso', medio: 'Banco Galicia', destino: '-', estado: 'pagado' },
+    { id: 'h3', fecha: '2026-06-10', hora: '14:20', desc: 'Aporte ahorro', monto: 100000, tipo: 'ahorro', medio: 'Cuenta Sueldo', destino: 'Binance', estado: 'pagado' },
+    { id: 'h4', fecha: '2026-06-12', hora: '10:00', desc: 'Préstamo Carlos', monto: 200000, tipo: 'prestamo', medio: '-', destino: '-', estado: 'pendiente', prestamo: { persona: 'Carlos', tipo: 'Me deben', original: 200000, pendiente: 150000, estadoStr: 'Próximo a vencer', estadoColor: 'warning' } },
+    { id: 'h5', fecha: '2026-06-05', hora: '20:15', desc: 'Televisor', monto: 300000, tipo: 'gasto', medio: 'Tarjeta Visa', destino: 'Deseos', estado: 'pendiente', cuotas: { total: 300000, cantidad: 6, actual: 1, valor: 50000 } }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -23,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderBilleterasUI();
     renderPrestamos();
+    renderHistorialGlobal(); // Inicia el renderizado del historial
 
     const slNec = document.getElementById('sl-nec');
     const slDes = document.getElementById('sl-des');
@@ -65,10 +75,10 @@ function toggleAccordion(contentId, iconId) {
     const icon = document.getElementById(iconId);
     if (content.classList.contains('show')) {
         content.classList.remove('show');
-        icon.classList.remove('open');
+        if(icon) icon.classList.remove('open');
     } else {
         content.classList.add('show');
-        icon.classList.add('open');
+        if(icon) icon.classList.add('open');
     }
 }
 
@@ -95,7 +105,7 @@ function limpiarInputs(contenedorId) {
     }
 }
 
-// MOVIMIENTOS
+// MOVIMIENTOS FORM
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active');
     document.getElementById('bti').classList.remove('active');
@@ -123,10 +133,111 @@ function toggleCompartido() {
     document.getElementById('caja-compartido').style.display = isChecked ? 'block' : 'none';
 }
 
-function toggleCheck(checkbox, rowId) {
-    const row = document.getElementById(rowId);
-    if (checkbox.checked) row.classList.add('item-completado');
-    else row.classList.remove('item-completado');
+// ==========================================
+// NUEVO: MOTOR DE HISTORIAL GLOBAL
+// ==========================================
+function renderHistorialGlobal() {
+    const container = document.getElementById('lista-historial-global');
+    if(!container) return;
+
+    let html = '';
+    let tIngresos = 0;
+    let tGastos = 0;
+    let count = historialGlobal.length;
+
+    historialGlobal.forEach(h => {
+        // Calcular Resumen
+        if(h.tipo === 'ingreso') tIngresos += h.monto;
+        if(h.tipo === 'gasto') tGastos += h.monto;
+
+        // Visuales
+        let colorMonto = 'var(--text)';
+        let prefijo = '';
+        if(h.tipo === 'gasto') { colorMonto = 'var(--red)'; prefijo = '-'; }
+        if(h.tipo === 'ingreso') { colorMonto = 'var(--green)'; prefijo = '+'; }
+        if(h.tipo === 'ahorro') { colorMonto = 'var(--accent)'; prefijo = '+'; }
+
+        // Tipos de Estado
+        let badgeEstado = '';
+        if(h.estado === 'pagado') badgeEstado = '<span class="badge badge-green" style="background:transparent; border:1px solid var(--green); color:var(--green);">Pagado</span>';
+        else if(h.estado === 'pendiente') badgeEstado = '<span class="badge badge-neutral">Pendiente</span>';
+        else if(h.estado === 'vencido') badgeEstado = '<span class="badge badge-red">Vencido</span>';
+        else if(h.estado === 'finalizado') badgeEstado = '<span class="badge badge-gray">Finalizado</span>';
+
+        // Detalle Expandible
+        let detallesHtml = `
+            <div style="font-size:13px; color:var(--text2); display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--border);">
+               <div><span style="color:var(--text3);">Tipo:</span> <span style="text-transform:capitalize;">${h.tipo}</span></div>
+               <div><span style="color:var(--text3);">Destino:</span> ${h.destino}</div>
+               <div><span style="color:var(--text3);">Estado:</span> <span style="text-transform:capitalize;">${h.estado}</span></div>
+            </div>`;
+
+        if(h.cuotas) {
+            detallesHtml += `
+            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Gastos en Cuotas</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Total financiado:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.total)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Cuotas:</span> <span style="color:var(--text); font-weight:600;">${h.cuotas.actual}/${h.cuotas.cantidad}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Valor cuota:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.valor)}</span></div>
+            </div>`;
+        }
+        if(h.compartido) {
+            detallesHtml += `
+            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px dashed var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--warning); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Gasto Compartido</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona asignada:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.persona}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Porcentaje a cobrar:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.pct}%</span></div>
+            </div>`;
+        }
+        if(h.prestamo) {
+            let colorP = h.prestamo.estadoColor === 'green' ? 'var(--green)' : 'var(--warning)';
+            detallesHtml += `
+            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle de Préstamo</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.persona}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Tipo:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.tipo}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Monto original:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.original)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:10px;"><span>Saldo pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.pendiente)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Estado General:</span> <span style="color:${colorP}; font-weight:700;">${h.prestamo.estadoStr}</span></div>
+            </div>`;
+        }
+
+        html += `
+        <div class="card" style="padding:20px 20px 15px 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+               <div>
+                   <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                      <h4 style="font-size:15px; font-weight:700; margin:0;">${h.desc}</h4>
+                      ${badgeEstado}
+                   </div>
+                   <p style="font-size:12px; color:var(--text3); margin:0;">${formatearFecha(h.fecha)} - ${h.hora} • ${h.medio}</p>
+               </div>
+               <div style="text-align:right;">
+                   <span style="font-size:16px; font-weight:800; color:${colorMonto}; display:block;">${prefijo}$${formatearDinero(h.monto)}</span>
+               </div>
+            </div>
+            
+            <div style="border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">
+                <button onclick="toggleAccordion('hist-det-${h.id}', 'hist-icon-${h.id}')" style="background:transparent; border:none; color:var(--accent); font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:0;">
+                    Ver detalle completo 
+                    <svg id="hist-icon-${h.id}" class="icon-chevron" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div id="hist-det-${h.id}" class="accordion-content">
+                    ${detallesHtml}
+                </div>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+
+    // Actualizar Resumen Rápido
+    document.getElementById('h-count').innerText = count;
+    document.getElementById('h-in').innerText = `$${formatearDinero(tIngresos)}`;
+    document.getElementById('h-out').innerText = `$${formatearDinero(tGastos)}`;
+    let bal = tIngresos - tGastos;
+    let balStr = bal < 0 ? `-$${formatearDinero(Math.abs(bal))}` : `$${formatearDinero(bal)}`;
+    document.getElementById('h-bal').innerText = balStr;
 }
 
 // AHORROS
@@ -134,16 +245,9 @@ function setAhorroTipo() {
     const tipo = document.getElementById('ahorro-tipo').value;
     const lblOrigen = document.getElementById('lbl-origen');
     const lblDestino = document.getElementById('lbl-destino');
-    if(tipo === 'aporte') {
-        lblOrigen.innerText = 'Origen (Medio de pago)';
-        lblDestino.innerText = 'Destino (Billetera Ahorro)';
-    } else if(tipo === 'retiro') {
-        lblOrigen.innerText = 'Origen (Billetera Ahorro)';
-        lblDestino.innerText = 'Destino (Medio de pago)';
-    } else {
-        lblOrigen.innerText = 'Origen (Billetera Ahorro)';
-        lblDestino.innerText = 'Destino (Billetera Ahorro)';
-    }
+    if(tipo === 'aporte') { lblOrigen.innerText = 'Origen (Medio de pago)'; lblDestino.innerText = 'Destino (Billetera Ahorro)'; }
+    else if(tipo === 'retiro') { lblOrigen.innerText = 'Origen (Billetera Ahorro)'; lblDestino.innerText = 'Destino (Medio de pago)'; }
+    else { lblOrigen.innerText = 'Origen (Billetera Ahorro)'; lblDestino.innerText = 'Destino (Billetera Ahorro)'; }
 }
 
 function renderBilleterasUI() {
@@ -194,22 +298,15 @@ function guardarNuevaBilletera() {
     setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
 }
 
-// ==========================================
-// PRÉSTAMOS - LÓGICA AUTOMÁTICA
-// ==========================================
+// PRÉSTAMOS
 function setTipoPrestamo(tipo) {
     const btnMedeben = document.getElementById('p-btn-medeben');
     const btnYodebo = document.getElementById('p-btn-yodebo');
     const btnSubmit = document.getElementById('btn-submit-prestamo');
     btnMedeben.classList.remove('active');
     btnYodebo.classList.remove('active');
-    if(tipo === 'medeben') {
-        btnMedeben.classList.add('active');
-        btnSubmit.style.background = 'var(--green)';
-    } else {
-        btnYodebo.classList.add('active');
-        btnSubmit.style.background = 'var(--red)';
-    }
+    if(tipo === 'medeben') { btnMedeben.classList.add('active'); btnSubmit.style.background = 'var(--green)'; }
+    else { btnYodebo.classList.add('active'); btnSubmit.style.background = 'var(--red)'; }
 }
 
 window.calcularPrestamoInfo = function() {
@@ -282,16 +379,11 @@ function renderPrestamos() {
     let html = '';
     for(const persona in agrupados) {
         let prestamosPersona = agrupados[persona];
-        let net = 0;
-        let vencidos = 0;
-        let proximos = 0;
+        let net = 0; let vencidos = 0; let proximos = 0;
 
         let htmlDetalles = '';
         prestamosPersona.forEach(p => {
-            let saldoPrestamo = 0;
-            let pagadas = 0;
-            let totalC = p.cuotas.length;
-            let cuotasHtml = '';
+            let saldoPrestamo = 0; let pagadas = 0; let totalC = p.cuotas.length; let cuotasHtml = '';
 
             p.cuotas.forEach((c, cIndex) => {
                 if(c.pagada) { pagadas++; } else {
@@ -299,8 +391,7 @@ function renderPrestamos() {
                     let hoy = new Date();
                     let fv = new Date(c.vencimiento + 'T12:00:00');
                     let diffDays = Math.ceil((fv - hoy) / (1000 * 3600 * 24));
-                    if(diffDays < 0) vencidos++;
-                    else if(diffDays <= 7) proximos++;
+                    if(diffDays < 0) vencidos++; else if(diffDays <= 7) proximos++;
                 }
 
                 let pagadaAttr = c.pagada ? 'checked' : '';
@@ -312,10 +403,7 @@ function renderPrestamos() {
 
             htmlDetalles += `
                 <div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span style="font-weight:600; font-size:14px; color:var(--text);">${p.concepto}</span>
-                        <span style="font-size:12px; color:var(--text3);">Total: $${formatearDinero(p.montoTotal)}</span>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-weight:600; font-size:14px; color:var(--text);">${p.concepto}</span><span style="font-size:12px; color:var(--text3);">Total: $${formatearDinero(p.montoTotal)}</span></div>
                     <div style="font-size:12px; color:var(--text2); margin-bottom:15px;">Cuotas pagadas: ${pagadas}/${totalC}</div>
                     ${cuotasHtml}
                 </div>`;
@@ -341,78 +429,34 @@ function renderPrestamos() {
             </div>`;
     }
 
-    // MEMORIA VISUAL: Guardar qué acordeones están abiertos antes de actualizar el DOM
     let acordeonesAbiertos = [];
-    document.querySelectorAll('#lista-prestamos-cards .accordion-content.show').forEach(acc => {
-        acordeonesAbiertos.push(acc.id);
-    });
+    document.querySelectorAll('#lista-prestamos-cards .accordion-content.show').forEach(acc => { acordeonesAbiertos.push(acc.id); });
 
     if(html === '') html = `<div class="card" style="display:flex; align-items:center; justify-content:center; height:120px; border-style:dashed;"><p style="color:var(--text3); font-size:14px; font-weight:500;">No tienes préstamos registrados.</p></div>`;
-    
-    // Actualizar el DOM
     document.getElementById('lista-prestamos-cards').innerHTML = html;
 
-    // MEMORIA VISUAL: Restaurar los acordeones abiertos
     acordeonesAbiertos.forEach(id => {
         const content = document.getElementById(id);
-        if (content) {
-            content.classList.add('show');
-            const iconId = id.replace('det-', 'icon-');
-            const icon = document.getElementById(iconId);
-            if (icon) icon.classList.add('open');
-        }
+        if (content) { content.classList.add('show'); const icon = document.getElementById(id.replace('det-', 'icon-')); if (icon) icon.classList.add('open'); }
     });
-
     actualizarAlertasGlobales();
 }
 
-window.toggleCuota = function(pId, cIndex) {
-    let prestamo = misPrestamos.find(p => p.id === pId);
-    if(prestamo) { prestamo.cuotas[cIndex].pagada = !prestamo.cuotas[cIndex].pagada; renderPrestamos(); }
-}
+window.toggleCuota = function(pId, cIndex) { let prestamo = misPrestamos.find(p => p.id === pId); if(prestamo) { prestamo.cuotas[cIndex].pagada = !prestamo.cuotas[cIndex].pagada; renderPrestamos(); } }
 
 function actualizarAlertasGlobales() {
-    let alertasHTML = '';
-    let hoy = new Date();
-    misPrestamos.forEach(p => {
-        p.cuotas.forEach(c => {
-            if(!c.pagada) {
-                let fv = new Date(c.vencimiento + 'T12:00:00');
-                let diffDays = Math.ceil((fv - hoy) / (1000 * 3600 * 24));
-                if(diffDays < 0) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-red"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vencida hace ${Math.abs(diffDays)} días.</span></div>`;
-                else if(diffDays <= 7) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-warning"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vence en ${diffDays} días.</span></div>`;
-            }
-        });
-    });
-
+    let alertasHTML = ''; let hoy = new Date();
+    misPrestamos.forEach(p => { p.cuotas.forEach(c => { if(!c.pagada) { let fv = new Date(c.vencimiento + 'T12:00:00'); let diffDays = Math.ceil((fv - hoy) / (1000 * 3600 * 24)); if(diffDays < 0) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-red"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vencida hace ${Math.abs(diffDays)} días.</span></div>`; else if(diffDays <= 7) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-warning"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vence en ${diffDays} días.</span></div>`; } }); });
     const list = document.getElementById('alertas-list');
-    if(list) {
-        if(alertasHTML === '') list.innerHTML = `<div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);"><span class="dot dot-neutral"></span><span>Sin alertas activas en este periodo.</span></div>`;
-        else list.innerHTML = alertasHTML;
-    }
+    if(list) { if(alertasHTML === '') list.innerHTML = `<div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);"><span class="dot dot-neutral"></span><span>Sin alertas activas en este periodo.</span></div>`; else list.innerHTML = alertasHTML; }
 }
 
 function toggleTheme(forceLight = false) {
     const body = document.body;
     const isLight = forceLight || body.getAttribute('data-theme') !== 'light';
-    if (isLight) {
-        body.setAttribute('data-theme', 'light');
-        document.getElementById('icon-dark').style.display = 'none'; document.getElementById('icon-light').style.display = 'inline';
-        document.querySelector('.icon-dark-m').style.display = 'none'; document.querySelector('.icon-light-m').style.display = 'inline';
-        localStorage.setItem('theme', 'light');
-    } else {
-        body.removeAttribute('data-theme');
-        document.getElementById('icon-dark').style.display = 'inline'; document.getElementById('icon-light').style.display = 'none';
-        document.querySelector('.icon-dark-m').style.display = 'inline'; document.querySelector('.icon-light-m').style.display = 'none';
-        localStorage.setItem('theme', 'dark');
-    }
+    if (isLight) { body.setAttribute('data-theme', 'light'); document.getElementById('icon-dark').style.display = 'none'; document.getElementById('icon-light').style.display = 'inline'; document.querySelector('.icon-dark-m').style.display = 'none'; document.querySelector('.icon-light-m').style.display = 'inline'; localStorage.setItem('theme', 'light'); }
+    else { body.removeAttribute('data-theme'); document.getElementById('icon-dark').style.display = 'inline'; document.getElementById('icon-light').style.display = 'none'; document.querySelector('.icon-dark-m').style.display = 'inline'; document.querySelector('.icon-light-m').style.display = 'none'; localStorage.setItem('theme', 'dark'); }
 }
 
-function togglePwd() {
-    const pwd = document.getElementById('a-pwd');
-    pwd.type = pwd.type === 'password' ? 'text' : 'password';
-}
-function doAuth() {
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-}
+function togglePwd() { const pwd = document.getElementById('a-pwd'); pwd.type = pwd.type === 'password' ? 'text' : 'password'; }
+function doAuth() { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex'; }
