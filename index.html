@@ -49,6 +49,7 @@
       <div class="nav">
         <button class="nb active" onclick="sp('resumen', this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Resumen</span></button>
         <button class="nb" onclick="sp('movimientos', this)"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg><span>Movimientos</span></button>
+        <button class="nb" onclick="sp('historial', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Historial</span></button>
         <button class="nb" onclick="sp('ahorros', this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>Ahorros</span></button>
         <button class="nb" onclick="sp('prestamos', this)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Préstamos</span></button>
         <button class="nb" onclick="sp('ia', this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>IA</span></button>
@@ -119,7 +120,7 @@
           <button class="btn" style="width:auto; padding:10px 20px;" onclick="togglePanel('panel-registro')">+ Nuevo Registro</button>
         </div>
 
-        <div class="card form-panel" id="panel-registro">
+        <div class="card form-panel" id="panel-registro" style="display:block;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="font-size:16px; font-weight:700;">Registrar Movimiento</h3>
             <button class="btn-icon" style="border:none; padding:5px;" onclick="togglePanel('panel-registro')">✕</button>
@@ -156,20 +157,42 @@
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
         </div>
 
-        <input type="text" class="in" placeholder="Buscar por descripción..." style="max-width: 500px; background: var(--bg2);">
-        <div class="filter-scroll">
-          <button class="pill active">Todo</button><button class="pill">Gastos</button><button class="pill">Ingresos</button><button class="pill">En cuotas</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
-          <div class="card" style="flex-grow: 1;">
-            <div class="ct">Registros del Mes</div>
-            <p style="color:var(--text3); font-size:13px; text-align:center; padding: 20px;">No hay registros aún.</p>
-          </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:20px;" class="ahorros-grid">
           <div class="card" style="flex-grow: 1;">
             <div class="ct">Comparativa 6 Meses</div>
-            <div class="chart-empty" style="height:250px;">Sin datos suficientes</div>
+            <div class="chart-empty" style="height:200px;">Sin datos suficientes</div>
           </div>
         </div>
+      </div>
+
+      <div id="page-historial" class="page">
+        <div class="header">
+          <h2>Historial General</h2>
+        </div>
+        
+        <div class="mg-4">
+          <div class="met compact"><div class="ml">Movimientos</div><div class="mv" id="h-count">0</div></div>
+          <div class="met compact"><div class="ml">Ingresos</div><div class="mv ok" id="h-in">$0</div></div>
+          <div class="met compact"><div class="ml">Gastos</div><div class="mv bad" id="h-out">$0</div></div>
+          <div class="met compact"><div class="ml">Balance</div><div class="mv" style="color:var(--text);" id="h-bal">$0</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom: 25px; padding: 20px;">
+           <div class="ct" style="margin-bottom: 15px;">Filtros Avanzados</div>
+           <div class="grid-filtros">
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Mes: Todos</option><option value="01">Enero</option><option value="05">Mayo</option><option value="06">Junio</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Año: Todos</option><option value="2026">2026</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Medio Pago: Todos</option><option value="Naranja X">Naranja X</option><option value="Banco Galicia">Banco Galicia</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Destino: Todos</option><option value="Necesidades">Necesidades</option><option value="Deseos">Deseos</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Persona: Todas</option><option value="Sofi">Sofi</option><option value="Carlos">Carlos</option></select>
+              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="vencido">Vencido</option></select>
+           </div>
+        </div>
+
+        <div id="lista-historial-global" style="display:flex; flex-direction:column; gap:15px;">
+           </div>
+
       </div>
 
       <div id="page-ahorros" class="page">
@@ -234,7 +257,6 @@
                 </div>
               </div>
             </div>
-            <div class="card" style="flex-grow: 1;"><div class="ct">Historial</div><p style="color:var(--text3); font-size:13px; text-align:center; padding:20px;">Sin movimientos registrados.</p></div>
           </div>
         </div>
       </div>
@@ -363,6 +385,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>
