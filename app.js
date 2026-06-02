@@ -5,13 +5,25 @@
 let misBilleteras = []; 
 let misPrestamos = [];
 
-// Base de datos Mock para demostrar el Historial Global con todos los casos requeridos
+// Base de datos Mock para demostrar el Historial Global (Auditoría de todos los módulos)
 const historialGlobal = [
-    { id: 'h1', fecha: '2026-06-15', hora: '18:30', desc: 'Supermercado', monto: 35000, tipo: 'gasto', medio: 'Naranja X', destino: 'Necesidades', estado: 'pagado', compartido: { persona: 'Sofi', pct: 50 } },
-    { id: 'h2', fecha: '2026-06-01', hora: '09:00', desc: 'Ingreso sueldo', monto: 2000000, tipo: 'ingreso', medio: 'Banco Galicia', destino: '-', estado: 'pagado' },
-    { id: 'h3', fecha: '2026-06-10', hora: '14:20', desc: 'Aporte ahorro', monto: 100000, tipo: 'ahorro', medio: 'Cuenta Sueldo', destino: 'Binance', estado: 'pagado' },
-    { id: 'h4', fecha: '2026-06-12', hora: '10:00', desc: 'Préstamo Carlos', monto: 200000, tipo: 'prestamo', medio: '-', destino: '-', estado: 'pendiente', prestamo: { persona: 'Carlos', tipo: 'Me deben', original: 200000, pendiente: 150000, estadoStr: 'Próximo a vencer', estadoColor: 'warning' } },
-    { id: 'h5', fecha: '2026-06-05', hora: '20:15', desc: 'Televisor', monto: 300000, tipo: 'gasto', medio: 'Tarjeta Visa', destino: 'Deseos', estado: 'pendiente', cuotas: { total: 300000, cantidad: 6, actual: 1, valor: 50000 } }
+    { id: 'h1', fecha: '2026-06-15', hora: '18:30', desc: 'Supermercado', monto: 35000, tipo: 'gasto', medio: 'Naranja X', destino: 'Necesidades', estado: 'pagado', 
+      gastoDetalle: { categoria: 'Alimentos', presupuesto: 300000, gastado: 185000, disponible: 115000 }
+    },
+    { id: 'h2', fecha: '2026-06-01', hora: '09:00', desc: 'Ingreso sueldo', monto: 1800000, tipo: 'ingreso', medio: 'Banco Galicia', destino: '-', estado: 'pagado' },
+    { id: 'h3', fecha: '2026-06-10', hora: '14:20', desc: 'Aporte ahorro Binance', monto: 100000, tipo: 'ahorro', medio: 'Cuenta Sueldo', destino: 'Binance', estado: 'pagado', 
+      ahorro: { origen: 'Galicia', destino: 'Binance', color: '#f5a623' } 
+    },
+    { id: 'h4', fecha: '2026-06-12', hora: '10:00', desc: 'Préstamo a Carlos', monto: 200000, tipo: 'prestamo', medio: '-', destino: '-', estado: 'pendiente', 
+      prestamo: { persona: 'Carlos', tipo: 'Me deben', original: 200000, pendiente: 150000, compromiso: '15/08/2026' } 
+    },
+    { id: 'h5', fecha: '2026-06-05', hora: '20:15', desc: 'Televisor', monto: 300000, tipo: 'gasto', medio: 'Naranja X', destino: 'Deseos', estado: 'pendiente', 
+      gastoDetalle: { categoria: 'Electrónica', presupuesto: 500000, gastado: 300000, disponible: 200000 },
+      cuotas: { total: 300000, cantidad: 6, actual: 1, valor: 50000 } 
+    },
+    { id: 'h6', fecha: '2026-06-18', hora: '12:00', desc: 'Cena compartida', monto: 50000, tipo: 'compartido', medio: 'Efectivo', destino: 'Salidas', estado: 'pendiente', 
+      compartido: { persona: 'Sofi', pct: 50, montoPendiente: 25000 } 
+    }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderBilleterasUI();
     renderPrestamos();
-    renderHistorialGlobal(); // Inicia el renderizado del historial
+    filtrarHistorial(); // Inicia el renderizado del historial con filtros por defecto
 
     const slNec = document.getElementById('sl-nec');
     const slDes = document.getElementById('sl-des');
@@ -105,6 +117,13 @@ function limpiarInputs(contenedorId) {
     }
 }
 
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
 // MOVIMIENTOS FORM
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active');
@@ -134,37 +153,70 @@ function toggleCompartido() {
 }
 
 // ==========================================
-// NUEVO: MOTOR DE HISTORIAL GLOBAL
+// MOTOR HISTORIAL: BÚSQUEDA, FILTROS Y EXPORTACIÓN
 // ==========================================
-function renderHistorialGlobal() {
+window.filtrarHistorial = function() {
+    const search = document.getElementById('h-busqueda').value.toLowerCase();
+    const mes = document.getElementById('h-mes').value;
+    const anio = document.getElementById('h-anio').value;
+    const tipo = document.getElementById('h-tipo').value;
+    const medio = document.getElementById('h-medio').value;
+    const destino = document.getElementById('h-destino').value;
+    const persona = document.getElementById('h-persona').value;
+    const estado = document.getElementById('h-estado').value;
+
+    let filtrados = historialGlobal.filter(h => {
+        // Búsqueda por texto libre
+        let txtInfo = `${h.desc} ${h.medio} ${h.destino} ${h.tipo} ${h.estado}`.toLowerCase();
+        if(h.prestamo) txtInfo += ` ${h.prestamo.persona}`;
+        if(h.compartido) txtInfo += ` ${h.compartido.persona}`;
+        if(h.ahorro) txtInfo += ` ${h.ahorro.origen} ${h.ahorro.destino}`;
+        if(search && !txtInfo.includes(search)) return false;
+
+        // Filtros exactos
+        if(mes && h.fecha.split('-')[1] !== mes) return false;
+        if(anio && h.fecha.split('-')[0] !== anio) return false;
+        if(tipo && h.tipo !== tipo) return false;
+        if(medio && h.medio !== medio && (!h.ahorro || h.ahorro.origen !== medio)) return false;
+        if(destino && h.destino !== destino && (!h.ahorro || h.ahorro.destino !== destino)) return false;
+        if(estado && h.estado !== estado) return false;
+        
+        if(persona) {
+            let matchesPersona = false;
+            if(h.prestamo && h.prestamo.persona === persona) matchesPersona = true;
+            if(h.compartido && h.compartido.persona === persona) matchesPersona = true;
+            if(!matchesPersona) return false;
+        }
+
+        return true;
+    });
+
+    renderHistorialGlobal(filtrados);
+}
+
+function renderHistorialGlobal(data) {
     const container = document.getElementById('lista-historial-global');
     if(!container) return;
 
     let html = '';
-    let tIngresos = 0;
-    let tGastos = 0;
-    let count = historialGlobal.length;
+    let tIngresos = 0; let tGastos = 0; let tAhorros = 0;
 
-    historialGlobal.forEach(h => {
-        // Calcular Resumen
+    data.forEach(h => {
         if(h.tipo === 'ingreso') tIngresos += h.monto;
-        if(h.tipo === 'gasto') tGastos += h.monto;
+        if(h.tipo === 'gasto' || h.tipo === 'compartido') tGastos += h.monto;
+        if(h.tipo === 'ahorro') tAhorros += h.monto;
 
-        // Visuales
-        let colorMonto = 'var(--text)';
-        let prefijo = '';
-        if(h.tipo === 'gasto') { colorMonto = 'var(--red)'; prefijo = '-'; }
+        let colorMonto = 'var(--text)'; let prefijo = '';
+        if(h.tipo === 'gasto' || h.tipo === 'compartido') { colorMonto = 'var(--red)'; prefijo = '-'; }
         if(h.tipo === 'ingreso') { colorMonto = 'var(--green)'; prefijo = '+'; }
-        if(h.tipo === 'ahorro') { colorMonto = 'var(--accent)'; prefijo = '+'; }
+        if(h.tipo === 'ahorro') { colorMonto = 'var(--blue)'; prefijo = '+'; }
 
-        // Tipos de Estado
         let badgeEstado = '';
         if(h.estado === 'pagado') badgeEstado = '<span class="badge badge-green" style="background:transparent; border:1px solid var(--green); color:var(--green);">Pagado</span>';
-        else if(h.estado === 'pendiente') badgeEstado = '<span class="badge badge-neutral">Pendiente</span>';
-        else if(h.estado === 'vencido') badgeEstado = '<span class="badge badge-red">Vencido</span>';
+        else if(h.estado === 'pendiente') badgeEstado = '<span class="badge badge-warning">Pendiente</span>';
+        else if(h.estado === 'vencido') badgeEstado = '<span class="badge badge-darkred">Vencido</span>';
         else if(h.estado === 'finalizado') badgeEstado = '<span class="badge badge-gray">Finalizado</span>';
 
-        // Detalle Expandible
         let detallesHtml = `
             <div style="font-size:13px; color:var(--text2); display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--border);">
                <div><span style="color:var(--text3);">Tipo:</span> <span style="text-transform:capitalize;">${h.tipo}</span></div>
@@ -172,6 +224,16 @@ function renderHistorialGlobal() {
                <div><span style="color:var(--text3);">Estado:</span> <span style="text-transform:capitalize;">${h.estado}</span></div>
             </div>`;
 
+        if(h.gastoDetalle) {
+            detallesHtml += `
+            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle Presupuestario</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Categoría:</span> <span style="color:var(--text); font-weight:600;">${h.gastoDetalle.categoria}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Presupuesto asignado:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.gastoDetalle.presupuesto)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Gastado acumulado:</span> <span style="color:var(--red); font-weight:600;">$${formatearDinero(h.gastoDetalle.gastado)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Disponible restante:</span> <span style="color:var(--green); font-weight:700;">$${formatearDinero(h.gastoDetalle.disponible)}</span></div>
+            </div>`;
+        }
         if(h.cuotas) {
             detallesHtml += `
             <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
@@ -185,12 +247,21 @@ function renderHistorialGlobal() {
             detallesHtml += `
             <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px dashed var(--border); margin-bottom:10px;">
                 <div style="font-size:11px; color:var(--warning); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Gasto Compartido</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona asignada:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.persona}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Porcentaje a cobrar:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.pct}%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona asociada:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.persona}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Porcentaje asignado:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.pct}%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Monto pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.compartido.montoPendiente)}</span></div>
+            </div>`;
+        }
+        if(h.ahorro) {
+            detallesHtml += `
+            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--blue); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle de Ahorro</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Medio Origen:</span> <span style="color:var(--text); font-weight:600;">${h.ahorro.origen}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Billetera Destino:</span> <div style="display:flex; align-items:center; gap:5px;"><span class="dot" style="background:${h.ahorro.color};"></span><span style="color:var(--text); font-weight:600;">${h.ahorro.destino}</span></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Monto transferido:</span> <span style="color:var(--blue); font-weight:700;">$${formatearDinero(h.monto)}</span></div>
             </div>`;
         }
         if(h.prestamo) {
-            let colorP = h.prestamo.estadoColor === 'green' ? 'var(--green)' : 'var(--warning)';
             detallesHtml += `
             <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
                 <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle de Préstamo</div>
@@ -198,7 +269,7 @@ function renderHistorialGlobal() {
                 <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Tipo:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.tipo}</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Monto original:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.original)}</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:10px;"><span>Saldo pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.pendiente)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Estado General:</span> <span style="color:${colorP}; font-weight:700;">${h.prestamo.estadoStr}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Fecha compromiso:</span> <span style="color:var(--text); font-weight:700;">${h.prestamo.compromiso}</span></div>
             </div>`;
         }
 
@@ -229,15 +300,25 @@ function renderHistorialGlobal() {
         </div>`;
     });
 
+    if(html === '') html = `<div class="card" style="display:flex; align-items:center; justify-content:center; height:120px; border-style:dashed;"><p style="color:var(--text3); font-size:14px; font-weight:500;">No hay movimientos que coincidan con estos filtros.</p></div>`;
     container.innerHTML = html;
 
-    // Actualizar Resumen Rápido
-    document.getElementById('h-count').innerText = count;
+    // Actualizar Resumen Rápido con los cálculos del array filtrado
+    document.getElementById('h-count').innerText = data.length;
     document.getElementById('h-in').innerText = `$${formatearDinero(tIngresos)}`;
     document.getElementById('h-out').innerText = `$${formatearDinero(tGastos)}`;
-    let bal = tIngresos - tGastos;
-    let balStr = bal < 0 ? `-$${formatearDinero(Math.abs(bal))}` : `$${formatearDinero(bal)}`;
-    document.getElementById('h-bal').innerText = balStr;
+    document.getElementById('h-aho').innerText = `$${formatearDinero(tAhorros)}`;
+}
+
+window.exportarHistorial = function(formato) {
+    showToast(`Generando exportación filtrada en ${formato.toUpperCase()}...`);
+    if(formato === 'pdf') {
+        // Alerta de que la exportación PDF respeta los filtros visualizados
+        setTimeout(() => {
+            const element = document.getElementById('lista-historial-global');
+            html2pdf().from(element).save('Historial_Auditoria.pdf');
+        }, 800);
+    }
 }
 
 // AHORROS
@@ -293,9 +374,7 @@ function guardarNuevaBilletera() {
     misBilleteras.push({ id: 'b_' + Date.now(), nombre: nombre, color: color });
     cerrarNuevaBilletera();
     renderBilleterasUI(); 
-    document.getElementById('toast').innerText = "Billetera creada";
-    document.getElementById('toast').classList.add('show');
-    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+    showToast("Billetera creada");
 }
 
 // PRÉSTAMOS
