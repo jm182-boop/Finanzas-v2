@@ -69,7 +69,6 @@
       <div id="page-resumen" class="page active">
         <div class="header">
           <div style="display:flex; align-items:center; gap:10px;"><button class="btn-icon">‹</button><h2 id="mlabel">Mes</h2><button class="btn-icon">›</button></div>
-          <button class="btn-icon" style="font-size: 13px; color: var(--accent); border-color:var(--accent);"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Descargar PDF</button>
         </div>
         <div class="mg">
           <div class="met"><div class="ml">Ingresos</div><div class="mv">$0</div></div>
@@ -167,26 +166,49 @@
 
       <div id="page-historial" class="page">
         <div class="header">
-          <h2>Historial General</h2>
+          <h2>Historial y Auditoría</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-icon" style="color:var(--text); border-color:var(--border); font-size:12px;" onclick="exportarHistorial('csv')">CSV</button>
+            <button class="btn-icon" style="color:var(--green); border-color:var(--green); font-size:12px;" onclick="exportarHistorial('excel')">Excel</button>
+            <button class="btn-icon" style="color:var(--red); border-color:var(--red); font-size:12px;" onclick="exportarHistorial('pdf')">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF
+            </button>
+          </div>
         </div>
         
         <div class="mg-4">
           <div class="met compact"><div class="ml">Movimientos</div><div class="mv" id="h-count">0</div></div>
           <div class="met compact"><div class="ml">Ingresos</div><div class="mv ok" id="h-in">$0</div></div>
           <div class="met compact"><div class="ml">Gastos</div><div class="mv bad" id="h-out">$0</div></div>
-          <div class="met compact"><div class="ml">Balance</div><div class="mv" style="color:var(--text);" id="h-bal">$0</div></div>
+          <div class="met compact"><div class="ml">Ahorros</div><div class="mv blue" id="h-aho">$0</div></div>
         </div>
 
         <div class="card" style="margin-bottom: 25px; padding: 20px;">
-           <div class="ct" style="margin-bottom: 15px;">Filtros Avanzados</div>
+           <div class="ct" style="margin-bottom: 15px;">Filtros y Búsqueda</div>
+           <input type="text" id="h-busqueda" class="in" placeholder="Buscar por descripción, persona, medio, destino, billetera..." onkeyup="filtrarHistorial()" style="background:var(--bg3);">
+           
            <div class="grid-filtros">
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Mes: Todos</option><option value="01">Enero</option><option value="05">Mayo</option><option value="06">Junio</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Año: Todos</option><option value="2026">2026</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Medio Pago: Todos</option><option value="Naranja X">Naranja X</option><option value="Banco Galicia">Banco Galicia</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Destino: Todos</option><option value="Necesidades">Necesidades</option><option value="Deseos">Deseos</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Persona: Todas</option><option value="Sofi">Sofi</option><option value="Carlos">Carlos</option></select>
-              <select class="in" style="margin-bottom:0; padding:10px;"><option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="vencido">Vencido</option></select>
+              <select id="h-mes" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Mes: Todos</option><option value="01">Enero</option><option value="05">Mayo</option><option value="06">Junio</option>
+              </select>
+              <select id="h-anio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Año: Todos</option><option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+              <select id="h-tipo" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option>
+              </select>
+              <select id="h-medio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Medio Pago: Todos</option><option value="Naranja X">Naranja X</option><option value="Banco Galicia">Banco Galicia</option><option value="Cuenta Sueldo">Cuenta Sueldo</option>
+              </select>
+              <select id="h-destino" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Destino: Todos</option><option value="Necesidades">Necesidades</option><option value="Deseos">Deseos</option><option value="Binance">Binance</option>
+              </select>
+              <select id="h-persona" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Persona: Todas</option><option value="Sofi">Sofi</option><option value="Carlos">Carlos</option>
+              </select>
+              <select id="h-estado" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                  <option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="vencido">Vencido</option>
+              </select>
            </div>
         </div>
 
@@ -385,6 +407,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
