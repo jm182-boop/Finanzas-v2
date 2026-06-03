@@ -87,7 +87,7 @@
                 <div class="ct" style="margin-bottom: 15px;">Alertas y Recordatorios</div>
                 <div id="alertas-list">
                    <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
-                     <span class="dot dot-neutral"></span>
+                     <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                      <span>Sin alertas activas en este periodo.</span>
                    </div>
                 </div>
@@ -97,11 +97,11 @@
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-checklist">
               <div class="ct">CHECKLIST DE PAGOS</div>
-              <p style="color:var(--text3); font-size:13px;">Sin obligaciones registradas.</p>
+              <p style="color:var(--text3); font-size:13px; text-align:center;">Sin obligaciones registradas.</p>
             </div>
             <div class="card">
               <div class="ct">POR MEDIO DE PAGO</div>
-              <div class="li" style="padding:10px 0; border:none;"><span class="li-desc" style="color:var(--text2); font-size:14px;">Sin movimientos</span><span class="li-monto" style="font-size:14px;">$0</span></div>
+              <p style="color:var(--text3); font-size:13px; text-align:center;">Sin movimientos</p>
             </div>
             <div class="card" style="flex-grow: 1;">
               <div class="ct">DISTRIBUCIÓN</div>
@@ -122,7 +122,7 @@
         <div class="card form-panel" id="panel-registro" style="display:block;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="font-size:16px; font-weight:700;">Registrar Movimiento</h3>
-            <button class="btn-icon" style="border:none; padding:5px;" onclick="togglePanel('panel-registro')">✕</button>
+            <button class="btn-icon" style="border:none; padding:5px;" onclick="togglePanel('panel-registro')"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
           </div>
           <div class="tabs">
             <button id="btg" class="tb active b-rojo" onclick="setTipoMov('gasto')">Gasto</button>
@@ -168,11 +168,9 @@
         <div class="header">
           <h2>Historial y Auditoría</h2>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn-icon" style="color:var(--text); border-color:var(--border); font-size:12px;" onclick="exportarHistorial('csv')">CSV</button>
-            <button class="btn-icon" style="color:var(--green); border-color:var(--green); font-size:12px;" onclick="exportarHistorial('excel')">Excel</button>
-            <button class="btn-icon" style="color:var(--red); border-color:var(--red); font-size:12px;" onclick="exportarHistorial('pdf')">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF
-            </button>
+            <button class="btn-icon" style="color:var(--text); border-color:var(--border); font-size:12px;" onclick="exportarHistorial('csv')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> CSV</button>
+            <button class="btn-icon" style="color:var(--green); border-color:var(--green); font-size:12px;" onclick="exportarHistorial('excel')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Excel</button>
+            <button class="btn-icon" style="color:var(--red); border-color:var(--red); font-size:12px;" onclick="exportarHistorial('pdf')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF</button>
           </div>
         </div>
         
@@ -184,31 +182,21 @@
         </div>
 
         <div class="card" style="margin-bottom: 25px; padding: 20px;">
-           <div class="ct" style="margin-bottom: 15px;">Filtros y Búsqueda</div>
-           <input type="text" id="h-busqueda" class="in" placeholder="Buscar por descripción, persona, medio, destino, billetera..." onkeyup="filtrarHistorial()" style="background:var(--bg3);">
+           <div class="ct" style="margin-bottom: 15px;"><svg class="icon-svg" style="display:inline; margin-right:5px; margin-bottom:-2px;" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtros y Búsqueda</div>
+           
+           <div style="position:relative; margin-bottom:15px;">
+              <svg class="icon-svg" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--text3);" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="h-busqueda" class="in" placeholder="Buscar descripción, medio, destino..." onkeyup="filtrarHistorial()" style="background:var(--bg3); padding-left:40px; margin-bottom:0;">
+           </div>
            
            <div class="grid-filtros">
-              <select id="h-mes" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Mes: Todos</option><option value="01">Enero</option><option value="05">Mayo</option><option value="06">Junio</option>
-              </select>
-              <select id="h-anio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Año: Todos</option><option value="2025">2025</option><option value="2026">2026</option>
-              </select>
-              <select id="h-tipo" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option>
-              </select>
-              <select id="h-medio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Medio Pago: Todos</option><option value="Naranja X">Naranja X</option><option value="Banco Galicia">Banco Galicia</option><option value="Cuenta Sueldo">Cuenta Sueldo</option>
-              </select>
-              <select id="h-destino" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Destino: Todos</option><option value="Necesidades">Necesidades</option><option value="Deseos">Deseos</option><option value="Binance">Binance</option>
-              </select>
-              <select id="h-persona" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Persona: Todas</option><option value="Sofi">Sofi</option><option value="Carlos">Carlos</option>
-              </select>
-              <select id="h-estado" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
-                  <option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="vencido">Vencido</option>
-              </select>
+              <select id="h-mes" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Mes: Todos</option><option value="01">Enero</option><option value="05">Mayo</option><option value="06">Junio</option></select>
+              <select id="h-anio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Año: Todos</option><option value="2025">2025</option><option value="2026">2026</option></select>
+              <select id="h-tipo" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option></select>
+              <select id="h-medio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Medio Pago: Todos</option></select>
+              <select id="h-destino" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Destino: Todos</option></select>
+              <select id="h-persona" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Persona: Todas</option></select>
+              <select id="h-estado" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="proximo">Próximo a vencer</option><option value="vencido">Vencido</option><option value="finalizado">Finalizado</option></select>
            </div>
         </div>
 
@@ -296,7 +284,7 @@
         <div class="card form-panel" id="panel-prestamo">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="font-size:16px; font-weight:700;">Registrar Préstamo</h3>
-            <button class="btn-icon" style="border:none; padding:5px;" onclick="togglePanel('panel-prestamo')">✕</button>
+            <button class="btn-icon" style="border:none; padding:5px;" onclick="togglePanel('panel-prestamo')"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
           </div>
           <div class="tabs" style="margin-bottom: 20px;">
             <button id="p-btn-medeben" class="tb active b-verde" onclick="setTipoPrestamo('medeben')">Me deben</button>
@@ -346,7 +334,7 @@
           </div>
           <div style="display:flex;gap:12px;margin-top:auto;">
             <input type="text" class="in" style="margin-bottom:0; background:var(--bg);" placeholder="Pregúntame cualquier cosa...">
-            <button class="btn" style="width:55px;flex-shrink:0; border-radius:10px;">➔</button>
+            <button class="btn" style="width:55px;flex-shrink:0; border-radius:10px;"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
           </div>
         </div>
       </div>
@@ -407,6 +395,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
