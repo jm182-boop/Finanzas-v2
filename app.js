@@ -1,30 +1,23 @@
 // ==========================================
-// app.js - MOTOR UI, AHORROS, PRÉSTAMOS E HISTORIAL
+// app.js - MOTOR UI, AHORROS, PRÉSTAMOS E HISTORIAL (100% LIMPIO - SIN DATOS FALSOS)
 // ==========================================
 
 let misBilleteras = []; 
 let misPrestamos = [];
+let historialGlobal = []; // Array de Base de Datos inicializado VACÍO
 
-// Base de datos Mock para demostrar el Historial Global (Auditoría de todos los módulos)
-const historialGlobal = [
-    { id: 'h1', fecha: '2026-06-15', hora: '18:30', desc: 'Supermercado', monto: 35000, tipo: 'gasto', medio: 'Naranja X', destino: 'Necesidades', estado: 'pagado', 
-      gastoDetalle: { categoria: 'Alimentos', presupuesto: 300000, gastado: 185000, disponible: 115000 }
-    },
-    { id: 'h2', fecha: '2026-06-01', hora: '09:00', desc: 'Ingreso sueldo', monto: 1800000, tipo: 'ingreso', medio: 'Banco Galicia', destino: '-', estado: 'pagado' },
-    { id: 'h3', fecha: '2026-06-10', hora: '14:20', desc: 'Aporte ahorro Binance', monto: 100000, tipo: 'ahorro', medio: 'Cuenta Sueldo', destino: 'Binance', estado: 'pagado', 
-      ahorro: { origen: 'Galicia', destino: 'Binance', color: '#f5a623' } 
-    },
-    { id: 'h4', fecha: '2026-06-12', hora: '10:00', desc: 'Préstamo a Carlos', monto: 200000, tipo: 'prestamo', medio: '-', destino: '-', estado: 'pendiente', 
-      prestamo: { persona: 'Carlos', tipo: 'Me deben', original: 200000, pendiente: 150000, compromiso: '15/08/2026' } 
-    },
-    { id: 'h5', fecha: '2026-06-05', hora: '20:15', desc: 'Televisor', monto: 300000, tipo: 'gasto', medio: 'Naranja X', destino: 'Deseos', estado: 'pendiente', 
-      gastoDetalle: { categoria: 'Electrónica', presupuesto: 500000, gastado: 300000, disponible: 200000 },
-      cuotas: { total: 300000, cantidad: 6, actual: 1, valor: 50000 } 
-    },
-    { id: 'h6', fecha: '2026-06-18', hora: '12:00', desc: 'Cena compartida', monto: 50000, tipo: 'compartido', medio: 'Efectivo', destino: 'Salidas', estado: 'pendiente', 
-      compartido: { persona: 'Sofi', pct: 50, montoPendiente: 25000 } 
-    }
-];
+// Conjunto de Iconos Lineales en SVG para inyectar en las plantillas JS
+const svgIcon = {
+    tipo: '<svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+    estado: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+    grupo: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+    destino: '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
+    medio: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>',
+    persona: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    porcentaje: '<svg class="icon-svg" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>',
+    billetera: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+    cuotas: '<svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -44,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderBilleterasUI();
     renderPrestamos();
-    filtrarHistorial(); // Inicia el renderizado del historial con filtros por defecto
+    filtrarHistorial(); // Inicia el renderizado del historial vacío
 
     const slNec = document.getElementById('sl-nec');
     const slDes = document.getElementById('sl-des');
@@ -153,7 +146,7 @@ function toggleCompartido() {
 }
 
 // ==========================================
-// MOTOR HISTORIAL: BÚSQUEDA, FILTROS Y EXPORTACIÓN
+// MOTOR HISTORIAL: PLANTILLAS, FILTROS Y ESTADOS VACÍOS
 // ==========================================
 window.filtrarHistorial = function() {
     const search = document.getElementById('h-busqueda').value.toLowerCase();
@@ -166,14 +159,12 @@ window.filtrarHistorial = function() {
     const estado = document.getElementById('h-estado').value;
 
     let filtrados = historialGlobal.filter(h => {
-        // Búsqueda por texto libre
         let txtInfo = `${h.desc} ${h.medio} ${h.destino} ${h.tipo} ${h.estado}`.toLowerCase();
         if(h.prestamo) txtInfo += ` ${h.prestamo.persona}`;
         if(h.compartido) txtInfo += ` ${h.compartido.persona}`;
         if(h.ahorro) txtInfo += ` ${h.ahorro.origen} ${h.ahorro.destino}`;
         if(search && !txtInfo.includes(search)) return false;
 
-        // Filtros exactos
         if(mes && h.fecha.split('-')[1] !== mes) return false;
         if(anio && h.fecha.split('-')[0] !== anio) return false;
         if(tipo && h.tipo !== tipo) return false;
@@ -212,64 +203,76 @@ function renderHistorialGlobal(data) {
         if(h.tipo === 'ahorro') { colorMonto = 'var(--blue)'; prefijo = '+'; }
 
         let badgeEstado = '';
-        if(h.estado === 'pagado') badgeEstado = '<span class="badge badge-green" style="background:transparent; border:1px solid var(--green); color:var(--green);">Pagado</span>';
-        else if(h.estado === 'pendiente') badgeEstado = '<span class="badge badge-warning">Pendiente</span>';
-        else if(h.estado === 'vencido') badgeEstado = '<span class="badge badge-darkred">Vencido</span>';
-        else if(h.estado === 'finalizado') badgeEstado = '<span class="badge badge-gray">Finalizado</span>';
+        if(h.estado === 'pagado') badgeEstado = `<span class="badge badge-green" style="background:transparent; border:1px solid var(--green); color:var(--green);">${svgIcon.estado} Pagado</span>`;
+        else if(h.estado === 'pendiente') badgeEstado = `<span class="badge badge-warning">${svgIcon.estado} Pendiente</span>`;
+        else if(h.estado === 'proximo') badgeEstado = `<span class="badge badge-warning" style="background:var(--warning); color:#141416;">${svgIcon.estado} Próximo a vencer</span>`;
+        else if(h.estado === 'vencido') badgeEstado = `<span class="badge badge-darkred">${svgIcon.estado} Vencido</span>`;
+        else if(h.estado === 'finalizado') badgeEstado = `<span class="badge badge-gray">${svgIcon.estado} Finalizado</span>`;
 
         let detallesHtml = `
             <div style="font-size:13px; color:var(--text2); display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--border);">
-               <div><span style="color:var(--text3);">Tipo:</span> <span style="text-transform:capitalize;">${h.tipo}</span></div>
-               <div><span style="color:var(--text3);">Destino:</span> ${h.destino}</div>
-               <div><span style="color:var(--text3);">Estado:</span> <span style="text-transform:capitalize;">${h.estado}</span></div>
+               <div style="display:flex; align-items:center; gap:5px;">${svgIcon.tipo} <span style="color:var(--text3);">Tipo:</span> <span style="text-transform:capitalize; color:var(--text);">${h.tipo}</span></div>
+               <div style="display:flex; align-items:center; gap:5px;">${svgIcon.estado} <span style="color:var(--text3);">Estado:</span> <span style="text-transform:capitalize; color:var(--text);">${h.estado}</span></div>
             </div>`;
 
         if(h.gastoDetalle) {
+            let pct = (h.gastoDetalle.gastado / h.gastoDetalle.presupuesto) * 100;
+            if(pct > 100) pct = 100;
             detallesHtml += `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle Presupuestario</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Categoría:</span> <span style="color:var(--text); font-weight:600;">${h.gastoDetalle.categoria}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Presupuesto asignado:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.gastoDetalle.presupuesto)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Gastado acumulado:</span> <span style="color:var(--red); font-weight:600;">$${formatearDinero(h.gastoDetalle.gastado)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Disponible restante:</span> <span style="color:var(--green); font-weight:700;">$${formatearDinero(h.gastoDetalle.disponible)}</span></div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.medio} <span>Medio de pago:</span></div> <span style="color:var(--text); font-weight:600;">${h.medio}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.grupo} <span>Grupo:</span></div> <span style="color:var(--text); font-weight:600;">${h.gastoDetalle.categoria}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:15px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.destino} <span>Destino:</span></div> <span style="color:var(--text); font-weight:600;">${h.destino}</span></div>
+                
+                <div class="progress-wrap" style="margin-bottom:0;">
+                    <div class="progress-header"><span>Presupuesto: $${formatearDinero(h.gastoDetalle.presupuesto)}</span><span>Disponible: $${formatearDinero(h.gastoDetalle.disponible)}</span></div>
+                    <div class="progress-bar" style="height:6px; background:var(--bg2);"><div class="progress-fill" style="width: ${pct}%; background: var(--accent);"></div></div>
+                    <div style="font-size:11px; color:var(--text3); margin-top:6px; text-align:right;">Gastado: $${formatearDinero(h.gastoDetalle.gastado)}</div>
+                </div>
             </div>`;
         }
-        if(h.cuotas) {
-            detallesHtml += `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Gastos en Cuotas</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Total financiado:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.total)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Cuotas:</span> <span style="color:var(--text); font-weight:600;">${h.cuotas.actual}/${h.cuotas.cantidad}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Valor cuota:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.valor)}</span></div>
-            </div>`;
-        }
+
         if(h.compartido) {
             detallesHtml += `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px dashed var(--border); margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--warning); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Gasto Compartido</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona asociada:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.persona}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Porcentaje asignado:</span> <span style="color:var(--text); font-weight:600;">${h.compartido.pct}%</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Monto pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.compartido.montoPendiente)}</span></div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px dashed var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--warning); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Gasto Compartido</div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.persona} <span>Persona asociada:</span></div> <span style="color:var(--text); font-weight:600;">${h.compartido.persona}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.porcentaje} <span>Porcentaje asignado:</span></div> <span style="color:var(--text); font-weight:600;">${h.compartido.pct}%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><span>Monto total del gasto:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.monto)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Monto pendiente:</span> <span style="color:var(--warning); font-weight:700;">$${formatearDinero(h.compartido.montoPendiente)}</span></div>
             </div>`;
         }
+
         if(h.ahorro) {
             detallesHtml += `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--blue); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle de Ahorro</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Medio Origen:</span> <span style="color:var(--text); font-weight:600;">${h.ahorro.origen}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Billetera Destino:</span> <div style="display:flex; align-items:center; gap:5px;"><span class="dot" style="background:${h.ahorro.color};"></span><span style="color:var(--text); font-weight:600;">${h.ahorro.destino}</span></div></div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.medio} <span>Origen del dinero:</span></div> <span style="color:var(--text); font-weight:600;">${h.ahorro.origen}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.billetera} <span>Destino del dinero:</span></div> <div style="display:flex; align-items:center; gap:5px;"><span class="dot" style="background:${h.ahorro.color};"></span><span style="color:var(--text); font-weight:600;">${h.ahorro.destino}</span></div></div>
                 <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Monto transferido:</span> <span style="color:var(--blue); font-weight:700;">$${formatearDinero(h.monto)}</span></div>
             </div>`;
         }
+
         if(h.prestamo) {
             detallesHtml += `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Detalle de Préstamo</div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Persona:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.persona}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Tipo:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.tipo}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Monto original:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.original)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:10px;"><span>Saldo pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.pendiente)}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px;"><span>Fecha compromiso:</span> <span style="color:var(--text); font-weight:700;">${h.prestamo.compromiso}</span></div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.persona} <span>Persona asociada:</span></div> <span style="color:var(--text); font-weight:600;">${h.prestamo.persona}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.tipo} <span>Tipo de préstamo:</span></div> <span style="color:var(--text); font-weight:600;">${h.prestamo.tipo}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><span>Monto original:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.original)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:12px;"><span>Saldo pendiente:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.prestamo.pendiente)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px; margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.cuotas} <span>Cantidad de cuotas:</span></div> <span style="color:var(--text); font-weight:600;">${h.prestamo.totalCuotas}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:8px;"><span>Cuota actual:</span> <span style="color:var(--text); font-weight:600;">${h.prestamo.cuotaActual}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Próximo vencimiento:</span> <span style="color:var(--text); font-weight:700;">${h.prestamo.compromiso}</span></div>
+            </div>`;
+        }
+        
+        if(h.cuotas && h.tipo === 'gasto') {
+            detallesHtml += `
+            <div style="background:var(--bg); padding:15px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px;"><div style="display:flex; align-items:center; gap:5px;">${svgIcon.cuotas} Financiación</div></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Total financiado:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.total)}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Cantidad total de cuotas:</span> <span style="color:var(--text); font-weight:600;">${h.cuotas.cantidad}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:5px;"><span>Cuota actual:</span> <span style="color:var(--text); font-weight:600;">${h.cuotas.actual}/${h.cuotas.cantidad}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text2);"><span>Valor de cada cuota:</span> <span style="color:var(--text); font-weight:600;">$${formatearDinero(h.cuotas.valor)}</span></div>
             </div>`;
         }
 
@@ -281,7 +284,7 @@ function renderHistorialGlobal(data) {
                       <h4 style="font-size:15px; font-weight:700; margin:0;">${h.desc}</h4>
                       ${badgeEstado}
                    </div>
-                   <p style="font-size:12px; color:var(--text3); margin:0;">${formatearFecha(h.fecha)} - ${h.hora} • ${h.medio}</p>
+                   <p style="font-size:12px; color:var(--text3); margin:0;">${formatearFecha(h.fecha)} - ${h.hora}</p>
                </div>
                <div style="text-align:right;">
                    <span style="font-size:16px; font-weight:800; color:${colorMonto}; display:block;">${prefijo}$${formatearDinero(h.monto)}</span>
@@ -300,10 +303,16 @@ function renderHistorialGlobal(data) {
         </div>`;
     });
 
-    if(html === '') html = `<div class="card" style="display:flex; align-items:center; justify-content:center; height:120px; border-style:dashed;"><p style="color:var(--text3); font-size:14px; font-weight:500;">No hay movimientos que coincidan con estos filtros.</p></div>`;
+    if(html === '') {
+        html = `
+        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:200px; border-style:dashed;">
+             <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--text3)" fill="none" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+             <p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">Aún no hay movimientos registrados<br>con estos filtros.</p>
+        </div>`;
+    }
     container.innerHTML = html;
 
-    // Actualizar Resumen Rápido con los cálculos del array filtrado
+    // Actualizar Resumen Rápido
     document.getElementById('h-count').innerText = data.length;
     document.getElementById('h-in').innerText = `$${formatearDinero(tIngresos)}`;
     document.getElementById('h-out').innerText = `$${formatearDinero(tGastos)}`;
@@ -313,7 +322,6 @@ function renderHistorialGlobal(data) {
 window.exportarHistorial = function(formato) {
     showToast(`Generando exportación filtrada en ${formato.toUpperCase()}...`);
     if(formato === 'pdf') {
-        // Alerta de que la exportación PDF respeta los filtros visualizados
         setTimeout(() => {
             const element = document.getElementById('lista-historial-global');
             html2pdf().from(element).save('Historial_Auditoria.pdf');
@@ -527,7 +535,7 @@ function actualizarAlertasGlobales() {
     let alertasHTML = ''; let hoy = new Date();
     misPrestamos.forEach(p => { p.cuotas.forEach(c => { if(!c.pagada) { let fv = new Date(c.vencimiento + 'T12:00:00'); let diffDays = Math.ceil((fv - hoy) / (1000 * 3600 * 24)); if(diffDays < 0) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-red"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vencida hace ${Math.abs(diffDays)} días.</span></div>`; else if(diffDays <= 7) alertasHTML += `<div style="display:flex; align-items:center; gap:12px; font-size:13px;"><span class="dot dot-warning"></span><span style="color:var(--text); font-weight:500;">Préstamo ${p.persona}: Cuota ${c.numero} vence en ${diffDays} días.</span></div>`; } }); });
     const list = document.getElementById('alertas-list');
-    if(list) { if(alertasHTML === '') list.innerHTML = `<div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);"><span class="dot dot-neutral"></span><span>Sin alertas activas en este periodo.</span></div>`; else list.innerHTML = alertasHTML; }
+    if(list) { if(alertasHTML === '') list.innerHTML = `<div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>Sin alertas activas en este periodo.</span></div>`; else list.innerHTML = alertasHTML; }
 }
 
 function toggleTheme(forceLight = false) {
