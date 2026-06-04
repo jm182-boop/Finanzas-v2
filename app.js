@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - FASE 2.1: MOTOR FINANCIERO INTEGRADO
+// app.js - FASE 2.1: MOTOR FINANCIERO INTEGRADO (+ Medios de Pago)
 // ==========================================
 
 // 1. ESTADO CENTRAL (Zero Data)
@@ -15,7 +15,7 @@ let EstadoApp = {
     configuracion: {
         regla: { necesidades: 50, deseos: 30, ahorro: 20 },
         moneda: 'AR',
-        mediosPago: ['Efectivo', 'Naranja X', 'Mercado Pago'] 
+        mediosPago: [] 
     }
 };
 
@@ -27,8 +27,20 @@ function guardarEstado() {
 function cargarEstado() {
     const estadoGuardado = localStorage.getItem('finApp_estado');
     if (estadoGuardado) {
-        EstadoApp = { ...EstadoApp, ...JSON.parse(estadoGuardado) };
+        const parsed = JSON.parse(estadoGuardado);
+        EstadoApp = { ...EstadoApp, ...parsed };
+        
+        // Failsafes vitales: Reconstruyen la estructura si el LocalStorage es viejo
         if (!EstadoApp.destinos) EstadoApp.destinos = [];
+        if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
+        if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
+    } else {
+        // Valores por defecto si la app es 100% nueva
+        EstadoApp.configuracion.mediosPago = [
+            { id: generarID('mp'), nombre: 'Efectivo', color: '#12e091' },
+            { id: generarID('mp'), nombre: 'Naranja X', color: '#ffb74d' },
+            { id: generarID('mp'), nombre: 'Mercado Pago', color: '#4da6ff' }
+        ];
     }
 }
 
@@ -40,6 +52,11 @@ function generarID(prefijo) {
 function renderizarTodo() {
     renderDestinosConfig();
     actualizarSelectsMovimientos();
+    
+    // Inyección de la consolidación de Medios de Pago
+    renderMediosPago();
+    actualizarSelectsMediosPago();
+    
     renderBilleterasUI();
     renderPrestamos();
     renderHistorialGlobal(EstadoApp.movimientos);
@@ -81,9 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(slNec) slNec.addEventListener('input', updateRegla);
     if(slDes) slDes.addEventListener('input', updateRegla);
     
-    if(slNec && slDes) {
-        slNec.value = EstadoApp.configuracion.regla.necesidades;
-        slDes.value = EstadoApp.configuracion.regla.deseos;
+    if(slNec && slDes && EstadoApp.configuracion.regla) {
+        slNec.value = EstadoApp.configuracion.regla.necesidades || 50;
+        slDes.value = EstadoApp.configuracion.regla.deseos || 30;
         updateRegla();
     }
 
@@ -95,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// FASE 2.1: LÓGICA DE MOVIMIENTOS
+// FASE 2.1: LÓGICA DE MOVIMIENTOS Y MATEMÁTICAS
 // ==========================================
 function guardarMovimiento() {
     const esGasto = document.getElementById('btg').classList.contains('active');
@@ -220,6 +237,7 @@ function updateRegla() {
         document.getElementById('resumen-pct-aho').innerText = a;
     }
     
+    if(!EstadoApp.configuracion) EstadoApp.configuracion = {};
     EstadoApp.configuracion.regla = { necesidades: n, deseos: d, ahorro: a };
 }
 
@@ -504,6 +522,93 @@ function actualizarSelectsMovimientos() {
         select.innerHTML = opcionesHTML;
         if(val) select.value = val; 
     });
+}
+
+// ==========================================
+// ADMINISTRADOR DE MEDIOS DE PAGO
+// ==========================================
+function agregarMedioPago() {
+    const nombre = document.getElementById('nuevo-medio-nombre').value.trim();
+    const color = document.getElementById('nuevo-medio-color').value;
+    if(!nombre) return;
+
+    // Failsafe vital
+    if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
+    if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
+
+    // Migración silenciosa si hay datos viejos
+    if (EstadoApp.configuracion.mediosPago.length > 0 && typeof EstadoApp.configuracion.mediosPago[0] === 'string') {
+        EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.map(m => ({ id: generarID('mp'), nombre: m, color: '#7c6dfa' }));
+    }
+
+    EstadoApp.configuracion.mediosPago.push({ id: generarID('mp'), nombre: nombre, color: color });
+    
+    document.getElementById('nuevo-medio-nombre').value = '';
+    guardarEstado();
+    renderizarTodo();
+    showToast("Medio de pago añadido");
+}
+
+function renderMediosPago() {
+    const lista = document.getElementById('lista-medios-pago');
+    if(!lista) return;
+
+    if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
+    if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
+
+    // Migración si recarga con LocalStorage viejo
+    if (EstadoApp.configuracion.mediosPago.length > 0 && typeof EstadoApp.configuracion.mediosPago[0] === 'string') {
+        EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.map(m => ({ id: generarID('mp'), nombre: m, color: '#7c6dfa' }));
+        guardarEstado();
+    }
+
+    let html = '';
+    EstadoApp.configuracion.mediosPago.forEach(mp => {
+        html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom: 5px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="dot" style="background:${mp.color};"></span>
+                <span style="font-size:13px; font-weight:600; color:var(--text);">${mp.nombre}</span>
+            </div>
+            <button class="ui-icon-btn" onclick="eliminarMedioPago('${mp.id}')"><i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i></button>
+        </div>`;
+    });
+    
+    lista.innerHTML = html || '<p style="font-size:12px; color:var(--text3); text-align:center;">Sin medios registrados</p>';
+}
+
+function eliminarMedioPago(id) {
+    if (!EstadoApp.configuracion || !EstadoApp.configuracion.mediosPago) return;
+    EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.filter(mp => mp.id !== id);
+    guardarEstado();
+    renderizarTodo();
+    showToast("Medio de pago eliminado");
+}
+
+function actualizarSelectsMediosPago() {
+    const selectGasto = document.getElementById('gmedio');
+    const selectIngreso = document.getElementById('imedio');
+    
+    let opcionesHTML = '<option value="" selected>Seleccionar Medio...</option>';
+    
+    if (EstadoApp.configuracion && EstadoApp.configuracion.mediosPago) {
+        EstadoApp.configuracion.mediosPago.forEach(mp => {
+            if (typeof mp === 'object') {
+                opcionesHTML += `<option value="${mp.id}">${mp.nombre}</option>`;
+            }
+        });
+    }
+
+    if (selectGasto) {
+        const valG = selectGasto.value;
+        selectGasto.innerHTML = opcionesHTML;
+        if(valG) selectGasto.value = valG;
+    }
+    if (selectIngreso) {
+        const valI = selectIngreso.value;
+        selectIngreso.innerHTML = opcionesHTML;
+        if(valI) selectIngreso.value = valI;
+    }
 }
 
 // ==========================================
