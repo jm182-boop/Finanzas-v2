@@ -367,11 +367,14 @@
             </div>
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
+              
+              <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
+              
               <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-                <input type="text" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
-                <input type="color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#12e091">
+                <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
+                <input type="color" id="nuevo-medio-color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#ffb74d">
               </div>
-              <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);">+ Añadir Medio</button>
+              <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
             </div>
           </div>
           
