@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - FASE 2: MOTOR FINANCIERO Y ESTADO CENTRAL
+// app.js - FASE 2.1: MOTOR FINANCIERO INTEGRADO
 // ==========================================
 
 // 1. ESTADO CENTRAL (Zero Data)
@@ -7,7 +7,7 @@ let EstadoApp = {
     movimientos: [],
     billeteras: [],
     prestamos: [],
-    destinos: [], // Administrador de Sobres
+    destinos: [], 
     presupuestos: {
         necesidades: { limite: 0, gastado: 0 },
         deseos: { limite: 0, gastado: 0 }
@@ -19,7 +19,7 @@ let EstadoApp = {
     }
 };
 
-// 2. PERSISTENCIA (LocalStorage)
+// 2. PERSISTENCIA Y IDs
 function guardarEstado() {
     localStorage.setItem('finApp_estado', JSON.stringify(EstadoApp));
 }
@@ -32,18 +32,20 @@ function cargarEstado() {
     }
 }
 
-// 3. GENERADOR DE IDs
 function generarID(prefijo) {
     return prefijo + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 }
 
-// 4. MOTOR DE RENDERIZADO GLOBAL
+// 3. MOTOR DE RENDERIZADO GLOBAL
 function renderizarTodo() {
     renderDestinosConfig();
     actualizarSelectsMovimientos();
     renderBilleterasUI();
     renderPrestamos();
     renderHistorialGlobal(EstadoApp.movimientos);
+    
+    // Ejecutar el motor matemático central
+    recalcularMotorFinanciero();
     
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -79,13 +81,122 @@ document.addEventListener('DOMContentLoaded', () => {
     if(slNec) slNec.addEventListener('input', updateRegla);
     if(slDes) slDes.addEventListener('input', updateRegla);
     
-    // Inyectar valores de la regla guardada en los sliders
     if(slNec && slDes) {
         slNec.value = EstadoApp.configuracion.regla.necesidades;
         slDes.value = EstadoApp.configuracion.regla.deseos;
         updateRegla();
     }
+
+    // CONEXIÓN DEL BOTÓN GUARDAR MOVIMIENTO
+    const btnAgregarMovimiento = document.getElementById('btnagregar');
+    if (btnAgregarMovimiento) {
+        btnAgregarMovimiento.addEventListener('click', guardarMovimiento);
+    }
 });
+
+// ==========================================
+// FASE 2.1: LÓGICA DE MOVIMIENTOS
+// ==========================================
+function guardarMovimiento() {
+    const esGasto = document.getElementById('btg').classList.contains('active');
+    const tipo = esGasto ? 'gasto' : 'ingreso';
+    
+    const concepto = document.getElementById('gdesc').value.trim();
+    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
+    const monto = parseFloat(montoStr);
+    
+    const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
+    const destinoSelect = document.querySelector('select[data-type="destino"]');
+    const destinoId = esGasto && destinoSelect ? destinoSelect.value : null;
+    
+    const seccionCampos = esGasto ? 'campos-gasto' : 'campos-ingreso';
+    const inputFecha = document.querySelector('#' + seccionCampos + ' .input-fecha');
+    const fecha = inputFecha && inputFecha.value ? inputFecha.value : new Date().toISOString().split('T')[0];
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+    if (!concepto || isNaN(monto) || monto <= 0 || !medioPagoId) {
+        showToast("Por favor, completa los campos obligatorios.");
+        return;
+    }
+    if (esGasto && !destinoId) {
+        showToast("Por favor, selecciona un destino presupuestario.");
+        return;
+    }
+
+    let subtipo = 'pago_unico';
+    let cuotasObj = { esCuota: false, total: 1, actual: 1 };
+    let compartidoObj = { esCompartido: false, persona: null, porcentaje: null };
+
+    if (esGasto) {
+        const cuotasTotal = parseInt(document.getElementById('gcuotas').value) || 0;
+        const cuotaActual = parseInt(document.getElementById('gcuota-num').value) || 0;
+        const chkCompartido = document.getElementById('chk-compartido');
+        const isCompartido = chkCompartido ? chkCompartido.checked : false;
+
+        if (cuotasTotal > 0) {
+            subtipo = 'cuota';
+            cuotasObj = { esCuota: true, total: cuotasTotal, actual: cuotaActual > 0 ? cuotaActual : 1 };
+        } else if (isCompartido) {
+            subtipo = 'compartido';
+            compartidoObj = {
+                esCompartido: true,
+                persona: document.getElementById('comp-quien').value.trim(),
+                porcentaje: parseFloat(document.getElementById('comp-pct').value) || 50
+            };
+        }
+    }
+
+    const nuevoMovimiento = {
+        id: generarID('mov'),
+        tipo: tipo,
+        subtipo: subtipo,
+        concepto: concepto,
+        monto: monto,
+        fecha: fecha,
+        hora: hora,
+        medioPagoId: medioPagoId,
+        destinoId: destinoId,
+        cuotas: cuotasObj,
+        compartido: compartidoObj
+    };
+
+    EstadoApp.movimientos.unshift(nuevoMovimiento);
+    guardarEstado();
+    
+    limpiarInputs('panel-registro');
+    const checkCompartidoDOM = document.getElementById('chk-compartido');
+    if (checkCompartidoDOM) {
+        checkCompartidoDOM.checked = false;
+        toggleCompartido();
+    }
+    document.getElementById('panel-registro').style.display = 'none';
+    
+    renderizarTodo();
+    showToast("Movimiento registrado correctamente");
+}
+
+function recalcularMotorFinanciero() {
+    let ingresos = 0;
+    let gastos = 0;
+
+    EstadoApp.movimientos.forEach(m => {
+        if (m.tipo === 'ingreso') ingresos += m.monto;
+        if (m.tipo === 'gasto' || m.tipo === 'compartido') gastos += m.monto;
+    });
+
+    let balance = ingresos - gastos;
+
+    const elIn = document.getElementById('resumen-in');
+    const elOut = document.getElementById('resumen-out');
+    const elDisp = document.getElementById('resumen-disp');
+
+    if (elIn) elIn.innerText = '$' + formatearDinero(ingresos);
+    if (elOut) elOut.innerText = '$' + formatearDinero(gastos);
+    if (elDisp) {
+        elDisp.innerText = '$' + formatearDinero(balance);
+        elDisp.className = balance >= 0 ? 'mv ok' : 'mv bad';
+    }
+}
 
 // ==========================================
 // FUNCIONES DE UI Y NAVEGACIÓN
@@ -222,6 +333,67 @@ function doAuth() {
 }
 
 // ==========================================
+// HISTORIAL (UI)
+// ==========================================
+window.filtrarHistorial = function() {
+    renderHistorialGlobal(EstadoApp.movimientos);
+}
+
+function renderHistorialGlobal(data) {
+    const container = document.getElementById('lista-historial-global');
+    if (!container) return;
+
+    if (data.length === 0) {
+        container.innerHTML = `
+        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px; border: 1px dashed var(--text3); background:transparent;">
+             <i data-lucide="inbox" style="width:48px; height:48px; color:var(--text3); margin-bottom:15px; stroke-width:1.5;"></i>
+             <p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">Aún no hay movimientos registrados<br>o que coincidan con estos filtros.</p>
+        </div>`;
+    } else {
+        let html = '';
+        data.forEach(m => {
+            const isGasto = m.tipo === 'gasto' || m.tipo === 'compartido';
+            const colorIcono = isGasto ? 'var(--red)' : 'var(--green)';
+            const colorBg = isGasto ? 'rgba(255, 87, 87, 0.1)' : 'rgba(18, 224, 145, 0.1)';
+            const colorMonto = isGasto ? 'var(--text)' : 'var(--green)';
+            const signo = isGasto ? '-' : '+';
+            const iconoLucide = isGasto ? 'arrow-down-right' : 'arrow-up-right';
+            
+            let subTexto = `${formatearFecha(m.fecha)} • ${m.hora}`;
+            if (m.subtipo === 'cuota') subTexto += ` • Cuota ${m.cuotas.actual}/${m.cuotas.total}`;
+            if (m.subtipo === 'compartido') subTexto += ` • Con ${m.compartido.persona}`;
+
+            html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--bg2); border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width:42px; height:42px; border-radius:10px; background:${colorBg}; color:${colorIcono}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i data-lucide="${iconoLucide}" class="icon-md"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:14px; color:var(--text); margin-bottom:2px;">${m.concepto}</div>
+                        <div style="font-size:12px; color:var(--text3);">${subTexto}</div>
+                    </div>
+                </div>
+                <div style="font-weight:700; font-size:15px; color:${colorMonto};">
+                    ${signo}$${formatearDinero(m.monto)}
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    let totalIn = 0, totalOut = 0;
+    data.forEach(m => {
+        if(m.tipo === 'ingreso') totalIn += m.monto;
+        if(m.tipo === 'gasto' || m.tipo === 'compartido') totalOut += m.monto;
+    });
+
+    if(document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
+    if(document.getElementById('h-in')) document.getElementById('h-in').innerText = '$' + formatearDinero(totalIn);
+    if(document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut);
+}
+
+// ==========================================
 // ADMINISTRADOR DE DESTINOS (CRUD)
 // ==========================================
 function abrirModalDestino(grupo, id = null) {
@@ -288,7 +460,7 @@ function renderDestinosConfig() {
 
     EstadoApp.destinos.forEach(d => {
         const itemHtml = `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg2); border-radius:8px; border:1px solid var(--border); opacity: ${d.activo ? '1' : '0.5'};">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg2); border-radius:8px; border:1px solid var(--border); margin-bottom: 5px; opacity: ${d.activo ? '1' : '0.5'};">
                 <div>
                     <div style="font-size:13px; font-weight:600; color:var(--text);">${d.nombre}</div>
                     <div style="font-size:11px; color:var(--text3);">$${formatearDinero(d.presupuesto)} / mes</div>
@@ -332,33 +504,6 @@ function actualizarSelectsMovimientos() {
         select.innerHTML = opcionesHTML;
         if(val) select.value = val; 
     });
-}
-
-// ==========================================
-// HISTORIAL (UI)
-// ==========================================
-window.filtrarHistorial = function() {
-    renderHistorialGlobal(EstadoApp.movimientos);
-}
-
-function renderHistorialGlobal(data) {
-    const container = document.getElementById('lista-historial-global');
-    if(!container) return;
-
-    if(data.length === 0) {
-        container.innerHTML = `
-        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px; border: 1px dashed var(--text3); background:transparent;">
-             <i data-lucide="inbox" style="width:48px; height:48px; color:var(--text3); margin-bottom:15px; stroke-width:1.5;"></i>
-             <p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">Aún no hay movimientos registrados<br>o que coincidan con estos filtros.</p>
-        </div>`;
-    } else {
-        container.innerHTML = ``; // Se llenará en Fase 2
-    }
-    
-    if(document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
-    if(document.getElementById('h-in')) document.getElementById('h-in').innerText = `$0`;
-    if(document.getElementById('h-out')) document.getElementById('h-out').innerText = `$0`;
-    if(document.getElementById('h-aho')) document.getElementById('h-aho').innerText = `$0`;
 }
 
 // ==========================================
