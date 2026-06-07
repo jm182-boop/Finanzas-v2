@@ -90,9 +90,21 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
           <div class="card" id="resumen-barras">
             <div class="ct"><i data-lucide="pie-chart" class="icon-sm"></i> REGLA 50/30/20</div>
-            <div class="progress-wrap"><div class="progress-header"><span>Necesidades (<span id="resumen-pct-nec">50</span>%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
-            <div class="progress-wrap"><div class="progress-header"><span>Deseos (<span id="resumen-pct-des">30</span>%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--accent);"></div></div></div>
-            <div class="progress-wrap"><div class="progress-header"><span>Ahorro (<span id="resumen-pct-aho">20</span>%)</span><span>$0 / $0</span></div><div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);"></div></div></div>
+            
+            <div class="progress-wrap">
+              <div class="progress-header"><span>Necesidades (<span id="resumen-pct-nec">50</span>%)</span><span id="resumen-nec-txt">$0 / $0</span></div>
+              <div class="progress-bar"><div id="resumen-nec-fill" class="progress-fill" style="width: 0%; background: var(--green);"></div></div>
+            </div>
+            
+            <div class="progress-wrap">
+              <div class="progress-header"><span>Deseos (<span id="resumen-pct-des">30</span>%)</span><span id="resumen-des-txt">$0 / $0</span></div>
+              <div class="progress-bar"><div id="resumen-des-fill" class="progress-fill" style="width: 0%; background: var(--accent);"></div></div>
+            </div>
+            
+            <div class="progress-wrap">
+              <div class="progress-header"><span>Ahorro (<span id="resumen-pct-aho">20</span>%)</span><span id="resumen-aho-txt">$0 / $0</span></div>
+              <div class="progress-bar"><div id="resumen-aho-fill" class="progress-fill" style="width: 0%; background: var(--green);"></div></div>
+            </div>
             
             <div style="border-top: 1px solid var(--border); margin-top: 30px; padding-top: 25px;">
                 <div class="ct" style="margin-bottom: 15px;"><i data-lucide="bell-ring" class="icon-sm"></i> Alertas y Recordatorios</div>
@@ -426,6 +438,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>
