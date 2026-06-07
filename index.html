@@ -161,7 +161,8 @@
               <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
             </label>
             <div id="caja-compartido" style="display:none;background:var(--bg);padding:20px;border-radius:12px;margin-bottom:15px;border:1px solid var(--border);">
-              <input type="text" class="in" id="comp-quien" placeholder="Persona">
+              <input type="text" class="in" id="comp-quien" placeholder="Persona" list="lista-personas">
+              <datalist id="lista-personas"></datalist>
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
                 <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
@@ -438,6 +439,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>
