@@ -1,8 +1,8 @@
 // ==========================================
-// app.js - FASE 2.2: MOTOR FINANCIERO INTEGRADO (+ Sobres y 50/30/20)
+// app.js - SPRINT 1: LIMPIEZA, COMPARTIDOS Y ELIMINAR (MVP)
 // ==========================================
 
-// 1. ESTADO CENTRAL (Zero Data)
+// 1. ESTADO CENTRAL
 let EstadoApp = {
     movimientos: [],
     billeteras: [],
@@ -15,7 +15,8 @@ let EstadoApp = {
     configuracion: {
         regla: { necesidades: 50, deseos: 30, ahorro: 20 },
         moneda: 'AR',
-        mediosPago: [] 
+        mediosPago: [],
+        personasFrecuentes: [] // Nuevo array del Sprint 1
     }
 };
 
@@ -30,17 +31,18 @@ function cargarEstado() {
         const parsed = JSON.parse(estadoGuardado);
         EstadoApp = { ...EstadoApp, ...parsed };
         
-        // Failsafes vitales: Reconstruyen la estructura si el LocalStorage es viejo
+        // Failsafes vitales
         if (!EstadoApp.destinos) EstadoApp.destinos = [];
         if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
         if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
+        if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
     } else {
-        // Valores por defecto si la app es 100% nueva
         EstadoApp.configuracion.mediosPago = [
             { id: generarID('mp'), nombre: 'Efectivo', color: '#12e091' },
             { id: generarID('mp'), nombre: 'Naranja X', color: '#ffb74d' },
             { id: generarID('mp'), nombre: 'Mercado Pago', color: '#4da6ff' }
         ];
+        EstadoApp.configuracion.personasFrecuentes = [];
     }
 }
 
@@ -52,18 +54,16 @@ function generarID(prefijo) {
 function renderizarTodo() {
     renderDestinosConfig();
     actualizarSelectsMovimientos();
-    
-    // Inyección de la consolidación de Medios de Pago
     renderMediosPago();
     actualizarSelectsMediosPago();
+    renderPersonasFrecuentes(); // Nuevo
     
     renderBilleterasUI();
     renderPrestamos();
     renderHistorialGlobal(EstadoApp.movimientos);
     
-    // Ejecutar los motores matemáticos
     recalcularMotorFinanciero();
-    calcularRegla503020(); // Fase 2.2: Cálculo Dinámico de Sobres
+    calcularRegla503020(); 
     
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -105,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRegla();
     }
 
-    // CONEXIÓN DEL BOTÓN GUARDAR MOVIMIENTO
     const btnAgregarMovimiento = document.getElementById('btnagregar');
     if (btnAgregarMovimiento) {
         btnAgregarMovimiento.addEventListener('click', guardarMovimiento);
@@ -113,109 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// FASE 2.2: MATEMÁTICA DE SOBRES Y REGLA 50/30/20
-// ==========================================
-function calcularRegla503020() {
-    let gastadoNec = 0;
-    let gastadoDes = 0;
-    let ingresosMes = 0;
-    
-    // Filtro temporal (Mes actual del sistema)
-    const hoy = new Date();
-    const mesActual = hoy.getMonth() + 1;
-    const anioActual = hoy.getFullYear();
-
-    // 1. Calcular Gastado real sumando movimientos
-    EstadoApp.movimientos.forEach(mov => {
-        if (!mov.fecha) return;
-        const partesFecha = mov.fecha.split('-');
-        if (parseInt(partesFecha[1]) !== mesActual || parseInt(partesFecha[0]) !== anioActual) return;
-
-        // Sumar ingresos para la barra teórica de ahorro
-        if (mov.tipo === 'ingreso') {
-            ingresosMes += mov.monto;
-            return;
-        }
-
-        // Procesar solo si es gasto
-        if (mov.tipo !== 'gasto') return;
-
-        // Cruzar con destino (Si el sobre fue borrado, se ignora aquí)
-        const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
-        if (!dest) return;
-
-        // Failsafe para Gastos Compartidos (sumar solo el % propio)
-        let montoReal = mov.monto;
-        if (mov.subtipo === 'compartido' && mov.compartido && mov.compartido.porcentaje) {
-            montoReal = mov.monto * (mov.compartido.porcentaje / 100);
-        }
-
-        if (dest.grupo === 'Necesidades') gastadoNec += montoReal;
-        if (dest.grupo === 'Deseos') gastadoDes += montoReal;
-    });
-
-    // 2. Calcular Límites configurados en Sobres
-    let limiteNec = 0;
-    let limiteDes = 0;
-    EstadoApp.destinos.forEach(d => {
-        if (d.grupo === 'Necesidades') limiteNec += d.presupuesto;
-        if (d.grupo === 'Deseos') limiteDes += d.presupuesto;
-    });
-
-    // 3. Renderizar Barra Necesidades
-    const txtNec = document.getElementById('resumen-nec-txt');
-    const fillNec = document.getElementById('resumen-nec-fill');
-    if (txtNec && fillNec) {
-        let pctNec = limiteNec > 0 ? (gastadoNec / limiteNec) * 100 : (gastadoNec > 0 ? 100 : 0);
-        txtNec.innerText = '$' + formatearDinero(gastadoNec) + ' / $' + formatearDinero(limiteNec);
-        
-        if (gastadoNec > limiteNec && limiteNec > 0) { // Sobregiro
-            fillNec.style.background = 'var(--red)';
-            fillNec.style.width = '100%';
-            txtNec.style.color = 'var(--red)';
-        } else {
-            fillNec.style.background = 'var(--green)';
-            fillNec.style.width = pctNec + '%';
-            txtNec.style.color = '';
-        }
-    }
-
-    // 4. Renderizar Barra Deseos
-    const txtDes = document.getElementById('resumen-des-txt');
-    const fillDes = document.getElementById('resumen-des-fill');
-    if (txtDes && fillDes) {
-        let pctDes = limiteDes > 0 ? (gastadoDes / limiteDes) * 100 : (gastadoDes > 0 ? 100 : 0);
-        txtDes.innerText = '$' + formatearDinero(gastadoDes) + ' / $' + formatearDinero(limiteDes);
-        
-        if (gastadoDes > limiteDes && limiteDes > 0) { // Sobregiro
-            fillDes.style.background = 'var(--red)';
-            fillDes.style.width = '100%';
-            txtDes.style.color = 'var(--red)';
-        } else {
-            fillDes.style.background = 'var(--accent)'; // Púrpura
-            fillDes.style.width = pctDes + '%';
-            txtDes.style.color = '';
-        }
-    }
-
-    // 5. Renderizar Barra Ahorro (Cálculo estático/teórico por ahora)
-    const txtAho = document.getElementById('resumen-aho-txt');
-    const fillAho = document.getElementById('resumen-aho-fill');
-    if (txtAho && fillAho) {
-        let pctAhorroMeta = EstadoApp.configuracion.regla ? EstadoApp.configuracion.regla.ahorro : 20;
-        let limiteAho = ingresosMes * (pctAhorroMeta / 100);
-        let ahorradoReal = 0; // Se integrará dinámicamente en la Fase 2.4
-        
-        let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
-        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
-        fillAho.style.background = 'var(--green)';
-        fillAho.style.width = pctAho + '%';
-        txtAho.style.color = '';
-    }
-}
-
-// ==========================================
-// FASE 2.1: LÓGICA DE MOVIMIENTOS Y MATEMÁTICAS
+// MOTOR DE MOVIMIENTOS Y CÁLCULOS
 // ==========================================
 function guardarMovimiento() {
     const esGasto = document.getElementById('btg').classList.contains('active');
@@ -258,11 +155,21 @@ function guardarMovimiento() {
             cuotasObj = { esCuota: true, total: cuotasTotal, actual: cuotaActual > 0 ? cuotaActual : 1 };
         } else if (isCompartido) {
             subtipo = 'compartido';
+            const nombrePers = document.getElementById('comp-quien').value.trim();
             compartidoObj = {
                 esCompartido: true,
-                persona: document.getElementById('comp-quien').value.trim(),
+                persona: nombrePers,
                 porcentaje: parseFloat(document.getElementById('comp-pct').value) || 50
             };
+            
+            // Sprint 1: Guardar persona frecuente
+            const chkGuardar = document.getElementById('comp-guardar');
+            if (chkGuardar && chkGuardar.checked && nombrePers) {
+                if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
+                if (!EstadoApp.configuracion.personasFrecuentes.includes(nombrePers)) {
+                    EstadoApp.configuracion.personasFrecuentes.push(nombrePers);
+                }
+            }
         }
     }
 
@@ -283,16 +190,23 @@ function guardarMovimiento() {
     EstadoApp.movimientos.unshift(nuevoMovimiento);
     guardarEstado();
     
+    // Sprint 1: Limpieza blindada y cierre de cajón compartido
     limpiarInputs('panel-registro');
-    const checkCompartidoDOM = document.getElementById('chk-compartido');
-    if (checkCompartidoDOM) {
-        checkCompartidoDOM.checked = false;
-        toggleCompartido();
-    }
+    toggleCompartido(); // Al limpiarInputs el checkbox pasa a false, esto oculta la caja.
+    
     document.getElementById('panel-registro').style.display = 'none';
     
     renderizarTodo();
     showToast("Movimiento registrado correctamente");
+}
+
+window.eliminarMovimiento = function(id) {
+    if (confirm("¿Estás seguro de eliminar este movimiento? Se recalcularán todos los balances y sobres.")) {
+        EstadoApp.movimientos = EstadoApp.movimientos.filter(m => m.id !== id);
+        guardarEstado();
+        renderizarTodo();
+        showToast("Movimiento eliminado exitosamente");
+    }
 }
 
 function recalcularMotorFinanciero() {
@@ -301,7 +215,8 @@ function recalcularMotorFinanciero() {
 
     EstadoApp.movimientos.forEach(m => {
         if (m.tipo === 'ingreso') ingresos += m.monto;
-        if (m.tipo === 'gasto' || m.tipo === 'compartido') gastos += m.monto;
+        // El balance general resta el total del gasto aunque sea compartido
+        if (m.tipo === 'gasto') gastos += m.monto;
     });
 
     let balance = ingresos - gastos;
@@ -315,6 +230,83 @@ function recalcularMotorFinanciero() {
     if (elDisp) {
         elDisp.innerText = '$' + formatearDinero(balance);
         elDisp.className = balance >= 0 ? 'mv ok' : 'mv bad';
+    }
+}
+
+function calcularRegla503020() {
+    let gastadoNec = 0;
+    let gastadoDes = 0;
+    let ingresosMes = 0;
+    
+    const hoy = new Date();
+    const mesActual = hoy.getMonth() + 1;
+    const anioActual = hoy.getFullYear();
+
+    EstadoApp.movimientos.forEach(mov => {
+        if (!mov.fecha) return;
+        const partesFecha = mov.fecha.split('-');
+        if (parseInt(partesFecha[1]) !== mesActual || parseInt(partesFecha[0]) !== anioActual) return;
+
+        if (mov.tipo === 'ingreso') {
+            ingresosMes += mov.monto;
+            return;
+        }
+
+        if (mov.tipo !== 'gasto') return;
+
+        const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
+        if (!dest) return;
+
+        // Failsafe matemático para Compartidos: Protege el sobre.
+        let montoReal = mov.monto;
+        if (mov.subtipo === 'compartido' && mov.compartido && mov.compartido.porcentaje) {
+            montoReal = mov.monto * (mov.compartido.porcentaje / 100);
+        }
+
+        if (dest.grupo === 'Necesidades') gastadoNec += montoReal;
+        if (dest.grupo === 'Deseos') gastadoDes += montoReal;
+    });
+
+    let limiteNec = 0;
+    let limiteDes = 0;
+    EstadoApp.destinos.forEach(d => {
+        if (d.grupo === 'Necesidades') limiteNec += d.presupuesto;
+        if (d.grupo === 'Deseos') limiteDes += d.presupuesto;
+    });
+
+    const txtNec = document.getElementById('resumen-nec-txt');
+    const fillNec = document.getElementById('resumen-nec-fill');
+    if (txtNec && fillNec) {
+        let pctNec = limiteNec > 0 ? (gastadoNec / limiteNec) * 100 : (gastadoNec > 0 ? 100 : 0);
+        txtNec.innerText = '$' + formatearDinero(gastadoNec) + ' / $' + formatearDinero(limiteNec);
+        if (gastadoNec > limiteNec && limiteNec > 0) { 
+            fillNec.style.background = 'var(--red)'; fillNec.style.width = '100%'; txtNec.style.color = 'var(--red)';
+        } else {
+            fillNec.style.background = 'var(--green)'; fillNec.style.width = pctNec + '%'; txtNec.style.color = '';
+        }
+    }
+
+    const txtDes = document.getElementById('resumen-des-txt');
+    const fillDes = document.getElementById('resumen-des-fill');
+    if (txtDes && fillDes) {
+        let pctDes = limiteDes > 0 ? (gastadoDes / limiteDes) * 100 : (gastadoDes > 0 ? 100 : 0);
+        txtDes.innerText = '$' + formatearDinero(gastadoDes) + ' / $' + formatearDinero(limiteDes);
+        if (gastadoDes > limiteDes && limiteDes > 0) { 
+            fillDes.style.background = 'var(--red)'; fillDes.style.width = '100%'; txtDes.style.color = 'var(--red)';
+        } else {
+            fillDes.style.background = 'var(--accent)'; fillDes.style.width = pctDes + '%'; txtDes.style.color = '';
+        }
+    }
+
+    const txtAho = document.getElementById('resumen-aho-txt');
+    const fillAho = document.getElementById('resumen-aho-fill');
+    if (txtAho && fillAho) {
+        let pctAhorroMeta = EstadoApp.configuracion.regla ? EstadoApp.configuracion.regla.ahorro : 20;
+        let limiteAho = ingresosMes * (pctAhorroMeta / 100);
+        let ahorradoReal = 0; 
+        let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
+        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
+        fillAho.style.background = 'var(--green)'; fillAho.style.width = pctAho + '%'; txtAho.style.color = '';
     }
 }
 
@@ -342,7 +334,7 @@ function updateRegla() {
     
     if(!EstadoApp.configuracion) EstadoApp.configuracion = {};
     EstadoApp.configuracion.regla = { necesidades: n, deseos: d, ahorro: a };
-    calcularRegla503020(); // Recalcular límites de ahorro al mover sliders
+    calcularRegla503020(); 
 }
 
 function logout() {
@@ -385,9 +377,17 @@ function formatearFecha(dateStr) {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
+// SPRINT 1: Función blindada para limpiar todo el formulario sin dejar rastros
 function limpiarInputs(contenedorId) {
     const contenedor = document.getElementById(contenedorId);
-    if (contenedor) contenedor.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => el.value = '');
+    if (!contenedor) return;
+    
+    contenedor.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => el.value = '');
+    contenedor.querySelectorAll('select').forEach(el => el.value = '');
+    contenedor.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+    
+    const fechaHoyString = new Date().toISOString().split('T')[0];
+    contenedor.querySelectorAll('input[type="date"], .input-fecha').forEach(el => el.value = fechaHoyString);
 }
 
 function showToast(msg) {
@@ -403,6 +403,7 @@ function setTipoMov(tipo) {
     const btnAgregar = document.getElementById('btnagregar');
     const chkCompartido = document.getElementById('chk-compartido');
     limpiarInputs('panel-registro'); 
+    toggleCompartido();
     
     if(tipo === 'gasto') {
         document.getElementById('btg').classList.add('active');
@@ -420,7 +421,8 @@ function setTipoMov(tipo) {
 }
 
 function toggleCompartido() {
-    const isChecked = document.getElementById('chk-compartido').checked;
+    const checkEl = document.getElementById('chk-compartido');
+    const isChecked = checkEl ? checkEl.checked : false;
     document.getElementById('caja-compartido').style.display = isChecked ? 'block' : 'none';
 }
 
@@ -474,7 +476,7 @@ function renderHistorialGlobal(data) {
     } else {
         let html = '';
         data.forEach(m => {
-            const isGasto = m.tipo === 'gasto' || m.tipo === 'compartido';
+            const isGasto = m.tipo === 'gasto';
             const colorIcono = isGasto ? 'var(--red)' : 'var(--green)';
             const colorBg = isGasto ? 'rgba(255, 87, 87, 0.1)' : 'rgba(18, 224, 145, 0.1)';
             const colorMonto = isGasto ? 'var(--text)' : 'var(--green)';
@@ -482,8 +484,16 @@ function renderHistorialGlobal(data) {
             const iconoLucide = isGasto ? 'arrow-down-right' : 'arrow-up-right';
             
             let subTexto = `${formatearFecha(m.fecha)} • ${m.hora}`;
+            let montoMostrar = m.monto; // Sprint 1: Lógica Visual de Montos
+            
             if (m.subtipo === 'cuota') subTexto += ` • Cuota ${m.cuotas.actual}/${m.cuotas.total}`;
-            if (m.subtipo === 'compartido') subTexto += ` • Con ${m.compartido.persona}`;
+            
+            // Sprint 1: Formato visual exclusivo para compartidos
+            if (m.subtipo === 'compartido') {
+                const tuParte = m.monto * (m.compartido.porcentaje / 100);
+                subTexto += ` • Compartido con ${m.compartido.persona} (Tu parte: $${formatearDinero(tuParte)})`;
+                montoMostrar = m.monto; // Mantiene visible el impacto real en el banco
+            }
 
             html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--bg2); border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
@@ -496,8 +506,11 @@ function renderHistorialGlobal(data) {
                         <div style="font-size:12px; color:var(--text3);">${subTexto}</div>
                     </div>
                 </div>
-                <div style="font-weight:700; font-size:15px; color:${colorMonto};">
-                    ${signo}$${formatearDinero(m.monto)}
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="font-weight:700; font-size:15px; color:${colorMonto}; text-align:right;">
+                        ${signo}$${formatearDinero(montoMostrar)}
+                    </div>
+                    <button class="ui-icon-btn" onclick="eliminarMovimiento('${m.id}')" title="Eliminar Movimiento"><i data-lucide="trash-2" class="icon-sm" style="color:var(--text3); opacity: 0.6;"></i></button>
                 </div>
             </div>`;
         });
@@ -507,7 +520,7 @@ function renderHistorialGlobal(data) {
     let totalIn = 0, totalOut = 0;
     data.forEach(m => {
         if(m.tipo === 'ingreso') totalIn += m.monto;
-        if(m.tipo === 'gasto' || m.tipo === 'compartido') totalOut += m.monto;
+        if(m.tipo === 'gasto') totalOut += m.monto;
     });
 
     if(document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
@@ -629,18 +642,30 @@ function actualizarSelectsMovimientos() {
 }
 
 // ==========================================
-// ADMINISTRADOR DE MEDIOS DE PAGO
+// ADMINISTRADOR DE MEDIOS DE PAGO Y PERSONAS
 // ==========================================
+
+// Sprint 1: Módulo para renderizar Autocompletado de Personas
+function renderPersonasFrecuentes() {
+    const dl = document.getElementById('lista-personas');
+    if(!dl) return;
+    let html = '';
+    if(EstadoApp.configuracion && EstadoApp.configuracion.personasFrecuentes) {
+        EstadoApp.configuracion.personasFrecuentes.forEach(p => {
+            html += `<option value="${p}">`;
+        });
+    }
+    dl.innerHTML = html;
+}
+
 function agregarMedioPago() {
     const nombre = document.getElementById('nuevo-medio-nombre').value.trim();
     const color = document.getElementById('nuevo-medio-color').value;
     if(!nombre) return;
 
-    // Failsafe vital
     if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
     if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
 
-    // Migración silenciosa si hay datos viejos
     if (EstadoApp.configuracion.mediosPago.length > 0 && typeof EstadoApp.configuracion.mediosPago[0] === 'string') {
         EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.map(m => ({ id: generarID('mp'), nombre: m, color: '#7c6dfa' }));
     }
@@ -660,7 +685,6 @@ function renderMediosPago() {
     if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
     if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
 
-    // Migración si recarga con LocalStorage viejo
     if (EstadoApp.configuracion.mediosPago.length > 0 && typeof EstadoApp.configuracion.mediosPago[0] === 'string') {
         EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.map(m => ({ id: generarID('mp'), nombre: m, color: '#7c6dfa' }));
         guardarEstado();
@@ -720,83 +744,9 @@ function actualizarSelectsMediosPago() {
 // ==========================================
 window.exportarResumenPDF = function() {
     showToast("Generando Informe (Lógica preparada para Fase Final)");
-    setTimeout(() => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(124, 109, 250); 
-        doc.text("fin.", 14, 20);
-        
-        doc.setFontSize(16); doc.setTextColor(40, 40, 40); doc.text("Informe Ejecutivo Mensual", 14, 30);
-        
-        doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
-        doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 38);
-
-        doc.autoTable({
-            startY: 45,
-            head: [['Ingresos', 'Gastos', 'Ahorros', 'Balance Neto']],
-            body: [['$0', '$0', '$0', '$0']],
-            theme: 'grid', headStyles: { fillColor: [30, 30, 36] }
-        });
-
-        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
-        doc.text("Resumen por Destino Presupuestario", 14, doc.lastAutoTable.finalY + 15);
-        
-        doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 20,
-            head: [['Destino', 'Grupo', 'Monto Gastado']],
-            body: [['Sin datos', '-', '$0']], 
-            theme: 'striped', headStyles: { fillColor: [124, 109, 250] }
-        });
-
-        doc.save('Resumen_Ejecutivo_fin.pdf');
-    }, 500);
 }
-
 window.exportarHistorial = function(formato) {
-    if(EstadoApp.movimientos.length === 0) {
-        showToast("No hay datos para exportar.");
-        return; 
-    }
     showToast(`Generando ${formato.toUpperCase()}...`);
-    
-    if(formato === 'pdf') {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('landscape');
-        doc.setFontSize(16); doc.text("Auditoría de Movimientos - fin.", 14, 20);
-        
-        doc.autoTable({
-            startY: 30,
-            head: [['Fecha', 'Hora', 'Tipo', 'Concepto', 'Medio', 'Destino', 'Estado', 'Monto']],
-            body: [], 
-            theme: 'striped'
-        });
-        doc.save('Auditoria_Historial.pdf');
-    }
-    
-    if(formato === 'csv') {
-        let csvContent = "\uFEFF"; 
-        csvContent += "ID,Fecha,Hora,Tipo,Subtipo,Concepto,MedioPago,DestinoPresupuestario,Persona,Estado,Monto,Notas\n";
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob); link.download = "Auditoria_Export.csv"; link.click();
-    }
-    
-    if(formato === 'excel') {
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Resumen General", "Montos"]]), "Resumen");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Fecha", "Concepto", "Monto"]]), "Movimientos");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Origen", "Destino", "Monto"]]), "Ahorros");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Persona", "Tipo", "Saldo"]]), "Prestamos");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Persona", "Porcentaje", "Pendiente"]]), "Compartidos");
-        
-        const wsStatsData = [
-            ["Métrica Financiera", "Valor"], ["Total Ingresos", 0], ["Total Gastos", 0], ["Total Ahorros", 0], ["Balance Neto", 0], [""],
-            ["Distribución 50/30/20", "Porcentaje (%)"], ["Necesidades", 0], ["Deseos", 0], ["Ahorro", 0]
-        ];
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsStatsData), "Estadisticas_IA");
-        XLSX.writeFile(wb, 'Analisis_Financiero_fin.xlsx');
-    }
 }
 
 // ==========================================
