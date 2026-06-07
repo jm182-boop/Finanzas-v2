@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - FASE 2.1: MOTOR FINANCIERO INTEGRADO (+ Medios de Pago)
+// app.js - FASE 2.2: MOTOR FINANCIERO INTEGRADO (+ Sobres y 50/30/20)
 // ==========================================
 
 // 1. ESTADO CENTRAL (Zero Data)
@@ -61,8 +61,9 @@ function renderizarTodo() {
     renderPrestamos();
     renderHistorialGlobal(EstadoApp.movimientos);
     
-    // Ejecutar el motor matemático central
+    // Ejecutar los motores matemáticos
     recalcularMotorFinanciero();
+    calcularRegla503020(); // Fase 2.2: Cálculo Dinámico de Sobres
     
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -110,6 +111,108 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAgregarMovimiento.addEventListener('click', guardarMovimiento);
     }
 });
+
+// ==========================================
+// FASE 2.2: MATEMÁTICA DE SOBRES Y REGLA 50/30/20
+// ==========================================
+function calcularRegla503020() {
+    let gastadoNec = 0;
+    let gastadoDes = 0;
+    let ingresosMes = 0;
+    
+    // Filtro temporal (Mes actual del sistema)
+    const hoy = new Date();
+    const mesActual = hoy.getMonth() + 1;
+    const anioActual = hoy.getFullYear();
+
+    // 1. Calcular Gastado real sumando movimientos
+    EstadoApp.movimientos.forEach(mov => {
+        if (!mov.fecha) return;
+        const partesFecha = mov.fecha.split('-');
+        if (parseInt(partesFecha[1]) !== mesActual || parseInt(partesFecha[0]) !== anioActual) return;
+
+        // Sumar ingresos para la barra teórica de ahorro
+        if (mov.tipo === 'ingreso') {
+            ingresosMes += mov.monto;
+            return;
+        }
+
+        // Procesar solo si es gasto
+        if (mov.tipo !== 'gasto') return;
+
+        // Cruzar con destino (Si el sobre fue borrado, se ignora aquí)
+        const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
+        if (!dest) return;
+
+        // Failsafe para Gastos Compartidos (sumar solo el % propio)
+        let montoReal = mov.monto;
+        if (mov.subtipo === 'compartido' && mov.compartido && mov.compartido.porcentaje) {
+            montoReal = mov.monto * (mov.compartido.porcentaje / 100);
+        }
+
+        if (dest.grupo === 'Necesidades') gastadoNec += montoReal;
+        if (dest.grupo === 'Deseos') gastadoDes += montoReal;
+    });
+
+    // 2. Calcular Límites configurados en Sobres
+    let limiteNec = 0;
+    let limiteDes = 0;
+    EstadoApp.destinos.forEach(d => {
+        if (d.grupo === 'Necesidades') limiteNec += d.presupuesto;
+        if (d.grupo === 'Deseos') limiteDes += d.presupuesto;
+    });
+
+    // 3. Renderizar Barra Necesidades
+    const txtNec = document.getElementById('resumen-nec-txt');
+    const fillNec = document.getElementById('resumen-nec-fill');
+    if (txtNec && fillNec) {
+        let pctNec = limiteNec > 0 ? (gastadoNec / limiteNec) * 100 : (gastadoNec > 0 ? 100 : 0);
+        txtNec.innerText = '$' + formatearDinero(gastadoNec) + ' / $' + formatearDinero(limiteNec);
+        
+        if (gastadoNec > limiteNec && limiteNec > 0) { // Sobregiro
+            fillNec.style.background = 'var(--red)';
+            fillNec.style.width = '100%';
+            txtNec.style.color = 'var(--red)';
+        } else {
+            fillNec.style.background = 'var(--green)';
+            fillNec.style.width = pctNec + '%';
+            txtNec.style.color = '';
+        }
+    }
+
+    // 4. Renderizar Barra Deseos
+    const txtDes = document.getElementById('resumen-des-txt');
+    const fillDes = document.getElementById('resumen-des-fill');
+    if (txtDes && fillDes) {
+        let pctDes = limiteDes > 0 ? (gastadoDes / limiteDes) * 100 : (gastadoDes > 0 ? 100 : 0);
+        txtDes.innerText = '$' + formatearDinero(gastadoDes) + ' / $' + formatearDinero(limiteDes);
+        
+        if (gastadoDes > limiteDes && limiteDes > 0) { // Sobregiro
+            fillDes.style.background = 'var(--red)';
+            fillDes.style.width = '100%';
+            txtDes.style.color = 'var(--red)';
+        } else {
+            fillDes.style.background = 'var(--accent)'; // Púrpura
+            fillDes.style.width = pctDes + '%';
+            txtDes.style.color = '';
+        }
+    }
+
+    // 5. Renderizar Barra Ahorro (Cálculo estático/teórico por ahora)
+    const txtAho = document.getElementById('resumen-aho-txt');
+    const fillAho = document.getElementById('resumen-aho-fill');
+    if (txtAho && fillAho) {
+        let pctAhorroMeta = EstadoApp.configuracion.regla ? EstadoApp.configuracion.regla.ahorro : 20;
+        let limiteAho = ingresosMes * (pctAhorroMeta / 100);
+        let ahorradoReal = 0; // Se integrará dinámicamente en la Fase 2.4
+        
+        let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
+        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
+        fillAho.style.background = 'var(--green)';
+        fillAho.style.width = pctAho + '%';
+        txtAho.style.color = '';
+    }
+}
 
 // ==========================================
 // FASE 2.1: LÓGICA DE MOVIMIENTOS Y MATEMÁTICAS
@@ -239,6 +342,7 @@ function updateRegla() {
     
     if(!EstadoApp.configuracion) EstadoApp.configuracion = {};
     EstadoApp.configuracion.regla = { necesidades: n, deseos: d, ahorro: a };
+    calcularRegla503020(); // Recalcular límites de ahorro al mover sliders
 }
 
 function logout() {
