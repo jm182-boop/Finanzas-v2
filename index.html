@@ -231,7 +231,7 @@
         <div class="header"><h2><i data-lucide="piggy-bank" class="icon-lg"></i> Ahorros</h2></div>
         
         <div class="mg-ahorro">
-          <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv">$0</div></div>
+          <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv" id="ahorro-total">$0</div></div>
           <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
           <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
         </div>
@@ -263,19 +263,19 @@
                 <option value="retiro">Retiro de ahorro</option>
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
-              <input type="text" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
+              <input type="text" id="ahorro-monto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
-                  <select class="in" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
+                  <select class="in" id="ahorro-origen" style="margin-bottom:0;"><option value="">Seleccionar...</option></select>
                 </div>
                 <div><label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino</label>
                   <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)"></select>
                 </div>
               </div>
-              <input type="date" class="in input-fecha">
-              <input type="text" class="in" placeholder="Nota (Opcional)">
-              <button class="btn" style="background:var(--accent);">Guardar Movimiento</button>
+              <input type="date" id="ahorro-fecha" class="in input-fecha">
+              <input type="text" id="ahorro-nota" class="in" placeholder="Nota (Opcional)">
+              <button class="btn" style="background:var(--accent);" onclick="guardarAhorro()">Guardar Movimiento</button>
 
               <div id="modal-nueva-billetera" class="modal-inline" style="display:none;">
                 <h3 style="font-size:16px; font-weight:700; margin-bottom:15px;">Nueva billetera</h3>
@@ -439,6 +439,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=28"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>
