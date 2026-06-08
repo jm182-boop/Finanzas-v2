@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - SPRINT FINAL ESTABILIZACIÓN Y SOBRES VISUALES
+// app.js - SPRINT FINAL ESTABILIZACIÓN Y REESTRUCTURACIÓN CORE
 // ==========================================
 
 // 1. ESTADO CENTRAL
@@ -37,7 +37,7 @@ function cargarEstado() {
 function generarID(prefijo) { return prefijo + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7); }
 
 // ==========================================
-// MOTOR MATEMÁTICO UNIVERSAL (IMPACTO NETO)
+// MOTOR MATEMÁTICO UNIVERSAL (IMPACTO NETO REAL)
 // ==========================================
 function getImpactoNeto(m) {
     if (m.tipo !== 'gasto') return m.monto;
@@ -60,12 +60,13 @@ function renderizarTodo() {
     
     renderBilleterasUI();
     renderPrestamos();
-    renderHistorialGlobal(EstadoApp.movimientos);
     
     recalcularMotorFinanciero();
     calcularRegla503020(); 
     renderSobresResumen();
     renderPorMedioPago();
+    
+    renderHistorialGlobal(EstadoApp.movimientos);
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -107,37 +108,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// MOTOR CENTRAL DE MOVIMIENTOS
+// PREVISUALIZADOR Y REGISTRO DE MOVIMIENTOS
 // ==========================================
 window.calcularCuotaInfoGasto = function() {
     const esGasto = document.getElementById('btg').classList.contains('active');
-    if (!esGasto) return;
+    const infoText = document.getElementById('g-info-cuota');
+    if (!infoText) return;
+    if (!esGasto) { infoText.innerHTML = ''; return; }
     
     const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
     const cuotasStr = document.getElementById('gcuotas').value;
-    const infoText = document.getElementById('g-info-cuota');
     const pctCompartidoStr = document.getElementById('comp-pct').value;
-    const isCompartido = document.getElementById('chk-compartido').checked;
+    const chkCompartidoEl = document.getElementById('chk-compartido');
+    const isCompartido = chkCompartidoEl ? chkCompartidoEl.checked : false;
 
-    if (!infoText) return;
-
-    if (montoStr) {
+    if (montoStr && parseFloat(montoStr) > 0) {
         let monto = parseFloat(montoStr);
         let cuotas = parseInt(cuotasStr) > 0 ? parseInt(cuotasStr) : 1;
         let valorCuota = monto / cuotas;
         
         let msg = `Total: $${formatearDinero(monto)}`;
-        if (cuotas > 1) msg += ` | Cuotas: ${cuotas} | Valor cuota: $${formatearDinero(valorCuota.toFixed(0))}`;
+        if (cuotas > 1) msg += `<br>Cuotas: ${cuotas} | Valor cuota: $${formatearDinero(valorCuota.toFixed(0))}`;
         
         if (isCompartido && pctCompartidoStr) {
             let pct = parseFloat(pctCompartidoStr);
             let tuParte = valorCuota * (pct / 100);
-            msg += ` | Tu parte: $${formatearDinero(tuParte.toFixed(0))}`;
+            msg += `<br>Tu parte (${pct}%): $${formatearDinero(tuParte.toFixed(0))}`;
         }
-        
-        infoText.innerText = msg;
+        infoText.innerHTML = msg;
     } else {
-        infoText.innerText = '';
+        infoText.innerHTML = '';
     }
 }
 
@@ -146,7 +146,9 @@ function guardarMovimiento() {
     const tipo = esGasto ? 'gasto' : 'ingreso';
     
     const concepto = document.getElementById('gdesc').value.trim();
-    const monto = parseFloat(document.getElementById('gmonto').value.replace(/\./g, ''));
+    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
+    const monto = parseFloat(montoStr);
+    
     const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
     const destinoSelect = document.querySelector('select[data-type="destino"]');
     const destinoId = esGasto && destinoSelect ? destinoSelect.value : null;
@@ -161,21 +163,26 @@ function guardarMovimiento() {
 
     let cuotasObj = { esCuota: false, total: 1, actual: 1 };
     let compartidoObj = { esCompartido: false, persona: null, porcentaje: null };
+    let subtipo = 'pago_unico';
 
     if (esGasto) {
         const cuotasTotal = parseInt(document.getElementById('gcuotas').value) || 0;
         const cuotaActual = parseInt(document.getElementById('gcuota-num').value) || 0;
-        const chkCompartido = document.getElementById('chk-compartido').checked;
+        const chkCompartidoEl = document.getElementById('chk-compartido');
+        const chkCompartido = chkCompartidoEl ? chkCompartidoEl.checked : false;
 
         if (cuotasTotal > 0) {
             cuotasObj = { esCuota: true, total: cuotasTotal, actual: cuotaActual > 0 ? cuotaActual : 1 };
+            subtipo = 'cuota';
         }
         
         if (chkCompartido) {
             const nombrePers = document.getElementById('comp-quien').value.trim();
             compartidoObj = { esCompartido: true, persona: nombrePers, porcentaje: parseFloat(document.getElementById('comp-pct').value) || 50 };
+            if(subtipo === 'cuota') subtipo = 'mixto'; else subtipo = 'compartido';
             
-            if (document.getElementById('comp-guardar').checked && nombrePers) {
+            const chkGuardar = document.getElementById('comp-guardar');
+            if (chkGuardar && chkGuardar.checked && nombrePers) {
                 if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
                 if (!EstadoApp.configuracion.personasFrecuentes.includes(nombrePers)) {
                     EstadoApp.configuracion.personasFrecuentes.push(nombrePers);
@@ -185,7 +192,7 @@ function guardarMovimiento() {
     }
 
     EstadoApp.movimientos.unshift({
-        id: generarID('mov'), tipo: tipo, concepto: concepto, monto: monto, fecha: fecha, hora: hora,
+        id: generarID('mov'), tipo: tipo, subtipo: subtipo, concepto: concepto, monto: monto, fecha: fecha, hora: hora,
         medioPagoId: medioPagoId, destinoId: destinoId, cuotas: cuotasObj, compartido: compartidoObj
     });
 
@@ -217,6 +224,9 @@ function recalcularMotorFinanciero() {
     if (elDisp) { elDisp.innerText = '$' + formatearDinero(balance); elDisp.className = balance >= 0 ? 'mv ok' : 'mv bad'; }
 }
 
+// ==========================================
+// REGLA 70/20/10 ESTRICTA Y DESACOPLADA
+// ==========================================
 function calcularRegla503020() {
     let gastadoNec = 0, gastadoDes = 0, ingresosMes = 0;
     const hoy = new Date(); const mesActual = hoy.getMonth() + 1; const anioActual = hoy.getFullYear();
@@ -227,16 +237,16 @@ function calcularRegla503020() {
         if (parseInt(partes[1]) !== mesActual || parseInt(partes[0]) !== anioActual) return;
 
         if (mov.tipo === 'ingreso') { ingresosMes += mov.monto; return; }
-        if (mov.tipo !== 'gasto') return;
-
-        const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
-        if (!dest) return;
-
-        let impactoReal = getImpactoNeto(mov);
-        if (dest.grupo === 'Necesidades') gastadoNec += impactoReal;
-        if (dest.grupo === 'Deseos') gastadoDes += impactoReal;
+        if (mov.tipo === 'gasto') {
+            const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
+            if (!dest) return;
+            let impactoReal = getImpactoNeto(mov);
+            if (dest.grupo === 'Necesidades') gastadoNec += impactoReal;
+            if (dest.grupo === 'Deseos') gastadoDes += impactoReal;
+        }
     });
 
+    // LÍMITES TEÓRICOS CALCULADOS EXCLUSIVAMENTE POR INGRESOS REALES
     let regla = EstadoApp.configuracion.regla || { necesidades: 50, deseos: 30, ahorro: 20 };
     let limiteNec = ingresosMes * (regla.necesidades / 100);
     let limiteDes = ingresosMes * (regla.deseos / 100);
@@ -262,7 +272,7 @@ function calcularRegla503020() {
 
     const txtAho = document.getElementById('resumen-aho-txt'); const fillAho = document.getElementById('resumen-aho-fill');
     if (txtAho && fillAho) {
-        let ahorradoReal = 0; // Se calcula real en otra vista
+        let ahorradoReal = 0; // Total real se maneja en su propio módulo, aquí visualizamos meta vs lograda (a futuro)
         let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
         txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
         fillAho.style.background = 'var(--green)'; fillAho.style.width = (pctAho > 100 ? 100 : pctAho) + '%';
@@ -270,7 +280,7 @@ function calcularRegla503020() {
 }
 
 // ==========================================
-// NUEVO MOTOR VISUAL DE SOBRES
+// MÓDULO VISUAL DE SOBRES INDEPENDIENTES
 // ==========================================
 function renderSobresResumen() {
     const contenedor = document.getElementById('resumen-sobres-lista');
@@ -395,7 +405,7 @@ function limpiarInputs(contenedorId) {
     contenedor.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
     const fechaHoyString = new Date().toISOString().split('T')[0];
     contenedor.querySelectorAll('input[type="date"], .input-fecha').forEach(el => el.value = fechaHoyString);
-    if(document.getElementById('g-info-cuota')) document.getElementById('g-info-cuota').innerText = '';
+    if(document.getElementById('g-info-cuota')) document.getElementById('g-info-cuota').innerHTML = '';
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
@@ -429,7 +439,7 @@ function togglePwd() { const pwd = document.getElementById('a-pwd'); pwd.type = 
 function doAuth() { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex'; }
 
 // ==========================================
-// HISTORIAL (UI) - SIMPLIFICADO Y ORDENADO
+// HISTORIAL (UI) - REDISEÑADO AL IMPACTO NETO
 // ==========================================
 window.filtrarHistorial = function() { renderHistorialGlobal(EstadoApp.movimientos); }
 
@@ -450,28 +460,39 @@ function renderHistorialGlobal(data) {
             else if (isAhorro) { colorIcono = 'var(--accent)'; colorBg = 'rgba(124, 109, 250, 0.1)'; colorMonto = 'var(--accent)'; signo = ''; iconoLucide = 'piggy-bank'; }
             
             let impactoReal = getImpactoNeto(m);
-            let detalles = `${formatearFecha(m.fecha)} • ${m.hora}`;
+            let detallesHtml = `${formatearFecha(m.fecha)} • ${m.hora}`;
             
             if (isGasto && (m.cuotas?.esCuota || m.compartido?.esCompartido)) {
-                detalles += `<br><span style="color:var(--text2); display:inline-block; margin-top:4px;">Total compra: $${formatearDinero(m.monto)}</span>`;
-                if (m.cuotas?.esCuota) detalles += ` • Cuota ${m.cuotas.actual}/${m.cuotas.total}`;
-                if (m.compartido?.esCompartido) detalles += ` • Compartido: ${m.compartido.persona} (${m.compartido.porcentaje}%)`;
+                detallesHtml += `<br><div style="margin-top:6px; padding:8px 10px; background:var(--bg3); border-radius:6px; font-size:11px; line-height:1.6; color:var(--text2);">`;
+                detallesHtml += `<b>Total compra:</b> $${formatearDinero(m.monto)}<br>`;
+                
+                let baseCuota = m.monto;
+                if (m.cuotas?.esCuota) {
+                    baseCuota = m.monto / m.cuotas.total;
+                    detallesHtml += `<b>Cuota ${m.cuotas.actual}/${m.cuotas.total}:</b> $${formatearDinero(baseCuota.toFixed(0))}<br>`;
+                }
+                
+                if (m.compartido?.esCompartido) {
+                    detallesHtml += `<b>Compartido con:</b> ${m.compartido.persona} (${m.compartido.porcentaje}%)<br>`;
+                    detallesHtml += `<b>Tu parte:</b> $${formatearDinero(impactoReal.toFixed(0))}`;
+                }
+                detallesHtml += `</div>`;
             }
 
             html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--bg2); border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; align-items:flex-start; gap:15px; flex:1;">
                     <div style="width:42px; height:42px; border-radius:10px; background:${colorBg}; color:${colorIcono}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                         <i data-lucide="${iconoLucide}" class="icon-md"></i>
                     </div>
-                    <div>
-                        <div style="font-weight:600; font-size:14px; color:var(--text); margin-bottom:2px;">${m.concepto}</div>
-                        <div style="font-size:12px; color:var(--text3); line-height:1.4;">${detalles}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px; color:var(--text); margin-bottom:4px;">${m.concepto}</div>
+                        <div style="font-size:12px; color:var(--text3);">${detallesHtml}</div>
                     </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; align-items:center; gap:15px; flex-shrink:0; padding-left:10px;">
                     <div style="font-weight:700; font-size:16px; color:${colorMonto}; text-align:right;">
-                        ${signo}$${formatearDinero(impactoReal)}
+                        ${signo}$${formatearDinero(impactoReal.toFixed(0))}
                     </div>
                     <button class="ui-icon-btn" onclick="eliminarMovimiento('${m.id}')" title="Eliminar Movimiento"><i data-lucide="trash-2" class="icon-sm" style="color:var(--text3); opacity: 0.6;"></i></button>
                 </div>
@@ -489,7 +510,7 @@ function renderHistorialGlobal(data) {
 
     if(document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
     if(document.getElementById('h-in')) document.getElementById('h-in').innerText = '$' + formatearDinero(totalIn);
-    if(document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut);
+    if(document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut.toFixed(0));
     if(document.getElementById('h-aho')) document.getElementById('h-aho').innerText = '$' + formatearDinero(totalAho);
 }
 
