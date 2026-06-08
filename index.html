@@ -89,7 +89,7 @@
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
           <div class="card" id="resumen-barras">
-            <div class="ct"><i data-lucide="pie-chart" class="icon-sm"></i> REGLA DE DISTRIBUCIÓN (Basada en Ingresos)</div>
+            <div class="ct"><i data-lucide="pie-chart" class="icon-sm"></i> REGLA DE DISTRIBUCIÓN (Límites por Ingreso)</div>
             
             <div class="progress-wrap">
               <div class="progress-header"><span>Necesidades (<span id="resumen-pct-nec">50</span>%)</span><span id="resumen-nec-txt">$0 / $0</span></div>
@@ -105,21 +105,12 @@
               <div class="progress-header"><span>Ahorro (<span id="resumen-pct-aho">20</span>%)</span><span id="resumen-aho-txt">$0 / $0</span></div>
               <div class="progress-bar"><div id="resumen-aho-fill" class="progress-fill" style="width: 0%; background: var(--green);"></div></div>
             </div>
-            
-            <div style="border-top: 1px solid var(--border); margin-top: 30px; padding-top: 25px;">
-                <div class="ct" style="margin-bottom: 15px;"><i data-lucide="bell-ring" class="icon-sm"></i> Alertas y Recordatorios</div>
-                <div id="alertas-list">
-                   <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
-                     <i data-lucide="check-circle" class="icon-sm"></i><span>Sin alertas activas en este periodo.</span>
-                   </div>
-                </div>
-            </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-sobres-card">
-              <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> ESTADO DE SOBRES PRESUPUESTARIOS</div>
-              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:400px;overflow-y:auto;padding-right:5px;">
+              <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> SOBRES PRESUPUESTARIOS</div>
+              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;">
                  </div>
             </div>
             <div class="card">
@@ -156,11 +147,12 @@
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino Presupuestario (En qué)</label><select class="in" style="margin-bottom:0;" data-type="destino"><option value="">Seleccionar Destino...</option></select></div>
             </div>
             <input type="date" class="in input-fecha">
+            
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
               <input type="number" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()" style="margin-bottom:5px;">
               <input type="number" class="in" id="gcuota-num" placeholder="N° Cuota actual" style="margin-bottom:5px;">
             </div>
-            <p id="g-info-cuota" style="font-size:12px; color:var(--accent); font-weight:600; margin-left:5px; height:18px; margin-top:2px; margin-bottom:10px;"></p>
+            <p id="g-info-cuota" style="font-size:12px; color:var(--accent); font-weight:600; margin-left:5px; height:auto; min-height:18px; margin-top:2px; margin-bottom:10px;"></p>
             
             <label style="display:flex;align-items:center;gap:10px;margin:10px 0 20px 0;font-size:14px;cursor:pointer;font-weight:500;">
               <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
@@ -447,6 +439,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=30"></script>
+  <script src="app.js?v=31"></script>
 </body>
 </html>
