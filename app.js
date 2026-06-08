@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - SPRINT 1: LIMPIEZA, COMPARTIDOS Y ELIMINAR (MVP)
+// app.js - SPRINT 1.5: BLINDAJE DE MOTOR FINANCIERO Y AHORROS
 // ==========================================
 
 // 1. ESTADO CENTRAL
@@ -16,7 +16,7 @@ let EstadoApp = {
         regla: { necesidades: 50, deseos: 30, ahorro: 20 },
         moneda: 'AR',
         mediosPago: [],
-        personasFrecuentes: [] // Nuevo array del Sprint 1
+        personasFrecuentes: [] 
     }
 };
 
@@ -31,7 +31,6 @@ function cargarEstado() {
         const parsed = JSON.parse(estadoGuardado);
         EstadoApp = { ...EstadoApp, ...parsed };
         
-        // Failsafes vitales
         if (!EstadoApp.destinos) EstadoApp.destinos = [];
         if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
         if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
@@ -56,7 +55,8 @@ function renderizarTodo() {
     actualizarSelectsMovimientos();
     renderMediosPago();
     actualizarSelectsMediosPago();
-    renderPersonasFrecuentes(); // Nuevo
+    renderPersonasFrecuentes(); 
+    actualizarSelectsAhorro(); 
     
     renderBilleterasUI();
     renderPrestamos();
@@ -140,9 +140,10 @@ function guardarMovimiento() {
         return;
     }
 
-    let subtipo = 'pago_unico';
+    // Sprint 1.5: Independencia Total de Banderas Lógicas
     let cuotasObj = { esCuota: false, total: 1, actual: 1 };
     let compartidoObj = { esCompartido: false, persona: null, porcentaje: null };
+    let subtipo = 'pago_unico';
 
     if (esGasto) {
         const cuotasTotal = parseInt(document.getElementById('gcuotas').value) || 0;
@@ -151,18 +152,19 @@ function guardarMovimiento() {
         const isCompartido = chkCompartido ? chkCompartido.checked : false;
 
         if (cuotasTotal > 0) {
-            subtipo = 'cuota';
             cuotasObj = { esCuota: true, total: cuotasTotal, actual: cuotaActual > 0 ? cuotaActual : 1 };
-        } else if (isCompartido) {
-            subtipo = 'compartido';
+            subtipo = 'cuota';
+        }
+        
+        if (isCompartido) {
             const nombrePers = document.getElementById('comp-quien').value.trim();
             compartidoObj = {
                 esCompartido: true,
                 persona: nombrePers,
                 porcentaje: parseFloat(document.getElementById('comp-pct').value) || 50
             };
+            if(subtipo === 'cuota') subtipo = 'mixto'; else subtipo = 'compartido';
             
-            // Sprint 1: Guardar persona frecuente
             const chkGuardar = document.getElementById('comp-guardar');
             if (chkGuardar && chkGuardar.checked && nombrePers) {
                 if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
@@ -176,7 +178,7 @@ function guardarMovimiento() {
     const nuevoMovimiento = {
         id: generarID('mov'),
         tipo: tipo,
-        subtipo: subtipo,
+        subtipo: subtipo, // Legado visual
         concepto: concepto,
         monto: monto,
         fecha: fecha,
@@ -190,9 +192,8 @@ function guardarMovimiento() {
     EstadoApp.movimientos.unshift(nuevoMovimiento);
     guardarEstado();
     
-    // Sprint 1: Limpieza blindada y cierre de cajón compartido
     limpiarInputs('panel-registro');
-    toggleCompartido(); // Al limpiarInputs el checkbox pasa a false, esto oculta la caja.
+    toggleCompartido(); 
     
     document.getElementById('panel-registro').style.display = 'none';
     
@@ -215,8 +216,11 @@ function recalcularMotorFinanciero() {
 
     EstadoApp.movimientos.forEach(m => {
         if (m.tipo === 'ingreso') ingresos += m.monto;
-        // El balance general resta el total del gasto aunque sea compartido
-        if (m.tipo === 'gasto') gastos += m.monto;
+        
+        // El balance es Flujo de Caja. En cuotas se resta el total para evitar un agujero contable.
+        // Solo protegemos si es compartido (restando la parte del otro si te pagó en efectivo, 
+        // aunque si pagaste el total con la tarjeta, la tarjeta absorbe el total. Dejamos total para flujo neto).
+        if (m.tipo === 'gasto') gastos += m.monto; 
     });
 
     let balance = ingresos - gastos;
@@ -257,9 +261,11 @@ function calcularRegla503020() {
         const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
         if (!dest) return;
 
-        // Failsafe matemático para Compartidos: Protege el sobre.
+        // Sprint 1.5: Matemática Fraccional protegida
         let montoReal = mov.monto;
-        if (mov.subtipo === 'compartido' && mov.compartido && mov.compartido.porcentaje) {
+        
+        // Si el gasto fue compartido, el Sobre Presupuestario personal solo absorbe la fracción propia
+        if (mov.compartido && mov.compartido.esCompartido && mov.compartido.porcentaje) {
             montoReal = mov.monto * (mov.compartido.porcentaje / 100);
         }
 
@@ -377,7 +383,6 @@ function formatearFecha(dateStr) {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-// SPRINT 1: Función blindada para limpiar todo el formulario sin dejar rastros
 function limpiarInputs(contenedorId) {
     const contenedor = document.getElementById(contenedorId);
     if (!contenedor) return;
@@ -477,22 +482,25 @@ function renderHistorialGlobal(data) {
         let html = '';
         data.forEach(m => {
             const isGasto = m.tipo === 'gasto';
-            const colorIcono = isGasto ? 'var(--red)' : 'var(--green)';
-            const colorBg = isGasto ? 'rgba(255, 87, 87, 0.1)' : 'rgba(18, 224, 145, 0.1)';
-            const colorMonto = isGasto ? 'var(--text)' : 'var(--green)';
-            const signo = isGasto ? '-' : '+';
-            const iconoLucide = isGasto ? 'arrow-down-right' : 'arrow-up-right';
+            const isAhorro = m.tipo === 'ahorro';
+            
+            let colorIcono = 'var(--green)'; let colorBg = 'rgba(18, 224, 145, 0.1)'; let colorMonto = 'var(--green)'; let signo = '+'; let iconoLucide = 'arrow-up-right';
+            if (isGasto) { colorIcono = 'var(--red)'; colorBg = 'rgba(255, 87, 87, 0.1)'; colorMonto = 'var(--text)'; signo = '-'; iconoLucide = 'arrow-down-right'; }
+            else if (isAhorro) { colorIcono = 'var(--accent)'; colorBg = 'rgba(124, 109, 250, 0.1)'; colorMonto = 'var(--accent)'; signo = ''; iconoLucide = 'piggy-bank'; }
             
             let subTexto = `${formatearFecha(m.fecha)} • ${m.hora}`;
-            let montoMostrar = m.monto; // Sprint 1: Lógica Visual de Montos
+            let montoMostrar = m.monto; 
             
-            if (m.subtipo === 'cuota') subTexto += ` • Cuota ${m.cuotas.actual}/${m.cuotas.total}`;
+            // Sprint 1.5: Renderizado Mixto Simultáneo
+            if (m.cuotas && m.cuotas.esCuota) {
+                const valorCuota = m.monto / m.cuotas.total;
+                subTexto += ` • Cuota ${m.cuotas.actual}/${m.cuotas.total} ($${formatearDinero(valorCuota)})`;
+            }
             
-            // Sprint 1: Formato visual exclusivo para compartidos
-            if (m.subtipo === 'compartido') {
-                const tuParte = m.monto * (m.compartido.porcentaje / 100);
+            if (m.compartido && m.compartido.esCompartido) {
+                let baseCalculo = (m.cuotas && m.cuotas.esCuota) ? (m.monto / m.cuotas.total) : m.monto;
+                const tuParte = baseCalculo * (m.compartido.porcentaje / 100);
                 subTexto += ` • Compartido con ${m.compartido.persona} (Tu parte: $${formatearDinero(tuParte)})`;
-                montoMostrar = m.monto; // Mantiene visible el impacto real en el banco
             }
 
             html += `
@@ -517,15 +525,17 @@ function renderHistorialGlobal(data) {
         container.innerHTML = html;
     }
     
-    let totalIn = 0, totalOut = 0;
+    let totalIn = 0, totalOut = 0, totalAho = 0;
     data.forEach(m => {
         if(m.tipo === 'ingreso') totalIn += m.monto;
         if(m.tipo === 'gasto') totalOut += m.monto;
+        if(m.tipo === 'ahorro') totalAho += m.monto;
     });
 
     if(document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
     if(document.getElementById('h-in')) document.getElementById('h-in').innerText = '$' + formatearDinero(totalIn);
     if(document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut);
+    if(document.getElementById('h-aho')) document.getElementById('h-aho').innerText = '$' + formatearDinero(totalAho);
 }
 
 // ==========================================
@@ -645,7 +655,6 @@ function actualizarSelectsMovimientos() {
 // ADMINISTRADOR DE MEDIOS DE PAGO Y PERSONAS
 // ==========================================
 
-// Sprint 1: Módulo para renderizar Autocompletado de Personas
 function renderPersonasFrecuentes() {
     const dl = document.getElementById('lista-personas');
     if(!dl) return;
@@ -750,15 +759,109 @@ window.exportarHistorial = function(formato) {
 }
 
 // ==========================================
-// AHORROS
+// AHORROS Y BILLETERAS (SPRINT 1.5 FULL MVP)
 // ==========================================
-function setAhorroTipo() {
+
+window.actualizarSelectsAhorro = function() {
+    const tipo = document.getElementById('ahorro-tipo');
+    const origen = document.getElementById('ahorro-origen');
+    const destino = document.getElementById('ahorro-destino');
+    if(!tipo || !origen || !destino) return;
+    
+    const valO = origen.value;
+    const valD = destino.value;
+    
+    let optsMedios = '<option value="">Seleccionar...</option>';
+    if(EstadoApp.configuracion && EstadoApp.configuracion.mediosPago) {
+        EstadoApp.configuracion.mediosPago.forEach(mp => { optsMedios += `<option value="${mp.id}">${mp.nombre}</option>`; });
+    }
+    
+    let optsBilleteras = '<option value="">Seleccionar...</option>';
+    EstadoApp.billeteras.forEach(b => { optsBilleteras += `<option value="${b.id}">${b.nombre}</option>`; });
+    
+    if(tipo.value === 'aporte') {
+        origen.innerHTML = optsMedios;
+        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>';
+    } else if(tipo.value === 'retiro') {
+        origen.innerHTML = optsBilleteras;
+        destino.innerHTML = optsMedios;
+    } else {
+        origen.innerHTML = optsBilleteras;
+        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>';
+    }
+
+    // Intentar restaurar valores si aún existen en las nuevas listas
+    if (origen.querySelector(`option[value="${valO}"]`)) origen.value = valO;
+    if (destino.querySelector(`option[value="${valD}"]`)) destino.value = valD;
+}
+
+window.setAhorroTipo = function() {
     const tipo = document.getElementById('ahorro-tipo').value;
     const lblOrigen = document.getElementById('lbl-origen');
     const lblDestino = document.getElementById('lbl-destino');
     if(tipo === 'aporte') { lblOrigen.innerText = 'Origen (Medio de pago)'; lblDestino.innerText = 'Destino (Billetera Ahorro)'; }
     else if(tipo === 'retiro') { lblOrigen.innerText = 'Origen (Billetera Ahorro)'; lblDestino.innerText = 'Destino (Medio de pago)'; }
     else { lblOrigen.innerText = 'Origen (Billetera Ahorro)'; lblDestino.innerText = 'Destino (Billetera Ahorro)'; }
+    
+    actualizarSelectsAhorro();
+}
+
+window.guardarAhorro = function() {
+    const tipoAhorro = document.getElementById('ahorro-tipo').value; 
+    const origenId = document.getElementById('ahorro-origen').value;
+    const destinoId = document.getElementById('ahorro-destino').value;
+    const montoStr = document.getElementById('ahorro-monto').value.replace(/\D/g, '');
+    const monto = parseFloat(montoStr);
+    const nota = document.getElementById('ahorro-nota').value.trim();
+    const fecha = document.getElementById('ahorro-fecha').value || new Date().toISOString().split('T')[0];
+    
+    if(!origenId || !destinoId || isNaN(monto) || monto <= 0) {
+        showToast("Completa origen, destino y monto válido.");
+        return;
+    }
+    if(origenId === destinoId) {
+        showToast("El origen y destino no pueden ser el mismo.");
+        return;
+    }
+    
+    // Lógica financiera de saldos en Billeteras
+    if(tipoAhorro === 'aporte') {
+        let bill = EstadoApp.billeteras.find(b => b.id === destinoId);
+        if(bill) bill.saldo = (bill.saldo || 0) + monto;
+    } else if(tipoAhorro === 'retiro') {
+        let bill = EstadoApp.billeteras.find(b => b.id === origenId);
+        if(bill) {
+            if((bill.saldo || 0) < monto) { showToast("Saldo insuficiente en la billetera de origen."); return; }
+            bill.saldo -= monto;
+        }
+    } else if(tipoAhorro === 'transferencia') {
+        let billO = EstadoApp.billeteras.find(b => b.id === origenId);
+        let billD = EstadoApp.billeteras.find(b => b.id === destinoId);
+        if(billO && billD) {
+            if((billO.saldo || 0) < monto) { showToast("Saldo insuficiente en el origen."); return; }
+            billO.saldo -= monto;
+            billD.saldo = (billD.saldo || 0) + monto;
+        }
+    }
+
+    EstadoApp.movimientos.unshift({
+        id: generarID('mov'),
+        tipo: 'ahorro',
+        subtipo: tipoAhorro,
+        concepto: nota || `Ahorro (${tipoAhorro})`,
+        monto: monto,
+        fecha: fecha,
+        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+        medioPagoId: tipoAhorro === 'aporte' ? origenId : (tipoAhorro === 'retiro' ? destinoId : null),
+        origenId: origenId,
+        destinoId: destinoId
+    });
+
+    guardarEstado();
+    renderizarTodo();
+    document.getElementById('ahorro-monto').value = '';
+    document.getElementById('ahorro-nota').value = '';
+    showToast("Movimiento de ahorro guardado con éxito.");
 }
 
 function renderBilleterasUI() {
@@ -767,8 +870,11 @@ function renderBilleterasUI() {
     const countBilleteras = document.getElementById('ahorro-billeteras-count');
     const selectDestino = document.getElementById('ahorro-destino');
     const listaUI = document.getElementById('lista-billeteras-ui');
+    const lblTotalAhorro = document.getElementById('ahorro-total');
     
     if(countBilleteras) countBilleteras.innerText = EstadoApp.billeteras.length;
+
+    let totalGlobalAhorro = 0;
 
     if (EstadoApp.billeteras.length === 0) {
         if(emptyState) emptyState.style.display = 'flex';
@@ -778,21 +884,18 @@ function renderBilleterasUI() {
         if(emptyState) emptyState.style.display = 'none';
         if(dataState) dataState.style.display = 'flex';
         
-        if(selectDestino) {
-            let opcionesHTML = '<option value="" selected>Seleccionar...</option>';
-            EstadoApp.billeteras.forEach(b => { opcionesHTML += `<option value="${b.id}">${b.nombre}</option>`; });
-            opcionesHTML += '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>';
-            selectDestino.innerHTML = opcionesHTML;
-        }
-
         if(listaUI) {
             let listaHTML = '';
             EstadoApp.billeteras.forEach(b => {
-                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div style="display:flex; align-items:center; gap:15px;"><span style="font-weight:700; font-size:15px;">$0</span></div></div>`;
+                let saldoAcumulado = b.saldo || 0;
+                totalGlobalAhorro += saldoAcumulado;
+                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div style="display:flex; align-items:center; gap:15px;"><span style="font-weight:700; font-size:15px;">$${formatearDinero(saldoAcumulado)}</span></div></div>`;
             });
             listaUI.innerHTML = listaHTML;
         }
     }
+    
+    if(lblTotalAhorro) lblTotalAhorro.innerText = '$' + formatearDinero(totalGlobalAhorro);
 }
 
 function abrirModalNuevaBilletera() { document.getElementById('modal-nueva-billetera').style.display = 'block'; }
