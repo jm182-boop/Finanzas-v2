@@ -89,7 +89,7 @@
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="resumen-grid">
           <div class="card" id="resumen-barras">
-            <div class="ct"><i data-lucide="pie-chart" class="icon-sm"></i> REGLA 50/30/20</div>
+            <div class="ct"><i data-lucide="pie-chart" class="icon-sm"></i> REGLA DE DISTRIBUCIÓN (Basada en Ingresos)</div>
             
             <div class="progress-wrap">
               <div class="progress-header"><span>Necesidades (<span id="resumen-pct-nec">50</span>%)</span><span id="resumen-nec-txt">$0 / $0</span></div>
@@ -117,13 +117,16 @@
           </div>
 
           <div style="display:flex;flex-direction:column;gap:20px;">
-            <div class="card" id="resumen-checklist">
-              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> CHECKLIST DE PAGOS</div>
-              <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>
+            <div class="card" id="resumen-sobres-card">
+              <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> ESTADO DE SOBRES PRESUPUESTARIOS</div>
+              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:400px;overflow-y:auto;padding-right:5px;">
+                 </div>
             </div>
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> POR MEDIO DE PAGO</div>
-              <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin movimientos registrados.</p>
+              <div id="resumen-medios-pago-lista" style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
+                 <p style="color:var(--text3); font-size:13px; text-align:center;">Sin movimientos registrados.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -145,7 +148,7 @@
             <button id="bti" class="tb b-verde" onclick="setTipoMov('ingreso')">Ingreso</button>
           </div>
           <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado...)">
-          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this)">
+          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this); calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
           
           <div id="campos-gasto">
             <div id="grid-billetera-sobre" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
@@ -154,9 +157,11 @@
             </div>
             <input type="date" class="in input-fecha">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-              <input type="text" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)">
-              <input type="text" class="in" id="gcuota-num" placeholder="N° Cuota actual">
+              <input type="number" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()" style="margin-bottom:5px;">
+              <input type="number" class="in" id="gcuota-num" placeholder="N° Cuota actual" style="margin-bottom:5px;">
             </div>
+            <p id="g-info-cuota" style="font-size:12px; color:var(--accent); font-weight:600; margin-left:5px; height:18px; margin-top:2px; margin-bottom:10px;"></p>
+            
             <label style="display:flex;align-items:center;gap:10px;margin:10px 0 20px 0;font-size:14px;cursor:pointer;font-weight:500;">
               <input type="checkbox" id="chk-compartido" class="check-rojo" onchange="toggleCompartido()"> Gasto compartido
             </label>
@@ -166,7 +171,7 @@
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
                 <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
-              <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;">
+              <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
             </div>
           </div>
           <div id="campos-ingreso" style="display:none;">
@@ -380,14 +385,17 @@
             </div>
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
-              
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-              
               <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
                 <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
                 <input type="color" id="nuevo-medio-color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#ffb74d">
               </div>
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
+            </div>
+            
+            <div class="card">
+              <div class="ct"><i data-lucide="users" class="icon-sm"></i> Personas Frecuentes</div>
+              <div id="lista-personas-admin" style="display:flex; flex-direction:column; gap:10px; margin-bottom:5px;"></div>
             </div>
           </div>
           
@@ -439,6 +447,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=29"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
