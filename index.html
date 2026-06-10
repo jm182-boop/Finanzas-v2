@@ -105,6 +105,15 @@
               <div class="progress-header"><span>Ahorro (<span id="resumen-pct-aho">20</span>%)</span><span id="resumen-aho-txt">$0 / $0</span></div>
               <div class="progress-bar"><div id="resumen-aho-fill" class="progress-fill" style="width: 0%; background: var(--green);"></div></div>
             </div>
+            
+            <div style="border-top: 1px solid var(--border); margin-top: 30px; padding-top: 25px;">
+                <div class="ct" style="margin-bottom: 15px;"><i data-lucide="bell-ring" class="icon-sm"></i> ALERTAS Y RECORDATORIOS</div>
+                <div id="alertas-list">
+                   <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
+                     <i data-lucide="check-circle" class="icon-sm"></i><span>Sin alertas activas en este periodo.</span>
+                   </div>
+                </div>
+            </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:20px;">
@@ -113,6 +122,12 @@
               <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;">
                  </div>
             </div>
+
+            <div class="card" id="resumen-checklist">
+              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> CHECKLIST DE PAGOS</div>
+              <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>
+            </div>
+            
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> POR MEDIO DE PAGO</div>
               <div id="resumen-medios-pago-lista" style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
@@ -139,14 +154,13 @@
             <button id="bti" class="tb b-verde" onclick="setTipoMov('ingreso')">Ingreso</button>
           </div>
           <input type="text" id="gdesc" class="in" placeholder="Descripción (Ej: Supermercado...)">
-          <input type="text" id="gmonto" class="in" placeholder="Monto total ($)" onkeyup="fmtI(this); calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
+          <input type="text" id="gmonto" class="in" placeholder="Monto total ($ ARS)" onkeyup="fmtI(this); calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
           
           <div id="campos-gasto">
             <div id="grid-billetera-sobre" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Medio de Pago (Origen)</label><select class="in" style="margin-bottom:0;" id="gmedio"><option value="">Seleccionar...</option></select></div>
               <div><label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino Presupuestario (En qué)</label><select class="in" style="margin-bottom:0;" data-type="destino"><option value="">Seleccionar Destino...</option></select></div>
             </div>
-            <input type="date" class="in input-fecha">
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
               <input type="number" class="in" id="gcuotas" placeholder="Total cuotas (Opcional)" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()" style="margin-bottom:5px;">
@@ -166,20 +180,32 @@
               <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
             </div>
           </div>
+          
           <div id="campos-ingreso" style="display:none;">
             <div style="margin-bottom:15px;">
                 <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Medio de Pago (Destino)</label>
                 <select class="in" style="margin-bottom:0;" id="imedio"><option value="">Seleccionar...</option></select>
             </div>
-            <input type="date" class="in input-fecha">
           </div>
+
+          <input type="date" class="in input-fecha">
+          <input type="text" id="gnota" class="in" placeholder="Nota o detalle adicional (Opcional)">
+          
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
+              <input type="checkbox" id="chk-usd" onchange="toggleUsdFields()"> Operación en Moneda Extranjera (USD)
+          </label>
+          <div id="caja-usd" style="display:none; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; padding: 15px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto en USD</label><input type="number" id="gusd-monto" class="in" placeholder="Ej: 250" style="margin-bottom:0;"></div>
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="number" id="gusd-cotizacion" class="in" placeholder="Ej: 1200" style="margin-bottom:0;"></div>
+          </div>
+
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr;gap:20px;" class="ahorros-grid">
           <div class="card" style="flex-grow: 1;">
             <div class="ct"><i data-lucide="bar-chart-2" class="icon-sm"></i> Comparativa 6 Meses</div>
-            <div class="chart-empty" style="height:200px;">Sin datos suficientes</div>
+            <div class="chart-empty" style="height:200px;">Sin datos suficientes (Módulo de Gráficos no activo)</div>
           </div>
         </div>
       </div>
@@ -206,22 +232,21 @@
            
            <div style="position:relative; margin-bottom:15px;">
               <i data-lucide="search" class="icon-sm" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--text3);"></i>
-              <input type="text" id="h-busqueda" class="in" placeholder="Buscar descripción, medio, destino..." onkeyup="filtrarHistorial()" style="background:var(--bg3); padding-left:40px; margin-bottom:0;">
+              <input type="text" id="h-busqueda" class="in" placeholder="Buscar descripción o persona..." onkeyup="filtrarHistorial()" style="background:var(--bg3); padding-left:40px; margin-bottom:0;">
            </div>
            
            <div class="grid-filtros">
-              <select id="h-mes" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Mes: Todos</option></select>
-              <select id="h-anio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Año: Todos</option></select>
-              <select id="h-tipo" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option><option value="ahorro">Ahorros</option><option value="prestamo">Préstamos</option><option value="compartido">Compartidos</option></select>
-              <select id="h-medio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Medio Pago: Todos</option></select>
-              <select id="h-destino" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Destino: Todos</option></select>
-              <select id="h-persona" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Persona: Todas</option></select>
-              <select id="h-estado" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"><option value="">Estado: Todos</option><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="proximo">Próximo a vencer</option><option value="vencido">Vencido</option><option value="finalizado">Finalizado</option></select>
+              <select id="h-mes" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"></select>
+              <select id="h-anio" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()"></select>
+              <select id="h-tipo" class="in" style="margin-bottom:0; padding:10px;" onchange="filtrarHistorial()">
+                <option value="">Tipo: Todos</option><option value="ingreso">Ingresos</option>
+                <option value="gasto">Gastos Normales</option><option value="ahorro">Ahorros</option>
+                <option value="compartido">Gastos Compartidos</option>
+              </select>
            </div>
         </div>
 
-        <div id="lista-historial-global" style="display:flex; flex-direction:column; gap:15px;">
-           </div>
+        <div id="lista-historial-global" style="display:flex; flex-direction:column; gap:15px;"></div>
       </div>
 
       <div id="page-ahorros" class="page">
@@ -260,7 +285,8 @@
                 <option value="retiro">Retiro de ahorro</option>
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
-              <input type="text" id="ahorro-monto" class="in" placeholder="Monto ($)" onkeyup="fmtI(this)">
+              <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($)" onkeyup="fmtI(this)">
+              <input type="text" id="ahorro-cotizacion" class="in" placeholder="Cotización USD / Monto Destino (Opcional)" onkeyup="fmtI(this)">
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
@@ -292,12 +318,15 @@
 
       <div id="page-prestamos" class="page">
         <div class="header">
-          <h2><i data-lucide="hand-coins" class="icon-lg"></i> Préstamos</h2>
-          <button class="btn" style="width:auto; padding:10px 20px;" onclick="togglePanel('panel-prestamo')">+ Nuevo Préstamo</button>
+          <h2><i data-lucide="hand-coins" class="icon-lg"></i> Préstamos y Deudas</h2>
+          <button class="btn" style="width:auto; padding:10px 20px;" onclick="togglePanel('panel-prestamo')">+ Nuevo Registro</button>
         </div>
         
-        <div class="filter-scroll">
-          <button class="pill active">Todos</button><button class="pill">Me deben</button><button class="pill">Yo debo</button><button class="pill">Pendientes</button>
+        <div class="filter-scroll" id="p-filtros">
+          <button class="pill active" onclick="filtrarPrestamosUI('todos', this)">Todos / Pendientes</button>
+          <button class="pill" onclick="filtrarPrestamosUI('medeben', this)">Me deben</button>
+          <button class="pill" onclick="filtrarPrestamosUI('yodebo', this)">Yo debo</button>
+          <button class="pill" style="background:var(--bg3); color:var(--text2);" onclick="filtrarPrestamosUI('archivados', this)"><i data-lucide="archive" class="icon-sm" style="margin-right:4px;"></i> Archivados</button>
         </div>
 
         <div class="card form-panel" id="panel-prestamo">
@@ -329,8 +358,7 @@
           <button class="btn" id="btn-submit-prestamo" style="background:var(--green); color:#fff;" onclick="guardarPrestamo()">Guardar Préstamo</button>
         </div>
 
-        <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;">
-           </div>
+        <div id="lista-prestamos-cards" style="display:flex;flex-direction:column;gap:15px;"></div>
       </div>
 
       <div id="page-ia" class="page">
@@ -439,6 +467,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>
