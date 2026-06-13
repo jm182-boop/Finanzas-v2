@@ -110,7 +110,7 @@
                 <div class="ct" style="margin-bottom: 15px;"><i data-lucide="bell-ring" class="icon-sm"></i> ALERTAS Y RECORDATORIOS</div>
                 <div id="alertas-list">
                    <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
-                     <i data-lucide="check-circle" class="icon-sm"></i><span>Todo en orden. Sin alertas activas.</span>
+                     <i data-lucide="check-circle" class="icon-sm"></i><span>Sin alertas activas en este periodo.</span>
                    </div>
                 </div>
             </div>
@@ -119,17 +119,20 @@
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-sobres-card">
               <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> SOBRES PRESUPUESTARIOS</div>
-              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;"></div>
+              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;">
+                 </div>
             </div>
 
             <div class="card" id="resumen-checklist">
-              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> OBLIGACIONES MENSUALES (CHECKLIST)</div>
-              <div id="resumen-checklist-lista" style="display:flex;flex-direction:column;margin-top:10px;"></div>
+              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> CHECKLIST DE PAGOS</div>
+              <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>
             </div>
             
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> POR MEDIO DE PAGO</div>
-              <div id="resumen-medios-pago-lista" style="display:flex;flex-direction:column;gap:10px;margin-top:15px;"></div>
+              <div id="resumen-medios-pago-lista" style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
+                 <p style="color:var(--text3); font-size:13px; text-align:center;">Sin movimientos registrados.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -192,8 +195,8 @@
               <input type="checkbox" id="chk-usd" onchange="toggleUsdFields()"> Operación en Moneda Extranjera (USD)
           </label>
           <div id="caja-usd" style="display:none; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; padding: 15px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
-              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto en USD</label><input type="text" id="gusd-monto" class="in" placeholder="Ej: 250" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
-              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="text" id="gusd-cotizacion" class="in" placeholder="Ej: 1200" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto en USD</label><input type="number" id="gusd-monto" class="in" placeholder="Ej: 250" style="margin-bottom:0;"></div>
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="number" id="gusd-cotizacion" class="in" placeholder="Ej: 1200" style="margin-bottom:0;"></div>
           </div>
 
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
@@ -282,15 +285,8 @@
                 <option value="retiro">Retiro de ahorro</option>
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
-              <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($ ARS)" onkeyup="fmtI(this)">
-              
-              <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
-                  <input type="checkbox" id="chk-usd-ahorro" onchange="toggleUsdAhorroFields()"> Operación en Moneda Extranjera (USD)
-              </label>
-              <div id="caja-usd-ahorro" style="display:none; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; padding: 15px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
-                  <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto Destino (USD)</label><input type="text" id="ahorro-monto-usd" class="in" placeholder="Ej: 250" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
-                  <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="text" id="ahorro-cotizacion" class="in" placeholder="Ej: 1200" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
-              </div>
+              <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($)" onkeyup="fmtI(this)">
+              <input type="text" id="ahorro-cotizacion" class="in" placeholder="Cotización USD / Monto Destino (Opcional)" onkeyup="fmtI(this)">
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
@@ -301,7 +297,7 @@
                 </div>
               </div>
               <input type="date" id="ahorro-fecha" class="in input-fecha">
-              <input type="text" id="ahorro-nota" class="in" placeholder="Nota o detalle adicional (Opcional)">
+              <input type="text" id="ahorro-nota" class="in" placeholder="Nota (Opcional)">
               <button class="btn" style="background:var(--accent);" onclick="guardarAhorro()">Guardar Movimiento</button>
 
               <div id="modal-nueva-billetera" class="modal-inline" style="display:none;">
@@ -400,15 +396,13 @@
 
           <div style="display:flex; flex-direction:column; gap:25px;">
             <div class="card">
-              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> Obligaciones Mensuales (Checklist)</div>
-              <p style="font-size:11px; color:var(--text3); margin-bottom:10px; line-height:1.4;">Agrega obligaciones libres sin categorías. Los préstamos activos se integrarán automáticamente.</p>
-              <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="chk-nuevo-nombre" class="in" placeholder="Ej: Seguro Auto..." style="margin-bottom:0;">
-                <button class="btn" style="width:auto; padding:0 15px;" onclick="agregarChecklist()">Añadir</button>
-              </div>
-              <div id="lista-checklist-admin" style="display:flex; flex-direction:column; gap:8px;"></div>
+              <div class="ct"><i data-lucide="globe" class="icon-sm"></i> Formato Regional</div>
+              <select class="in" style="margin-bottom: 0;">
+                <option value="AR" selected>Argentina (ARS)</option>
+                <option value="UY">Uruguay</option>
+                <option value="CL">Chile</option>
+              </select>
             </div>
-            
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
@@ -473,6 +467,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>
