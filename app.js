@@ -282,7 +282,7 @@ function recalcularMotorFinanciero() {
 
 function calcularRegla503020() {
     let gastadoNec = 0, gastadoDes = 0, ingresosMes = 0;
-    let ahorradoReal = 0; // Sumador de aportes de ahorro
+    let ahorradoReal = 0; 
     const hoy = new Date(); const mesActual = hoy.getMonth() + 1; const anioActual = hoy.getFullYear();
 
     EstadoApp.movimientos.forEach(mov => {
@@ -690,17 +690,20 @@ function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active'); document.getElementById('bti').classList.remove('active');
     const btnAgregar = document.getElementById('btnagregar'); const chkCompartido = document.getElementById('chk-compartido'); 
     const chkUsd = document.getElementById('chk-usd');
+    const chkGuardar = document.getElementById('comp-guardar');
     limpiarInputs('panel-registro'); toggleCompartido();
     
     if(tipo === 'gasto') { 
         document.getElementById('btg').classList.add('active'); document.getElementById('campos-gasto').style.display = 'block'; document.getElementById('campos-ingreso').style.display = 'none'; btnAgregar.style.background = 'var(--red)'; 
         if (chkCompartido) chkCompartido.classList.add('check-rojo'); 
         if (chkUsd) chkUsd.classList.add('check-rojo'); 
+        if (chkGuardar) chkGuardar.classList.add('check-rojo');
     } 
     else { 
         document.getElementById('bti').classList.add('active'); document.getElementById('campos-gasto').style.display = 'none'; document.getElementById('campos-ingreso').style.display = 'block'; btnAgregar.style.background = 'var(--green)'; 
         if (chkCompartido) chkCompartido.classList.remove('check-rojo'); 
         if (chkUsd) chkUsd.classList.remove('check-rojo'); 
+        if (chkGuardar) chkGuardar.classList.remove('check-rojo');
     }
 }
 
@@ -794,8 +797,8 @@ function renderBilleterasUI() {
             let listaHTML = '';
             EstadoApp.billeteras.forEach(b => { 
                 totalGlobalAhorro += (b.saldo || 0); 
-                let usdText = saldosUsd[b.id] && saldosUsd[b.id] > 0 ? `<span style="font-size:12px; color:var(--accent); margin-left:8px;">$${formatearDinero(saldosUsd[b.id])} USD</span>` : '';
-                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)} ARS</span>${usdText}</div></div>`; 
+                let usdText = saldosUsd[b.id] && saldosUsd[b.id] > 0 ? `<span style="font-weight:700; font-size:15px; color:var(--accent); margin-left:20px;">$${formatearDinero(saldosUsd[b.id])} USD</span>` : '';
+                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div style="display:flex; align-items:center;"><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)} ARS</span>${usdText}</div></div>`; 
             });
             listaUI.innerHTML = listaHTML;
         }
@@ -899,6 +902,10 @@ function renderPrestamos() {
         prestamosPersona.forEach(p => {
             if (window.filtroPrestamo === 'archivados' && !p.archivado) return;
             if (window.filtroPrestamo !== 'archivados' && p.archivado) return;
+            
+            if (window.filtroPrestamo === 'medeben' && p.tipo !== 'medeben') return;
+            if (window.filtroPrestamo === 'yodebo' && p.tipo !== 'yodebo') return;
+
             countValidos++;
 
             let saldoPrestamo = 0; let pagadas = 0; let cuotasHtml = '';
@@ -935,9 +942,6 @@ function renderPrestamos() {
         });
         
         if (countValidos === 0) continue;
-        
-        if (window.filtroPrestamo === 'medeben' && !tieneMeDeben) continue;
-        if (window.filtroPrestamo === 'yodebo' && !tieneYoDebo) continue;
 
         let badgeTipo = '';
         if (tieneMeDeben) badgeTipo += '<span class="badge badge-green">Me deben</span> ';
@@ -946,8 +950,17 @@ function renderPrestamos() {
 
         let personaId = key.replace(/\s+/g, '');
         let divClass = "accordion-content"; if (prestamoAccordionAbierto === 'det-' + personaId) divClass += " show";
+        
+        let netColor = 'var(--text3)';
+        if (window.filtroPrestamo === 'todos' || window.filtroPrestamo === 'archivados') {
+             netColor = net > 0 ? 'var(--green)' : (net < 0 ? 'var(--red)' : 'var(--text3)');
+        } else if (window.filtroPrestamo === 'medeben') {
+             netColor = 'var(--green)';
+        } else if (window.filtroPrestamo === 'yodebo') {
+             netColor = 'var(--red)';
+        }
 
-        html += `<div class="card"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;"><div><h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3><div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div></div><div style="text-align:right;"><p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Pendiente</p><p style="font-size:22px; font-weight:800; color:${net >= 0 ? 'var(--green)' : 'var(--red)'}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p></div></div><div style="border-top:1px solid var(--border); padding-top:15px;"><button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i></button><div id="det-${personaId}" class="${divClass}">${htmlDetalles}</div></div></div>`;
+        html += `<div class="card"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;"><div><h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3><div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div></div><div style="text-align:right;"><p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Pendiente</p><p style="font-size:22px; font-weight:800; color:${netColor}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p></div></div><div style="border-top:1px solid var(--border); padding-top:15px;"><button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i></button><div id="det-${personaId}" class="${divClass}">${htmlDetalles}</div></div></div>`;
     }
     container.innerHTML = html || `<p style="color:var(--text3); font-size:13px; text-align:center;">No hay registros para este filtro.</p>`;
     
