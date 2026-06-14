@@ -12,7 +12,7 @@ let EstadoApp = {
     checklistEstado: { mes: '', completados: [] }
 };
 
-window.alertasGeneradas = []; // Memoria temporal para las alertas
+window.alertasGeneradas = [];
 
 function guardarEstado() { 
     localStorage.setItem('finApp_estado', JSON.stringify(EstadoApp)); 
@@ -47,8 +47,8 @@ function generarID(prefijo) {
 // ==========================================
 function getAlertColor(pct, defaultColor) {
     if (pct >= 100) return 'var(--red)';
-    if (pct >= 90) return '#f97316'; // Naranja
-    if (pct >= 80) return '#eab308'; // Amarillo
+    if (pct >= 90) return '#f97316';
+    if (pct >= 80) return '#eab308';
     return defaultColor;
 }
 
@@ -68,7 +68,6 @@ function renderAlertas() {
         return;
     }
     
-    // Ordenar alertas por gravedad
     window.alertasGeneradas.sort((a,b) => {
         let valA = a.nivel === 'Crítico' ? 3 : (a.nivel === 'Precaución' ? 2 : 1);
         let valB = b.nivel === 'Crítico' ? 3 : (b.nivel === 'Precaución' ? 2 : 1);
@@ -99,15 +98,15 @@ function getImpactoNeto(m) {
 // INICIALIZACIÓN Y RENDERIZADO GLOBAL
 // ==========================================
 function renderizarTodo() {
-    window.alertasGeneradas = []; // Limpiamos alertas antes de recalcular
+    window.alertasGeneradas = []; 
     
     renderDestinosConfig();
     actualizarSelectsMovimientos();
     renderMediosPago();
     actualizarSelectsMediosPago();
     renderPersonasFrecuentes(); 
-    renderPersonasAdmin();
-    renderChecklistConfig(); // Novedad Checklist
+    if (typeof renderPersonasAdmin === 'function') renderPersonasAdmin();
+    renderChecklistConfig(); 
     actualizarSelectsAhorro(); 
     
     renderBilleterasUI();
@@ -117,11 +116,11 @@ function renderizarTodo() {
     calcularRegla503020(); 
     renderSobresResumen();
     renderPorMedioPago();
-    renderChecklistResumen(); // Novedad Checklist
-    renderAlertas(); // Novedad Alertas
+    renderChecklistResumen(); 
+    renderAlertas(); 
     
-    poblarFiltrosHistorial();
-    filtrarHistorial();
+    if (typeof poblarFiltrosHistorial === 'function') poblarFiltrosHistorial();
+    if (typeof filtrarHistorial === 'function') filtrarHistorial();
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -213,7 +212,6 @@ function guardarMovimiento() {
     
     const nota = document.getElementById('gnota').value.trim();
 
-    // Lógica USD
     const chkUsd = document.getElementById('chk-usd');
     const isUsd = chkUsd ? chkUsd.checked : false;
     const montoUsd = isUsd ? parseFloat(document.getElementById('gusd-monto').value.replace(/\D/g, '')) || 0 : null;
@@ -284,6 +282,7 @@ function recalcularMotorFinanciero() {
 
 function calcularRegla503020() {
     let gastadoNec = 0, gastadoDes = 0, ingresosMes = 0;
+    let ahorradoReal = 0; // Sumador de aportes de ahorro
     const hoy = new Date(); const mesActual = hoy.getMonth() + 1; const anioActual = hoy.getFullYear();
 
     EstadoApp.movimientos.forEach(mov => {
@@ -292,6 +291,8 @@ function calcularRegla503020() {
         if (parseInt(partes[1]) !== mesActual || parseInt(partes[0]) !== anioActual) return;
 
         if (mov.tipo === 'ingreso') { ingresosMes += mov.monto; return; }
+        if (mov.tipo === 'ahorro' && mov.subtipo === 'aporte') { ahorradoReal += mov.monto; return; }
+        
         if (mov.tipo === 'gasto') {
             const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
             if (!dest) return;
@@ -332,10 +333,14 @@ function calcularRegla503020() {
 
     const txtAho = document.getElementById('resumen-aho-txt'); const fillAho = document.getElementById('resumen-aho-fill');
     if (txtAho && fillAho) {
-        let ahorradoReal = 0; 
         let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
         txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho.toFixed(0));
         fillAho.style.background = 'var(--green)'; fillAho.style.width = (pctAho > 100 ? 100 : pctAho) + '%';
+    }
+
+    const metaMesEl = document.getElementById('ahorro-meta-mes');
+    if (metaMesEl) {
+        metaMesEl.innerText = '$' + formatearDinero(limiteAho.toFixed(0));
     }
 }
 
@@ -403,7 +408,7 @@ function renderChecklistConfig() {
 function getSaldosPrestamosPuros() {
     let agrupados = {};
     EstadoApp.prestamos.forEach(p => {
-        if (p.archivado) return; // No contar los archivados
+        if (p.archivado) return;
         let key = p.persona.trim().toLowerCase();
         if (!agrupados[key]) agrupados[key] = { nombre: p.persona, neto: 0 };
         let saldo = 0; p.cuotas.forEach(c => { if (!c.pagada) saldo += c.monto; });
@@ -416,7 +421,6 @@ function renderChecklistResumen() {
     const contenedor = document.getElementById('resumen-checklist-lista'); if (!contenedor) return;
     const hoy = new Date(); const mesActualStr = `${hoy.getFullYear()}-${hoy.getMonth() + 1}`;
     
-    // Resetear checklist si es un mes nuevo
     if (!EstadoApp.checklistEstado || EstadoApp.checklistEstado.mes !== mesActualStr) {
         EstadoApp.checklistEstado = { mes: mesActualStr, completados: [] }; guardarEstado();
     }
@@ -426,7 +430,6 @@ function renderChecklistResumen() {
         EstadoApp.configuracion.checklist.forEach(c => items.push({ id: c.id, nombre: c.nombre, tipo: 'manual' }));
     }
     
-    // Inyección de préstamos automáticos
     let saldos = getSaldosPrestamosPuros();
     saldos.forEach(s => {
         if (s.neto > 0) items.push({ id: 'prest_me_' + s.nombre.toLowerCase().replace(/\s+/g, ''), nombre: 'Me debe ' + s.nombre, tipo: 'auto' });
@@ -532,11 +535,9 @@ function renderHistorialGlobal(data) {
             let impactoReal = getImpactoNeto(m);
             let detallesHtml = `${formatearFecha(m.fecha)} • ${m.hora}`;
             
-            // INYECCIÓN DE NOTAS Y USD MANTENIENDO EL RESTO INTACTO
             if (m.nota) detallesHtml += `<br><span style="font-size:11px; font-style:italic; color:var(--text2); display:inline-block; margin-top:2px;">"${m.nota}"</span>`;
             if (m.isUsd && m.montoUsd && m.cotizacionUsd) detallesHtml += `<br><span style="font-size:11px; color:var(--accent); font-weight:600; display:inline-block; margin-top:2px;">Equivalente: $${formatearDinero(m.montoUsd)} USD (Cotización: $${formatearDinero(m.cotizacionUsd)})</span>`;
-            else if (isAhorro && m.cotizacion) detallesHtml += `<br><span style="color:var(--text2); font-size:11px;">Cotización USD: $${formatearDinero(m.cotizacion)}</span>`; // Fallback para ahorros antiguos
-
+            
             if (isGasto && (m.cuotas?.esCuota || m.compartido?.esCompartido)) {
                 detallesHtml += `<br><div style="margin-top:6px; padding:8px 10px; background:var(--bg3); border-radius:6px; font-size:11px; line-height:1.6; color:var(--text2);">`;
                 detallesHtml += `<b>Total compra:</b> $${formatearDinero(m.monto)}<br>`;
@@ -679,7 +680,6 @@ function limpiarInputs(contenedorId) {
     const fechaHoyString = new Date().toISOString().split('T')[0]; contenedor.querySelectorAll('input[type="date"], .input-fecha').forEach(el => el.value = fechaHoyString);
     if(document.getElementById('g-info-cuota')) document.getElementById('g-info-cuota').innerHTML = '';
     
-    // Ocultar cajas de USD al limpiar
     const cajaUsd = document.getElementById('caja-usd'); if(cajaUsd) cajaUsd.style.display = 'none';
     const cajaUsdAhorro = document.getElementById('caja-usd-ahorro'); if(cajaUsdAhorro) cajaUsdAhorro.style.display = 'none';
 }
@@ -688,9 +688,20 @@ function showToast(msg) { const t = document.getElementById('toast'); t.innerTex
 
 function setTipoMov(tipo) {
     document.getElementById('btg').classList.remove('active'); document.getElementById('bti').classList.remove('active');
-    const btnAgregar = document.getElementById('btnagregar'); const chkCompartido = document.getElementById('chk-compartido'); limpiarInputs('panel-registro'); toggleCompartido();
-    if(tipo === 'gasto') { document.getElementById('btg').classList.add('active'); document.getElementById('campos-gasto').style.display = 'block'; document.getElementById('campos-ingreso').style.display = 'none'; btnAgregar.style.background = 'var(--red)'; if (chkCompartido) chkCompartido.classList.add('check-rojo'); } 
-    else { document.getElementById('bti').classList.add('active'); document.getElementById('campos-gasto').style.display = 'none'; document.getElementById('campos-ingreso').style.display = 'block'; btnAgregar.style.background = 'var(--green)'; if (chkCompartido) chkCompartido.classList.remove('check-rojo'); }
+    const btnAgregar = document.getElementById('btnagregar'); const chkCompartido = document.getElementById('chk-compartido'); 
+    const chkUsd = document.getElementById('chk-usd');
+    limpiarInputs('panel-registro'); toggleCompartido();
+    
+    if(tipo === 'gasto') { 
+        document.getElementById('btg').classList.add('active'); document.getElementById('campos-gasto').style.display = 'block'; document.getElementById('campos-ingreso').style.display = 'none'; btnAgregar.style.background = 'var(--red)'; 
+        if (chkCompartido) chkCompartido.classList.add('check-rojo'); 
+        if (chkUsd) chkUsd.classList.add('check-rojo'); 
+    } 
+    else { 
+        document.getElementById('bti').classList.add('active'); document.getElementById('campos-gasto').style.display = 'none'; document.getElementById('campos-ingreso').style.display = 'block'; btnAgregar.style.background = 'var(--green)'; 
+        if (chkCompartido) chkCompartido.classList.remove('check-rojo'); 
+        if (chkUsd) chkUsd.classList.remove('check-rojo'); 
+    }
 }
 
 function toggleCompartido() { const checkEl = document.getElementById('chk-compartido'); document.getElementById('caja-compartido').style.display = (checkEl && checkEl.checked) ? 'block' : 'none'; window.calcularCuotaInfoGasto(); }
@@ -737,7 +748,6 @@ window.guardarAhorro = function() {
     const tipo = document.getElementById('ahorro-tipo').value; const origenId = document.getElementById('ahorro-origen').value; const destinoId = document.getElementById('ahorro-destino').value;
     const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\D/g, '')); 
     
-    // Lógica USD Ahorros
     const chkUsd = document.getElementById('chk-usd-ahorro');
     const isUsd = chkUsd ? chkUsd.checked : false;
     const montoUsd = isUsd ? parseFloat(document.getElementById('ahorro-monto-usd').value.replace(/\D/g, '')) || 0 : null;
@@ -762,21 +772,37 @@ window.guardarAhorro = function() {
     if(chkUsd) { chkUsd.checked = false; toggleUsdAhorroFields(); }
     renderizarTodo(); showToast("Ahorro guardado.");
 }
+
 function renderBilleterasUI() {
     const emptyState = document.getElementById('ahorros-empty-billeteras'); const dataState = document.getElementById('ahorros-con-billeteras');
     const countBilleteras = document.getElementById('ahorro-billeteras-count'); const listaUI = document.getElementById('lista-billeteras-ui');
     if(countBilleteras) countBilleteras.innerText = EstadoApp.billeteras.length; let totalGlobalAhorro = 0;
+    
+    let saldosUsd = {};
+    EstadoApp.movimientos.forEach(m => {
+        if(m.tipo === 'ahorro' && m.isUsd && m.montoUsd) {
+            if(m.subtipo === 'aporte') { saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; }
+            if(m.subtipo === 'retiro') { saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; }
+            if(m.subtipo === 'transferencia') { saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; }
+        }
+    });
+
     if (EstadoApp.billeteras.length === 0) { if(emptyState) emptyState.style.display = 'flex'; if(dataState) dataState.style.display = 'none'; } 
     else {
         if(emptyState) emptyState.style.display = 'none'; if(dataState) dataState.style.display = 'flex';
         if(listaUI) {
             let listaHTML = '';
-            EstadoApp.billeteras.forEach(b => { totalGlobalAhorro += (b.saldo || 0); listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)}</span></div>`; });
+            EstadoApp.billeteras.forEach(b => { 
+                totalGlobalAhorro += (b.saldo || 0); 
+                let usdText = saldosUsd[b.id] && saldosUsd[b.id] > 0 ? `<span style="font-size:12px; color:var(--accent); margin-left:8px;">$${formatearDinero(saldosUsd[b.id])} USD</span>` : '';
+                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)} ARS</span>${usdText}</div></div>`; 
+            });
             listaUI.innerHTML = listaHTML;
         }
     }
     if(document.getElementById('ahorro-total')) document.getElementById('ahorro-total').innerText = '$' + formatearDinero(totalGlobalAhorro);
 }
+
 window.abrirModalNuevaBilletera = function() { document.getElementById('modal-nueva-billetera').style.display = 'block'; }
 window.verificarNuevaBilletera = function(s) { if(s.value === 'nueva') { s.value = ""; abrirModalNuevaBilletera(); } }
 window.cerrarNuevaBilletera = function() { document.getElementById('modal-nueva-billetera').style.display = 'none'; document.getElementById('nueva-bill-nombre').value = ''; }
@@ -786,7 +812,7 @@ window.guardarNuevaBilletera = function() { const nombre = document.getElementBy
 // PRÉSTAMOS Y DEUDAS
 // ==========================================
 window.filtroPrestamo = 'todos';
-let prestamoAccordionAbierto = null; // Memoria del acordeón
+let prestamoAccordionAbierto = null; 
 
 window.filtrarPrestamosUI = function(tipo, btn) {
     window.filtroPrestamo = tipo;
@@ -812,10 +838,23 @@ window.setTipoPrestamo = function(tipo) {
     if(tipo === 'medeben') { document.getElementById('p-btn-medeben').classList.add('active'); document.getElementById('btn-submit-prestamo').style.background = 'var(--green)'; }
     else { document.getElementById('p-btn-yodebo').classList.add('active'); document.getElementById('btn-submit-prestamo').style.background = 'var(--red)'; }
 }
+
 window.calcularPrestamoInfo = function() {
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, '')); const cuotas = parseInt(document.getElementById('pcuotas').value); const infoText = document.getElementById('p-info-cuota');
+    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, '')); 
+    const cuotas = parseInt(document.getElementById('pcuotas').value); 
+    const infoText = document.getElementById('p-info-cuota');
+    const fechaInicio = document.getElementById('pfecha').value;
+    
     if(monto && cuotas > 0) infoText.innerText = `Cuota estimada: $${formatearDinero((monto / cuotas).toFixed(0))}`; else infoText.innerText = '';
+    
+    if (fechaInicio && cuotas > 0) {
+        let d = new Date(fechaInicio + 'T12:00:00');
+        d.setMonth(d.getMonth() + cuotas);
+        const fechCompromisoEl = document.getElementById('pfechacompromiso');
+        if(fechCompromisoEl) fechCompromisoEl.value = d.toISOString().split('T')[0];
+    }
 }
+
 window.guardarPrestamo = function() {
     const tipo = document.getElementById('p-btn-medeben').classList.contains('active') ? 'medeben' : 'yodebo';
     const persona = document.getElementById('ppersona').value.trim(); const concepto = document.getElementById('pdesc').value.trim(); const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, ''));
@@ -864,19 +903,21 @@ function renderPrestamos() {
 
             let saldoPrestamo = 0; let pagadas = 0; let cuotasHtml = '';
             let isMeDeben = p.tipo === 'medeben';
-            let colorTextoCuota = isMeDeben ? 'var(--green)' : 'var(--text)';
+            let colorTextoCuota = isMeDeben ? 'var(--green)' : 'var(--red)';
             
-            if (isMeDeben && !p.archivado) tieneMeDeben = true;
-            if (!isMeDeben && !p.archivado) tieneYoDebo = true;
+            if (isMeDeben) tieneMeDeben = true;
+            if (!isMeDeben) tieneYoDebo = true;
 
             p.cuotas.forEach((c, cIndex) => { 
                 if(c.pagada) pagadas++; else saldoPrestamo += c.monto; 
                 let chk = c.pagada ? 'checked' : ''; let line = c.pagada ? 'item-completado' : ''; 
                 cuotasHtml += `<div class="li ${line}" style="padding:8px 0; border-bottom:1px dashed var(--border);"><span class="li-desc" style="font-size:13px;"><input type="checkbox" ${chk} onchange="toggleCuota('${p.id}', ${cIndex})"> Cuota ${c.numero}</span><span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto.toFixed(0))}</span></div>`; 
             });
+            
             if(isMeDeben) net += saldoPrestamo; else net -= saldoPrestamo;
             
-            let badge = isMeDeben ? '<span style="background:var(--green); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Me debe</span>' : '<span style="background:var(--red); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Le debo</span>';
+            let colorTotal = isMeDeben ? 'var(--green)' : 'var(--red)';
+            let badge = isMeDeben ? '<span style="background:var(--green); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Me debe</span>' : '<span style="background:var(--red); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Yo debo</span>';
             let archiveIcon = p.archivado ? 'refresh-cw' : 'archive';
 
             htmlDetalles += `
@@ -888,26 +929,29 @@ function renderPrestamos() {
                         <button class="ui-icon-btn" onclick="eliminarPrestamo('${p.id}')" title="Eliminar"><i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i></button>
                     </div>
                 </div>
-                <div style="font-size:12px; color:var(--text3); margin-bottom:15px;">Total prestado: $${formatearDinero(p.montoTotal)} • Cuotas pagadas: ${pagadas}/${p.cuotas.length}</div>
+                <div style="font-size:12px; color:var(--text3); margin-bottom:15px;">Total: <span style="color:${colorTotal}; font-weight:600;">$${formatearDinero(p.montoTotal)}</span> • Pagadas: ${pagadas}/${p.cuotas.length}</div>
                 ${cuotasHtml}
             </div>`;
         });
         
         if (countValidos === 0) continue;
-        if (window.filtroPrestamo === 'medeben' && net <= 0) continue;
-        if (window.filtroPrestamo === 'yodebo' && net >= 0) continue;
+        
+        if (window.filtroPrestamo === 'medeben' && !tieneMeDeben) continue;
+        if (window.filtroPrestamo === 'yodebo' && !tieneYoDebo) continue;
 
         let badgeTipo = '';
         if (tieneMeDeben) badgeTipo += '<span class="badge badge-green">Me deben</span> ';
         if (tieneYoDebo) badgeTipo += '<span class="badge badge-red">Yo debo</span>';
-        if (!tieneMeDeben && !tieneYoDebo) badgeTipo = '<span class="badge" style="border:1px solid var(--text3); color:var(--text3);">Archivado / Saldado</span>';
+        if (!tieneMeDeben && !tieneYoDebo) badgeTipo = '<span class="badge" style="border:1px solid var(--text3); color:var(--text3);">Saldado</span>';
 
         let personaId = key.replace(/\s+/g, '');
-        let divClass = "accordion-content"; if (prestamoAccordionAbierto === 'det-' + personaId) divClass += " show"; // Memoria del acordeón
+        let divClass = "accordion-content"; if (prestamoAccordionAbierto === 'det-' + personaId) divClass += " show";
 
         html += `<div class="card"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;"><div><h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3><div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div></div><div style="text-align:right;"><p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Pendiente</p><p style="font-size:22px; font-weight:800; color:${net >= 0 ? 'var(--green)' : 'var(--red)'}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p></div></div><div style="border-top:1px solid var(--border); padding-top:15px;"><button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i></button><div id="det-${personaId}" class="${divClass}">${htmlDetalles}</div></div></div>`;
     }
     container.innerHTML = html || `<p style="color:var(--text3); font-size:13px; text-align:center;">No hay registros para este filtro.</p>`;
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.toggleCuota = function(pId, cIndex) { let prestamo = EstadoApp.prestamos.find(p => p.id === pId); if(prestamo) { prestamo.cuotas[cIndex].pagada = !prestamo.cuotas[cIndex].pagada; guardarEstado(); renderizarTodo(); } }
