@@ -69,6 +69,7 @@
 
     <div class="main-content" id="area-imprimible">
       
+      <!-- PAGE RESUMEN -->
       <div id="page-resumen" class="page active">
         <div class="header">
           <div style="display:flex; align-items:center; gap:10px;">
@@ -139,6 +140,7 @@
         </div>
       </div>
 
+      <!-- PAGE MOVIMIENTOS -->
       <div id="page-movimientos" class="page">
         <div class="header">
           <h2><i data-lucide="list-ordered" class="icon-lg"></i> Movimientos</h2>
@@ -191,6 +193,7 @@
 
           <input type="date" class="in input-fecha">
           
+          <!-- NOTAS Y USD EN MOVIMIENTOS -->
           <input type="text" id="gnota" class="in" placeholder="Nota o detalle adicional (Opcional)">
           
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
@@ -212,6 +215,7 @@
         </div>
       </div>
 
+      <!-- PAGE HISTORIAL -->
       <div id="page-historial" class="page">
         <div class="header">
           <h2><i data-lucide="history" class="icon-lg"></i> Historial y Auditoría</h2>
@@ -251,13 +255,14 @@
         <div id="lista-historial-global" style="display:flex; flex-direction:column; gap:15px;"></div>
       </div>
 
+      <!-- PAGE AHORROS -->
       <div id="page-ahorros" class="page">
         <div class="header"><h2><i data-lucide="piggy-bank" class="icon-lg"></i> Ahorros</h2></div>
         
         <div class="mg-ahorro">
           <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv" id="ahorro-total">$0</div></div>
           <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
-          <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
+          <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" id="ahorro-meta-mes" style="color:var(--text2);">$0</div></div>
         </div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
@@ -289,6 +294,7 @@
               </select>
               <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($ ARS)" onkeyup="fmtI(this)">
               
+              <!-- NOTAS Y USD EN AHORROS -->
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
                   <input type="checkbox" id="chk-usd-ahorro" onchange="toggleUsdAhorroFields()"> Operación en Moneda Extranjera (USD)
               </label>
@@ -325,6 +331,7 @@
         </div>
       </div>
 
+      <!-- PAGE PRÉSTAMOS -->
       <div id="page-prestamos" class="page">
         <div class="header">
           <h2><i data-lucide="hand-coins" class="icon-lg"></i> Préstamos y Deudas</h2>
@@ -332,6 +339,7 @@
         </div>
         
         <div class="filter-scroll" id="p-filtros">
+          <!-- FILTRO ARCHIVADOS -->
           <button class="pill active" onclick="filtrarPrestamosUI('todos', this)">Todos / Pendientes</button>
           <button class="pill" onclick="filtrarPrestamosUI('medeben', this)">Me deben</button>
           <button class="pill" onclick="filtrarPrestamosUI('yodebo', this)">Yo debo</button>
@@ -388,11 +396,13 @@
         </div>
       </div>
 
+      <!-- PAGE CONFIGURACIÓN -->
       <div id="page-config" class="page">
         <div class="header"><h2><i data-lucide="settings" class="icon-lg"></i> Configuración y Estructura</h2></div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;" class="cfg-grid-2">
           
+          <!-- COLUMNA IZQUIERDA -->
           <div style="display:flex; flex-direction:column; gap:25px;">
               <div class="card">
                 <div class="ct"><i data-lucide="sliders-horizontal" class="icon-sm"></i> Regla de Distribución</div>
@@ -405,6 +415,7 @@
                 <button class="btn" style="margin-top:25px;" onclick="guardarEstado(); showToast('Configuración guardada');">Guardar Configuración</button>
               </div>
 
+              <!-- SOBRES MOVIMIENTOS A LA COLUMNA IZQUIERDA -->
               <div class="card">
                 <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> Destinos Presupuestarios (Sobres)</div>
                 <div style="display:flex; flex-direction:column; gap: 20px;">
@@ -431,8 +442,10 @@
               </div>
           </div>
 
+          <!-- COLUMNA DERECHA -->
           <div style="display:flex; flex-direction:column; gap:25px;">
             
+            <!-- CHECKLIST CONFIGURACIÓN -->
             <div class="card">
               <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> Obligaciones Mensuales (Checklist)</div>
               <p style="font-size:11px; color:var(--text3); margin-bottom:10px; line-height:1.4;">Agrega obligaciones libres sin categorías (Alquiler, Expensas, etc.). Los préstamos activos se integrarán automáticamente.</p>
@@ -491,6 +504,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=40"></script>
+  <script src="app.js?v=41"></script>
 </body>
 </html>
