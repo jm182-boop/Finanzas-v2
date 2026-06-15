@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - SPRINT 1.5 FINAL (UI/UX Y ESTABILIZACIÓN)
+// app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y ESTABILIZACIÓN)
 // ==========================================
 
 let EstadoApp = {
@@ -18,7 +18,10 @@ let EstadoApp = {
         personasFrecuentes: [], 
         checklist: [] 
     },
-    checklistEstado: { mes: '', completados: [] }
+    checklistEstado: { 
+        mes: '', 
+        completados: [] 
+    }
 };
 
 window.alertasGeneradas = [];
@@ -66,7 +69,13 @@ function generarAlertaObj(nombre, pct) {
     let nivel = pct >= 100 ? 'Crítico' : (pct >= 90 ? 'Precaución' : 'Advertencia');
     let color = pct >= 100 ? 'var(--red)' : (pct >= 90 ? '#f97316' : '#eab308');
     let icon = pct >= 100 ? 'alert-octagon' : 'alert-triangle';
-    return { msg: `${nombre} al ${pct.toFixed(0)}%`, color: color, icon: icon, nivel: nivel };
+    
+    return { 
+        msg: `${nombre} al ${pct.toFixed(0)}%`, 
+        color: color, 
+        icon: icon, 
+        nivel: nivel 
+    };
 }
 
 function renderAlertas() {
@@ -82,7 +91,7 @@ function renderAlertas() {
         return;
     }
     
-    window.alertasGeneradas.sort((a,b) => {
+    window.alertasGeneradas.sort((a, b) => {
         let valA = a.nivel === 'Crítico' ? 3 : (a.nivel === 'Precaución' ? 2 : 1);
         let valB = b.nivel === 'Crítico' ? 3 : (b.nivel === 'Precaución' ? 2 : 1);
         return valB - valA;
@@ -198,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // REGISTRO Y PREVISUALIZACIÓN (MOVIMIENTOS)
 // ==========================================
-
 window.updatePctLabel = function() {
     const val = document.getElementById('comp-pct').value;
     const lbl = document.getElementById('comp-pct-lbl');
@@ -221,6 +229,7 @@ window.calcularCuotaInfoGasto = function() {
     const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
     const cuotasStr = document.getElementById('gcuotas').value;
     const pctCompartidoStr = document.getElementById('comp-pct').value;
+    
     const chkCompartidoEl = document.getElementById('chk-compartido');
     const isCompartido = chkCompartidoEl ? chkCompartidoEl.checked : false;
 
@@ -262,8 +271,8 @@ function guardarMovimiento() {
     const concepto = document.getElementById('gdesc').value.trim();
     const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
     const monto = parseFloat(montoStr);
-    const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
     
+    const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
     const destinoSelect = document.querySelector('select[data-type="destino"]');
     const destinoId = esGasto && destinoSelect ? destinoSelect.value : null;
     
@@ -554,7 +563,11 @@ window.agregarChecklist = function() {
     const nombre = document.getElementById('chk-nuevo-nombre').value.trim();
     if (!nombre) return;
     
-    EstadoApp.configuracion.checklist.push({ id: generarID('chk'), nombre: nombre });
+    EstadoApp.configuracion.checklist.push({ 
+        id: generarID('chk'), 
+        nombre: nombre 
+    });
+    
     guardarEstado(); 
     renderizarTodo(); 
     document.getElementById('chk-nuevo-nombre').value = ''; 
@@ -588,6 +601,7 @@ function renderChecklistConfig() {
 
 function getSaldosPrestamosPuros() {
     let agrupados = {};
+    
     EstadoApp.prestamos.forEach(p => {
         if (p.archivado) return;
         
@@ -607,6 +621,7 @@ function getSaldosPrestamosPuros() {
             agrupados[key].neto -= saldo;
         }
     });
+    
     return Object.values(agrupados);
 }
 
@@ -1702,6 +1717,7 @@ function renderPrestamos() {
         let tieneYoDebo = false;
 
         prestamosPersona.forEach(p => {
+            // LÓGICA DE FILTRADO REGISTRO POR REGISTRO (Restaurada y Perfecta)
             if (window.filtroPrestamo === 'archivados' && !p.archivado) return;
             if (window.filtroPrestamo !== 'archivados' && p.archivado) return;
             
