@@ -8,10 +8,15 @@ let EstadoApp = {
     prestamos: [],
     destinos: [], 
     presupuestos: { necesidades: { limite: 0, gastado: 0 }, deseos: { limite: 0, gastado: 0 } },
-    configuracion: { regla: { necesidades: 50, deseos: 30, ahorro: 20 }, moneda: 'AR', mediosPago: [], personasFrecuentes: [] }
+    configuracion: { regla: { necesidades: 50, deseos: 30, ahorro: 20 }, moneda: 'AR', mediosPago: [], personasFrecuentes: [], checklist: [] },
+    checklistEstado: { mes: '', completados: [] }
 };
 
-function guardarEstado() { localStorage.setItem('finApp_estado', JSON.stringify(EstadoApp)); }
+window.alertasGeneradas = [];
+
+function guardarEstado() { 
+    localStorage.setItem('finApp_estado', JSON.stringify(EstadoApp)); 
+}
 
 function cargarEstado() {
     const estadoGuardado = localStorage.getItem('finApp_estado');
@@ -22,6 +27,8 @@ function cargarEstado() {
         if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
         if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
         if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
+        if (!EstadoApp.configuracion.checklist) EstadoApp.configuracion.checklist = [];
+        if (!EstadoApp.checklistEstado) EstadoApp.checklistEstado = { mes: '', completados: [] };
     } else {
         EstadoApp.configuracion.mediosPago = [
             { id: generarID('mp'), nombre: 'Efectivo', color: '#12e091' },
@@ -31,7 +38,49 @@ function cargarEstado() {
     }
 }
 
-function generarID(prefijo) { return prefijo + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7); }
+function generarID(prefijo) { 
+    return prefijo + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7); 
+}
+
+// ==========================================
+// SEMÁFORO UNIVERSAL DE ALERTAS
+// ==========================================
+function getAlertColor(pct, defaultColor) {
+    if (pct >= 100) return 'var(--red)';
+    if (pct >= 90) return '#f97316';
+    if (pct >= 80) return '#eab308';
+    return defaultColor;
+}
+
+function generarAlertaObj(nombre, pct) {
+    let nivel = pct >= 100 ? 'Crítico' : (pct >= 90 ? 'Precaución' : 'Advertencia');
+    let color = pct >= 100 ? 'var(--red)' : (pct >= 90 ? '#f97316' : '#eab308');
+    let icon = pct >= 100 ? 'alert-octagon' : 'alert-triangle';
+    return { msg: `${nombre} al ${pct.toFixed(0)}%`, color: color, icon: icon, nivel: nivel };
+}
+
+function renderAlertas() {
+    const contenedor = document.getElementById('alertas-list');
+    if (!contenedor) return;
+    
+    if (window.alertasGeneradas.length === 0) {
+        contenedor.innerHTML = `<div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);"><i data-lucide="check-circle" class="icon-sm" style="color:var(--green);"></i><span>Todo en orden. Sin alertas activas.</span></div>`;
+        return;
+    }
+    
+    window.alertasGeneradas.sort((a,b) => {
+        let valA = a.nivel === 'Crítico' ? 3 : (a.nivel === 'Precaución' ? 2 : 1);
+        let valB = b.nivel === 'Crítico' ? 3 : (b.nivel === 'Precaución' ? 2 : 1);
+        return valB - valA;
+    });
+    
+    let html = '';
+    window.alertasGeneradas.forEach(a => {
+        html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; font-weight:600; color:${a.color};"><i data-lucide="${a.icon}" class="icon-sm"></i><span>${a.msg}</span></div>`;
+    });
+    contenedor.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
 // ==========================================
 // MOTOR MATEMÁTICO UNIVERSAL
@@ -49,12 +98,15 @@ function getImpactoNeto(m) {
 // INICIALIZACIÓN Y RENDERIZADO GLOBAL
 // ==========================================
 function renderizarTodo() {
+    window.alertasGeneradas = []; 
+    
     renderDestinosConfig();
     actualizarSelectsMovimientos();
     renderMediosPago();
     actualizarSelectsMediosPago();
     renderPersonasFrecuentes(); 
-    renderPersonasAdmin();
+    if (typeof renderPersonasAdmin === 'function') renderPersonasAdmin();
+    renderChecklistConfig(); 
     actualizarSelectsAhorro(); 
     
     renderBilleterasUI();
@@ -64,9 +116,11 @@ function renderizarTodo() {
     calcularRegla503020(); 
     renderSobresResumen();
     renderPorMedioPago();
+    renderChecklistResumen(); 
+    renderAlertas(); 
     
-    poblarFiltrosHistorial();
-    filtrarHistorial();
+    if (typeof poblarFiltrosHistorial === 'function') poblarFiltrosHistorial();
+    if (typeof filtrarHistorial === 'function') filtrarHistorial();
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -102,14 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// REGISTRO Y PREVISUALIZACIÓN
+// REGISTRO Y PREVISUALIZACIÓN (MOVIMIENTOS)
 // ==========================================
-window.updatePctLabel = function() {
-    const val = document.getElementById('comp-pct').value;
-    const lbl = document.getElementById('comp-pct-lbl');
-    if(lbl) lbl.innerText = val + '%';
-}
-
 window.calcularCuotaInfoGasto = function() {
     const esGasto = document.getElementById('btg').classList.contains('active');
     const infoText = document.getElementById('g-info-cuota');
@@ -143,7 +191,8 @@ window.calcularCuotaInfoGasto = function() {
 
 window.toggleUsdFields = function() {
     const chkUsd = document.getElementById('chk-usd');
-    document.getElementById('caja-usd').style.display = (chkUsd && chkUsd.checked) ? 'grid' : 'none';
+    const cajaUsd = document.getElementById('caja-usd');
+    if (cajaUsd) cajaUsd.style.display = (chkUsd && chkUsd.checked) ? 'grid' : 'none';
 }
 
 function guardarMovimiento() {
@@ -160,9 +209,11 @@ function guardarMovimiento() {
     const inputFecha = document.querySelector('.input-fecha');
     const fecha = inputFecha && inputFecha.value ? inputFecha.value : new Date().toISOString().split('T')[0];
     const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    
     const nota = document.getElementById('gnota').value.trim();
 
-    const isUsd = document.getElementById('chk-usd').checked;
+    const chkUsd = document.getElementById('chk-usd');
+    const isUsd = chkUsd ? chkUsd.checked : false;
     const montoUsd = isUsd ? parseFloat(document.getElementById('gusd-monto').value.replace(/\D/g, '')) || 0 : null;
     const cotizacionUsd = isUsd ? parseFloat(document.getElementById('gusd-cotizacion').value.replace(/\D/g, '')) || 0 : null;
 
@@ -196,8 +247,13 @@ function guardarMovimiento() {
         nota: nota, isUsd: isUsd, montoUsd: montoUsd, cotizacionUsd: cotizacionUsd
     });
 
-    guardarEstado(); limpiarInputs('panel-registro'); toggleCompartido(); toggleUsdFields(); document.getElementById('panel-registro').style.display = 'none';
-    renderizarTodo(); showToast("Movimiento registrado");
+    guardarEstado(); 
+    limpiarInputs('panel-registro'); 
+    toggleCompartido(); 
+    if(chkUsd) { chkUsd.checked = false; toggleUsdFields(); }
+    document.getElementById('panel-registro').style.display = 'none';
+    renderizarTodo(); 
+    showToast("Movimiento registrado");
 }
 
 window.eliminarMovimiento = function(id) {
@@ -226,6 +282,7 @@ function recalcularMotorFinanciero() {
 
 function calcularRegla503020() {
     let gastadoNec = 0, gastadoDes = 0, ingresosMes = 0;
+    let ahorradoReal = 0; 
     const hoy = new Date(); const mesActual = hoy.getMonth() + 1; const anioActual = hoy.getFullYear();
 
     EstadoApp.movimientos.forEach(mov => {
@@ -234,6 +291,8 @@ function calcularRegla503020() {
         if (parseInt(partes[1]) !== mesActual || parseInt(partes[0]) !== anioActual) return;
 
         if (mov.tipo === 'ingreso') { ingresosMes += mov.monto; return; }
+        if (mov.tipo === 'ahorro' && mov.subtipo === 'aporte') { ahorradoReal += mov.monto; return; }
+        
         if (mov.tipo === 'gasto') {
             const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
             if (!dest) return;
@@ -251,27 +310,37 @@ function calcularRegla503020() {
     const txtNec = document.getElementById('resumen-nec-txt'); const fillNec = document.getElementById('resumen-nec-fill');
     if (txtNec && fillNec) {
         let pctNec = limiteNec > 0 ? (gastadoNec / limiteNec) * 100 : (gastadoNec > 0 ? 100 : 0);
+        let colorNec = getAlertColor(pctNec, 'var(--green)');
+        if(pctNec >= 80) window.alertasGeneradas.push(generarAlertaObj("Regla Necesidades", pctNec));
+        
         txtNec.innerText = '$' + formatearDinero(gastadoNec.toFixed(0)) + ' / $' + formatearDinero(limiteNec.toFixed(0));
-        fillNec.style.background = gastadoNec > limiteNec && limiteNec > 0 ? 'var(--red)' : 'var(--green)';
+        fillNec.style.background = colorNec;
         fillNec.style.width = (pctNec > 100 ? 100 : pctNec) + '%';
-        txtNec.style.color = gastadoNec > limiteNec && limiteNec > 0 ? 'var(--red)' : '';
+        txtNec.style.color = pctNec >= 100 ? 'var(--red)' : '';
     }
 
     const txtDes = document.getElementById('resumen-des-txt'); const fillDes = document.getElementById('resumen-des-fill');
     if (txtDes && fillDes) {
         let pctDes = limiteDes > 0 ? (gastadoDes / limiteDes) * 100 : (gastadoDes > 0 ? 100 : 0);
+        let colorDes = getAlertColor(pctDes, 'var(--accent)');
+        if(pctDes >= 80) window.alertasGeneradas.push(generarAlertaObj("Regla Deseos", pctDes));
+        
         txtDes.innerText = '$' + formatearDinero(gastadoDes.toFixed(0)) + ' / $' + formatearDinero(limiteDes.toFixed(0));
-        fillDes.style.background = gastadoDes > limiteDes && limiteDes > 0 ? 'var(--red)' : 'var(--accent)';
+        fillDes.style.background = colorDes;
         fillDes.style.width = (pctDes > 100 ? 100 : pctDes) + '%';
-        txtDes.style.color = gastadoDes > limiteDes && limiteDes > 0 ? 'var(--red)' : '';
+        txtDes.style.color = pctDes >= 100 ? 'var(--red)' : '';
     }
 
     const txtAho = document.getElementById('resumen-aho-txt'); const fillAho = document.getElementById('resumen-aho-fill');
     if (txtAho && fillAho) {
-        let ahorradoReal = 0; 
         let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
         txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho.toFixed(0));
         fillAho.style.background = 'var(--green)'; fillAho.style.width = (pctAho > 100 ? 100 : pctAho) + '%';
+    }
+
+    const metaMesEl = document.getElementById('ahorro-meta-mes');
+    if (metaMesEl) {
+        metaMesEl.innerText = '$' + formatearDinero(limiteAho.toFixed(0));
     }
 }
 
@@ -300,13 +369,95 @@ function renderSobresResumen() {
         let excedido = gastado > dest.presupuesto ? gastado - dest.presupuesto : 0;
         let pctConsumido = dest.presupuesto > 0 ? (gastado / dest.presupuesto) * 100 : (gastado > 0 ? 100 : 0);
         let pctBarra = pctConsumido > 100 ? 100 : pctConsumido;
-        let colorBarra = dest.grupo === 'Necesidades' ? 'var(--green)' : 'var(--accent)';
-        if (excedido > 0) colorBarra = 'var(--red)';
+        
+        let baseColor = dest.grupo === 'Necesidades' ? 'var(--green)' : 'var(--accent)';
+        let colorBarra = getAlertColor(pctConsumido, baseColor);
+        if(pctConsumido >= 80) window.alertasGeneradas.push(generarAlertaObj(`Sobre ${dest.nombre}`, pctConsumido));
+
         let statusText = excedido > 0 ? `<span style="color:var(--red); font-weight:700;">Excedido: $${formatearDinero(excedido.toFixed(0))}</span>` : `<span style="color:var(--text3);">Disponible: $${formatearDinero(disponible.toFixed(0))}</span>`;
 
         html += `<div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px;"><div><div style="font-weight:700; font-size:14px; color:var(--text); margin-bottom:2px;">${dest.nombre} <span style="font-size:10px; font-weight:500; color:var(--text3); padding:2px 6px; background:var(--bg3); border-radius:4px; margin-left:5px;">${dest.grupo}</span></div><div style="font-size:12px; color:var(--text2);">Gastado: $${formatearDinero(gastado.toFixed(0))} / Presupuesto: $${formatearDinero(dest.presupuesto)}</div></div><div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:${colorBarra};">${pctConsumido.toFixed(0)}%</div></div></div><div style="width:100%; height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; margin-bottom:8px;"><div style="height:100%; width:${pctBarra}%; background:${colorBarra}; border-radius:3px; transition:width 0.3s ease;"></div></div><div style="text-align:right; font-size:12px;">${statusText}</div></div>`;
     });
     contenedor.innerHTML = html;
+}
+
+// ==========================================
+// MÓDULO OBLIGACIONES MENSUALES (CHECKLIST)
+// ==========================================
+window.agregarChecklist = function() {
+    const nombre = document.getElementById('chk-nuevo-nombre').value.trim();
+    if (!nombre) return;
+    EstadoApp.configuracion.checklist.push({ id: generarID('chk'), nombre: nombre });
+    guardarEstado(); renderizarTodo(); document.getElementById('chk-nuevo-nombre').value = ''; showToast("Obligación agregada");
+}
+
+window.eliminarChecklist = function(id) {
+    EstadoApp.configuracion.checklist = EstadoApp.configuracion.checklist.filter(c => c.id !== id);
+    guardarEstado(); renderizarTodo(); showToast("Obligación eliminada");
+}
+
+function renderChecklistConfig() {
+    const contenedor = document.getElementById('lista-checklist-admin'); if(!contenedor) return;
+    let html = '';
+    EstadoApp.configuracion.checklist.forEach(c => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);"><span style="font-size:13px; font-weight:600; color:var(--text);">${c.nombre}</span><button class="ui-icon-btn" onclick="eliminarChecklist('${c.id}')"><i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i></button></div>`;
+    });
+    contenedor.innerHTML = html || '<p style="color:var(--text3); font-size:13px; text-align:center;">Sin obligaciones.</p>';
+}
+
+function getSaldosPrestamosPuros() {
+    let agrupados = {};
+    EstadoApp.prestamos.forEach(p => {
+        if (p.archivado) return;
+        let key = p.persona.trim().toLowerCase();
+        if (!agrupados[key]) agrupados[key] = { nombre: p.persona, neto: 0 };
+        let saldo = 0; p.cuotas.forEach(c => { if (!c.pagada) saldo += c.monto; });
+        if (p.tipo === 'medeben') agrupados[key].neto += saldo; else agrupados[key].neto -= saldo;
+    });
+    return Object.values(agrupados);
+}
+
+function renderChecklistResumen() {
+    const contenedor = document.getElementById('resumen-checklist-lista'); if (!contenedor) return;
+    const hoy = new Date(); const mesActualStr = `${hoy.getFullYear()}-${hoy.getMonth() + 1}`;
+    
+    if (!EstadoApp.checklistEstado || EstadoApp.checklistEstado.mes !== mesActualStr) {
+        EstadoApp.checklistEstado = { mes: mesActualStr, completados: [] }; guardarEstado();
+    }
+
+    let items = [];
+    if (EstadoApp.configuracion.checklist) {
+        EstadoApp.configuracion.checklist.forEach(c => items.push({ id: c.id, nombre: c.nombre, tipo: 'manual' }));
+    }
+    
+    let saldos = getSaldosPrestamosPuros();
+    saldos.forEach(s => {
+        if (s.neto > 0) items.push({ id: 'prest_me_' + s.nombre.toLowerCase().replace(/\s+/g, ''), nombre: 'Me debe ' + s.nombre, tipo: 'auto' });
+        if (s.neto < 0) items.push({ id: 'prest_yo_' + s.nombre.toLowerCase().replace(/\s+/g, ''), nombre: 'Yo debo a ' + s.nombre, tipo: 'auto' });
+    });
+
+    if (items.length === 0) { 
+        contenedor.innerHTML = '<p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>'; 
+        return; 
+    }
+
+    let html = '';
+    items.forEach(item => {
+        let isChecked = EstadoApp.checklistEstado.completados.includes(item.id);
+        let checkAttr = isChecked ? 'checked' : '';
+        let labelStyle = isChecked ? 'opacity: 0.5; text-decoration: line-through; color: var(--text3);' : 'color: var(--text);';
+        let autoBadge = item.tipo === 'auto' ? '<span style="font-size:10px; background:var(--bg3); padding:2px 6px; border-radius:4px; margin-left:8px; color:var(--text3);">Auto</span>' : '';
+
+        html += `<div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px dashed var(--border); transition: all 0.2s;"><input type="checkbox" ${checkAttr} onchange="toggleChecklistItem('${item.id}')" style="margin:0 12px 0 0; cursor:pointer;"><span style="font-size:13px; font-weight:600; ${labelStyle}">${item.nombre} ${autoBadge}</span></div>`;
+    });
+    contenedor.innerHTML = html;
+}
+
+window.toggleChecklistItem = function(id) {
+    let idx = EstadoApp.checklistEstado.completados.indexOf(id);
+    if (idx > -1) EstadoApp.checklistEstado.completados.splice(idx, 1); 
+    else EstadoApp.checklistEstado.completados.push(id);
+    guardarEstado(); renderChecklistResumen();
 }
 
 function renderPorMedioPago() {
@@ -385,8 +536,8 @@ function renderHistorialGlobal(data) {
             let detallesHtml = `${formatearFecha(m.fecha)} • ${m.hora}`;
             
             if (m.nota) detallesHtml += `<br><span style="font-size:11px; font-style:italic; color:var(--text2); display:inline-block; margin-top:2px;">"${m.nota}"</span>`;
-            if (m.isUsd && m.montoUsd && m.cotizacionUsd) detallesHtml += `<br><span style="font-size:11px; color:var(--accent); font-weight:600; display:inline-block; margin-top:2px;">Equivalente: $${m.montoUsd} USD (Cotización: $${m.cotizacionUsd})</span>`;
-
+            if (m.isUsd && m.montoUsd && m.cotizacionUsd) detallesHtml += `<br><span style="font-size:11px; color:var(--accent); font-weight:600; display:inline-block; margin-top:2px;">Equivalente: $${formatearDinero(m.montoUsd)} USD (Cotización: $${formatearDinero(m.cotizacionUsd)})</span>`;
+            
             if (isGasto && (m.cuotas?.esCuota || m.compartido?.esCompartido)) {
                 detallesHtml += `<br><div style="margin-top:6px; padding:8px 10px; background:var(--bg3); border-radius:6px; font-size:11px; line-height:1.6; color:var(--text2);">`;
                 detallesHtml += `<b>Total compra:</b> $${formatearDinero(m.monto)}<br>`;
@@ -403,7 +554,6 @@ function renderHistorialGlobal(data) {
                 }
                 detallesHtml += `</div>`;
             }
-            if (isAhorro && m.cotizacion) detallesHtml += `<br><span style="color:var(--text2); font-size:11px;">Cotización USD: $${formatearDinero(m.cotizacion)}</span>`;
 
             html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--bg2); border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
@@ -494,11 +644,13 @@ function actualizarSelectsMovimientos() {
 }
 
 function renderPersonasFrecuentes() { const dl = document.getElementById('lista-personas'); if(!dl) return; let html = ''; if(EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes.forEach(p => { html += `<option value="${p}">`; }); dl.innerHTML = html; }
-function renderPersonasAdmin() {
+
+window.renderPersonasAdmin = function() {
     const contenedor = document.getElementById('lista-personas-admin'); if(!contenedor) return; let html = '';
     if(EstadoApp.configuracion.personasFrecuentes && EstadoApp.configuracion.personasFrecuentes.length > 0) { EstadoApp.configuracion.personasFrecuentes.forEach(p => { html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);"><span style="font-size:13px; font-weight:600; color:var(--text);">${p}</span><button class="ui-icon-btn" onclick="eliminarPersonaFrecuente('${p}')"><i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i></button></div>`; }); } else { html = '<p style="color:var(--text3); font-size:13px; text-align:center;">Sin personas guardadas.</p>'; }
     contenedor.innerHTML = html;
 }
+
 window.eliminarPersonaFrecuente = function(nombre) { EstadoApp.configuracion.personasFrecuentes = EstadoApp.configuracion.personasFrecuentes.filter(p => p !== nombre); guardarEstado(); renderizarTodo(); showToast(`Persona "${nombre}" eliminada.`); }
 
 function agregarMedioPago() { const nombre = document.getElementById('nuevo-medio-nombre').value.trim(); const color = document.getElementById('nuevo-medio-color').value; if(!nombre) return; EstadoApp.configuracion.mediosPago.push({ id: generarID('mp'), nombre: nombre, color: color }); document.getElementById('nuevo-medio-nombre').value = ''; guardarEstado(); renderizarTodo(); showToast("Medio de pago añadido"); }
@@ -527,13 +679,9 @@ function limpiarInputs(contenedorId) {
     contenedor.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => el.value = ''); contenedor.querySelectorAll('select').forEach(el => el.value = ''); contenedor.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
     const fechaHoyString = new Date().toISOString().split('T')[0]; contenedor.querySelectorAll('input[type="date"], .input-fecha').forEach(el => el.value = fechaHoyString);
     if(document.getElementById('g-info-cuota')) document.getElementById('g-info-cuota').innerHTML = '';
-    document.getElementById('caja-usd').style.display = 'none';
     
-    const pctRange = document.getElementById('comp-pct');
-    if (pctRange && contenedor.contains(pctRange)) {
-        pctRange.value = 50;
-        if(document.getElementById('comp-pct-lbl')) document.getElementById('comp-pct-lbl').innerText = '50%';
-    }
+    const cajaUsd = document.getElementById('caja-usd'); if(cajaUsd) cajaUsd.style.display = 'none';
+    const cajaUsdAhorro = document.getElementById('caja-usd-ahorro'); if(cajaUsdAhorro) cajaUsdAhorro.style.display = 'none';
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
@@ -592,40 +740,79 @@ window.setAhorroTipo = function() {
     else { lblOrigen.innerText = 'Origen (Billetera Ahorro)'; lblDestino.innerText = 'Destino (Billetera Ahorro)'; }
     actualizarSelectsAhorro();
 }
+
+window.toggleUsdAhorroFields = function() {
+    const chkUsd = document.getElementById('chk-usd-ahorro');
+    const cajaUsd = document.getElementById('caja-usd-ahorro');
+    if (cajaUsd) cajaUsd.style.display = (chkUsd && chkUsd.checked) ? 'grid' : 'none';
+}
+
 window.guardarAhorro = function() {
     const tipo = document.getElementById('ahorro-tipo').value; const origenId = document.getElementById('ahorro-origen').value; const destinoId = document.getElementById('ahorro-destino').value;
-    const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\D/g, '')); const cotizacion = parseFloat(document.getElementById('ahorro-cotizacion').value.replace(/\D/g, '')) || null;
+    const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\D/g, '')); 
+    
+    const chkUsd = document.getElementById('chk-usd-ahorro');
+    const isUsd = chkUsd ? chkUsd.checked : false;
+    const montoUsd = isUsd ? parseFloat(document.getElementById('ahorro-monto-usd').value.replace(/\D/g, '')) || 0 : null;
+    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('ahorro-cotizacion').value.replace(/\D/g, '')) || null : null;
+
     const nota = document.getElementById('ahorro-nota').value.trim(); const fecha = document.getElementById('ahorro-fecha').value || new Date().toISOString().split('T')[0];
+    
     if(!origenId || !destinoId || isNaN(monto) || monto <= 0) { showToast("Completa origen, destino y monto válido."); return; }
     if(origenId === destinoId) { showToast("Origen y destino idénticos."); return; }
+    
     if(tipo === 'aporte') { let b = EstadoApp.billeteras.find(b => b.id === destinoId); if(b) b.saldo = (b.saldo || 0) + monto; } 
     else if(tipo === 'retiro') { let b = EstadoApp.billeteras.find(b => b.id === origenId); if(b) { if((b.saldo || 0) < monto) { showToast("Saldo insuficiente."); return; } b.saldo -= monto; } } 
     else if(tipo === 'transferencia') { let bO = EstadoApp.billeteras.find(b => b.id === origenId); let bD = EstadoApp.billeteras.find(b => b.id === destinoId); if(bO && bD) { if((bO.saldo || 0) < monto) { showToast("Saldo insuficiente."); return; } bO.saldo -= monto; bD.saldo = (bD.saldo || 0) + monto; } }
-    EstadoApp.movimientos.unshift({ id: generarID('mov'), tipo: 'ahorro', subtipo: tipo, concepto: nota || `Ahorro (${tipo})`, monto: monto, cotizacion: cotizacion, fecha: fecha, hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }), origenId: origenId, destinoId: destinoId });
-    guardarEstado(); renderizarTodo(); document.getElementById('ahorro-monto').value = ''; document.getElementById('ahorro-cotizacion').value = ''; document.getElementById('ahorro-nota').value = ''; showToast("Ahorro guardado.");
+    
+    EstadoApp.movimientos.unshift({ 
+        id: generarID('mov'), tipo: 'ahorro', subtipo: tipo, concepto: nota || `Ahorro (${tipo})`, monto: monto, 
+        nota: nota, isUsd: isUsd, montoUsd: montoUsd, cotizacionUsd: cotizacionUsd,
+        fecha: fecha, hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }), origenId: origenId, destinoId: destinoId 
+    });
+    
+    guardarEstado(); limpiarInputs('page-ahorros'); 
+    if(chkUsd) { chkUsd.checked = false; toggleUsdAhorroFields(); }
+    renderizarTodo(); showToast("Ahorro guardado.");
 }
+
 function renderBilleterasUI() {
     const emptyState = document.getElementById('ahorros-empty-billeteras'); const dataState = document.getElementById('ahorros-con-billeteras');
     const countBilleteras = document.getElementById('ahorro-billeteras-count'); const listaUI = document.getElementById('lista-billeteras-ui');
     if(countBilleteras) countBilleteras.innerText = EstadoApp.billeteras.length; let totalGlobalAhorro = 0;
+    
+    let saldosUsd = {};
+    EstadoApp.movimientos.forEach(m => {
+        if(m.tipo === 'ahorro' && m.isUsd && m.montoUsd) {
+            if(m.subtipo === 'aporte') { saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; }
+            if(m.subtipo === 'retiro') { saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; }
+            if(m.subtipo === 'transferencia') { saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; }
+        }
+    });
+
     if (EstadoApp.billeteras.length === 0) { if(emptyState) emptyState.style.display = 'flex'; if(dataState) dataState.style.display = 'none'; } 
     else {
         if(emptyState) emptyState.style.display = 'none'; if(dataState) dataState.style.display = 'flex';
         if(listaUI) {
             let listaHTML = '';
-            EstadoApp.billeteras.forEach(b => { totalGlobalAhorro += (b.saldo || 0); listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)}</span></div>`; });
+            EstadoApp.billeteras.forEach(b => { 
+                totalGlobalAhorro += (b.saldo || 0); 
+                let usdText = saldosUsd[b.id] && saldosUsd[b.id] > 0 ? `<span style="font-weight:700; font-size:15px; color:var(--accent); margin-left:20px;">$${formatearDinero(saldosUsd[b.id])} USD</span>` : '';
+                listaHTML += `<div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="dot" style="background:${b.color};"></span><span style="font-size:14px; font-weight:600;">${b.nombre}</span></div><div style="display:flex; align-items:center;"><span style="font-weight:700; font-size:15px;">$${formatearDinero(b.saldo || 0)} ARS</span>${usdText}</div></div>`; 
+            });
             listaUI.innerHTML = listaHTML;
         }
     }
     if(document.getElementById('ahorro-total')) document.getElementById('ahorro-total').innerText = '$' + formatearDinero(totalGlobalAhorro);
 }
+
 window.abrirModalNuevaBilletera = function() { document.getElementById('modal-nueva-billetera').style.display = 'block'; }
 window.verificarNuevaBilletera = function(s) { if(s.value === 'nueva') { s.value = ""; abrirModalNuevaBilletera(); } }
 window.cerrarNuevaBilletera = function() { document.getElementById('modal-nueva-billetera').style.display = 'none'; document.getElementById('nueva-bill-nombre').value = ''; }
 window.guardarNuevaBilletera = function() { const nombre = document.getElementById('nueva-bill-nombre').value; const color = document.getElementById('nueva-bill-color').value; if(nombre.trim() === '') return; EstadoApp.billeteras.push({ id: generarID('bill'), nombre: nombre, color: color, saldo: 0 }); guardarEstado(); renderizarTodo(); cerrarNuevaBilletera(); showToast("Billetera guardada"); }
 
 // ==========================================
-// PRÉSTAMOS - TARJETAS UNIFICADAS, MEMORIA DE ACORDEÓN Y ARCHIVO
+// PRÉSTAMOS Y DEUDAS
 // ==========================================
 window.filtroPrestamo = 'todos';
 let prestamoAccordionAbierto = null; 
@@ -656,8 +843,19 @@ window.setTipoPrestamo = function(tipo) {
 }
 
 window.calcularPrestamoInfo = function() {
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, '')); const cuotas = parseInt(document.getElementById('pcuotas').value); const infoText = document.getElementById('p-info-cuota');
+    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, '')); 
+    const cuotas = parseInt(document.getElementById('pcuotas').value); 
+    const infoText = document.getElementById('p-info-cuota');
+    const fechaInicio = document.getElementById('pfecha').value;
+    
     if(monto && cuotas > 0) infoText.innerText = `Cuota estimada: $${formatearDinero((monto / cuotas).toFixed(0))}`; else infoText.innerText = '';
+    
+    if (fechaInicio && cuotas > 0) {
+        let d = new Date(fechaInicio + 'T12:00:00');
+        d.setMonth(d.getMonth() + cuotas);
+        const fechCompromisoEl = document.getElementById('pfechacompromiso');
+        if(fechCompromisoEl) fechCompromisoEl.value = d.toISOString().split('T')[0];
+    }
 }
 
 window.guardarPrestamo = function() {
@@ -665,12 +863,8 @@ window.guardarPrestamo = function() {
     const persona = document.getElementById('ppersona').value.trim(); const concepto = document.getElementById('pdesc').value.trim(); const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, ''));
     if(!persona || !concepto || isNaN(monto)) return;
     let cuotasCount = parseInt(document.getElementById('pcuotas').value) || 1; let cuotas = []; let cuotaMonto = monto / cuotasCount; let fechaInicio = document.getElementById('pfecha').value;
-
-    if (document.getElementById('pcuotas').value && cuotasCount > 0) {
-        let dInicio = new Date(fechaInicio + 'T12:00:00');
-        for(let i=1; i<=cuotasCount; i++) { let fVenc = new Date(dInicio); fVenc.setMonth(fVenc.getMonth() + (i-1)); cuotas.push({ numero: i, monto: cuotaMonto, vencimiento: fVenc.toISOString().split('T')[0], pagada: false }); }
-    } else { cuotas.push({ numero: 1, monto: monto, vencimiento: fechaInicio, pagada: false }); }
-
+    if (document.getElementById('pcuotas').value && cuotasCount > 0) { let dInicio = new Date(fechaInicio + 'T12:00:00'); for(let i=1; i<=cuotasCount; i++) { let fVenc = new Date(dInicio); fVenc.setMonth(fVenc.getMonth() + (i-1)); cuotas.push({ numero: i, monto: cuotaMonto, vencimiento: fVenc.toISOString().split('T')[0], pagada: false }); } } 
+    else { cuotas.push({ numero: 1, monto: monto, vencimiento: fechaInicio, pagada: false }); }
     EstadoApp.prestamos.push({ id: generarID('prest'), tipo: tipo, persona: persona, concepto: concepto, montoTotal: monto, cuotas: cuotas, archivado: false });
     guardarEstado(); renderizarTodo(); limpiarInputs('panel-prestamo'); document.getElementById('panel-prestamo').style.display = 'none'; showToast("Préstamo guardado");
 }
@@ -691,38 +885,48 @@ function renderPrestamos() {
     const container = document.getElementById('lista-prestamos-cards'); if(!container) return;
     if(EstadoApp.prestamos.length === 0) { container.innerHTML = `<div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:200px; border: 1px dashed var(--text3); background:transparent;"><i data-lucide="handshake" style="width:48px; height:48px; color:var(--text3); margin-bottom:15px; stroke-width:1.5;"></i><p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">No tienes deudas registradas.</p></div>`; return; }
     
-    let agrupados = {};
+    let agrupados = {}; 
     EstadoApp.prestamos.forEach(p => { 
         let key = p.persona.trim().toLowerCase(); 
-        if(!agrupados[key]) agrupados[key] = { nombreDisplay: p.persona, prestamos: [] };
+        if(!agrupados[key]) agrupados[key] = { nombreDisplay: p.persona, prestamos: [] }; 
         agrupados[key].prestamos.push(p); 
     });
-
+    
     let html = '';
     for(const key in agrupados) {
-        let personaDisplay = agrupados[key].nombreDisplay;
+        let personaDisplay = agrupados[key].nombreDisplay; 
         let prestamosPersona = agrupados[key].prestamos; 
         let net = 0; let htmlDetalles = ''; let countValidos = 0;
+        let tieneMeDeben = false; let tieneYoDebo = false;
 
         prestamosPersona.forEach(p => {
             if (window.filtroPrestamo === 'archivados' && !p.archivado) return;
             if (window.filtroPrestamo !== 'archivados' && p.archivado) return;
+            
+            if (window.filtroPrestamo === 'medeben' && p.tipo !== 'medeben') return;
+            if (window.filtroPrestamo === 'yodebo' && p.tipo !== 'yodebo') return;
+
             countValidos++;
 
             let saldoPrestamo = 0; let pagadas = 0; let cuotasHtml = '';
             let isMeDeben = p.tipo === 'medeben';
-            let colorTextoCuota = isMeDeben ? 'var(--green)' : 'var(--text)';
-
-            p.cuotas.forEach((c, cIndex) => {
-                if(c.pagada) { pagadas++; } else { saldoPrestamo += c.monto; }
-                let chk = c.pagada ? 'checked' : ''; let line = c.pagada ? 'item-completado' : '';
-                cuotasHtml += `<div class="li ${line}" style="padding:8px 0; border-bottom:1px dashed var(--border);"><span class="li-desc" style="font-size:13px;"><input type="checkbox" ${chk} onchange="toggleCuota('${p.id}', ${cIndex})"> Cuota ${c.numero}</span><span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto.toFixed(0))}</span></div>`;
-            });
-            if(isMeDeben) net += saldoPrestamo; else net -= saldoPrestamo;
-
-            let badge = isMeDeben ? '<span style="background:var(--green); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Me debe</span>' : '<span style="background:var(--red); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Le debo</span>';
-            let archiveIcon = p.archivado ? 'refresh-cw' : 'archive';
+            let colorTextoCuota = isMeDeben ? 'var(--green)' : 'var(--red)';
             
+            if (isMeDeben) tieneMeDeben = true;
+            if (!isMeDeben) tieneYoDebo = true;
+
+            p.cuotas.forEach((c, cIndex) => { 
+                if(c.pagada) pagadas++; else saldoPrestamo += c.monto; 
+                let chk = c.pagada ? 'checked' : ''; let line = c.pagada ? 'item-completado' : ''; 
+                cuotasHtml += `<div class="li ${line}" style="padding:8px 0; border-bottom:1px dashed var(--border);"><span class="li-desc" style="font-size:13px;"><input type="checkbox" ${chk} onchange="toggleCuota('${p.id}', ${cIndex})"> Cuota ${c.numero}</span><span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto.toFixed(0))}</span></div>`; 
+            });
+            
+            if(isMeDeben) net += saldoPrestamo; else net -= saldoPrestamo;
+            
+            let colorTotal = isMeDeben ? 'var(--green)' : 'var(--red)';
+            let badge = isMeDeben ? '<span style="background:var(--green); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Me debe</span>' : '<span style="background:var(--red); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Yo debo</span>';
+            let archiveIcon = p.archivado ? 'refresh-cw' : 'archive';
+
             htmlDetalles += `
             <div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
@@ -732,21 +936,35 @@ function renderPrestamos() {
                         <button class="ui-icon-btn" onclick="eliminarPrestamo('${p.id}')" title="Eliminar"><i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i></button>
                     </div>
                 </div>
-                <div style="font-size:12px; color:var(--text3); margin-bottom:15px;">Total prestado: $${formatearDinero(p.montoTotal)} • Cuotas pagadas: ${pagadas}/${p.cuotas.length}</div>
+                <div style="font-size:12px; color:var(--text3); margin-bottom:15px;">Total: <span style="color:${colorTotal}; font-weight:600;">$${formatearDinero(p.montoTotal)}</span> • Pagadas: ${pagadas}/${p.cuotas.length}</div>
                 ${cuotasHtml}
             </div>`;
         });
-
+        
         if (countValidos === 0) continue;
-        if (window.filtroPrestamo === 'medeben' && net <= 0) continue;
-        if (window.filtroPrestamo === 'yodebo' && net >= 0) continue;
 
-        let badgeTipo = net > 0 ? '<span class="badge badge-green">Me debe a mí</span>' : (net < 0 ? '<span class="badge badge-red">Yo le debo</span>' : '<span class="badge" style="border:1px solid var(--text3); color:var(--text3);">Saldado</span>');
+        let badgeTipo = '';
+        if (tieneMeDeben) badgeTipo += '<span class="badge badge-green">Me deben</span> ';
+        if (tieneYoDebo) badgeTipo += '<span class="badge badge-red">Yo debo</span>';
+        if (!tieneMeDeben && !tieneYoDebo) badgeTipo = '<span class="badge" style="border:1px solid var(--text3); color:var(--text3);">Saldado</span>';
+
         let personaId = key.replace(/\s+/g, '');
-        let divClass = "accordion-content"; if (prestamoAccordionAbierto === 'det-' + personaId) divClass += " show"; 
+        let divClass = "accordion-content"; if (prestamoAccordionAbierto === 'det-' + personaId) divClass += " show";
+        
+        let netColor = 'var(--text3)';
+        if (window.filtroPrestamo === 'todos' || window.filtroPrestamo === 'archivados') {
+             netColor = net > 0 ? 'var(--green)' : (net < 0 ? 'var(--red)' : 'var(--text3)');
+        } else if (window.filtroPrestamo === 'medeben') {
+             netColor = 'var(--green)';
+        } else if (window.filtroPrestamo === 'yodebo') {
+             netColor = 'var(--red)';
+        }
 
-        html += `<div class="card"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;"><div><h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3><div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div></div><div style="text-align:right;"><p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Neto</p><p style="font-size:22px; font-weight:800; color:${net > 0 ? 'var(--green)' : (net < 0 ? 'var(--red)' : 'var(--text3)')}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p></div></div><div style="border-top:1px solid var(--border); padding-top:15px;"><button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i></button><div id="det-${personaId}" class="${divClass}">${htmlDetalles}</div></div></div>`;
+        html += `<div class="card"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;"><div><h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3><div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div></div><div style="text-align:right;"><p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Pendiente</p><p style="font-size:22px; font-weight:800; color:${netColor}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p></div></div><div style="border-top:1px solid var(--border); padding-top:15px;"><button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i></button><div id="det-${personaId}" class="${divClass}">${htmlDetalles}</div></div></div>`;
     }
     container.innerHTML = html || `<p style="color:var(--text3); font-size:13px; text-align:center;">No hay registros para este filtro.</p>`;
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+
 window.toggleCuota = function(pId, cIndex) { let prestamo = EstadoApp.prestamos.find(p => p.id === pId); if(prestamo) { prestamo.cuotas[cIndex].pagada = !prestamo.cuotas[cIndex].pagada; guardarEstado(); renderizarTodo(); } }
