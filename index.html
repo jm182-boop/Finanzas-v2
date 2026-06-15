@@ -50,13 +50,13 @@
         <div class="uemail" id="uemail"></div>
       </div>
       <div class="nav">
-        <button class="nb active" onclick="sp('resumen', this)"><i data-lucide="layout-dashboard" class="icon-lg" style="display:none;"></i><span>Resumen</span></button>
-        <button class="nb" onclick="sp('movimientos', this)"><i data-lucide="list-ordered" class="icon-lg" style="display:none;"></i><span>Movimientos</span></button>
-        <button class="nb" onclick="sp('historial', this)"><i data-lucide="history" class="icon-lg" style="display:none;"></i><span>Historial</span></button>
-        <button class="nb" onclick="sp('ahorros', this)"><i data-lucide="piggy-bank" class="icon-lg" style="display:none;"></i><span>Ahorros</span></button>
-        <button class="nb" onclick="sp('prestamos', this)"><i data-lucide="hand-coins" class="icon-lg" style="display:none;"></i><span>Préstamos</span></button>
-        <button class="nb" onclick="sp('ia', this)"><i data-lucide="bot" class="icon-lg" style="display:none;"></i><span>IA</span></button>
-        <button class="nb" onclick="sp('config', this)"><i data-lucide="settings" class="icon-lg" style="display:none;"></i><span>Configuración</span></button>
+        <button class="nb active" onclick="sp('resumen', this)"><i data-lucide="layout-dashboard" class="icon-lg"></i><span>Resumen</span></button>
+        <button class="nb" onclick="sp('movimientos', this)"><i data-lucide="list-ordered" class="icon-lg"></i><span>Movimientos</span></button>
+        <button class="nb" onclick="sp('historial', this)"><i data-lucide="history" class="icon-lg"></i><span>Historial</span></button>
+        <button class="nb" onclick="sp('ahorros', this)"><i data-lucide="piggy-bank" class="icon-lg"></i><span>Ahorros</span></button>
+        <button class="nb" onclick="sp('prestamos', this)"><i data-lucide="hand-coins" class="icon-lg"></i><span>Préstamos</span></button>
+        <button class="nb" onclick="sp('ia', this)"><i data-lucide="bot" class="icon-lg"></i><span>IA</span></button>
+        <button class="nb" onclick="sp('config', this)"><i data-lucide="settings" class="icon-lg"></i><span>Configuración</span></button>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn-icon" onclick="toggleTheme()">
@@ -69,6 +69,7 @@
 
     <div class="main-content" id="area-imprimible">
       
+      <!-- PAGE RESUMEN -->
       <div id="page-resumen" class="page active">
         <div class="header">
           <div style="display:flex; align-items:center; gap:10px;">
@@ -119,13 +120,14 @@
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div class="card" id="resumen-sobres-card">
               <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> SOBRES PRESUPUESTARIOS</div>
-              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;">
-                 </div>
+              <div id="resumen-sobres-lista" style="display:flex;flex-direction:column;gap:15px;margin-top:15px;max-height:450px;overflow-y:auto;padding-right:5px;"></div>
             </div>
 
             <div class="card" id="resumen-checklist">
-              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> CHECKLIST DE PAGOS</div>
-              <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>
+              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> OBLIGACIONES MENSUALES (CHECKLIST)</div>
+              <div id="resumen-checklist-lista" style="display:flex;flex-direction:column;margin-top:10px;">
+                 <p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>
+              </div>
             </div>
             
             <div class="card">
@@ -138,6 +140,7 @@
         </div>
       </div>
 
+      <!-- PAGE MOVIMIENTOS -->
       <div id="page-movimientos" class="page">
         <div class="header">
           <h2><i data-lucide="list-ordered" class="icon-lg"></i> Movimientos</h2>
@@ -175,16 +178,9 @@
               <input type="text" class="in" id="comp-quien" placeholder="Persona" list="lista-personas">
               <datalist id="lista-personas"></datalist>
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);">
-                <input type="checkbox" id="comp-guardar" class="check-rojo"> Guardar persona para el futuro
+                <input type="checkbox" id="comp-guardar"> Guardar persona para el futuro
               </label>
-              
-              <div style="margin-top:10px;">
-                <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;display:block;margin-bottom:5px;">Tu porcentaje de pago</label>
-                <div style="display:flex; align-items:center; gap:15px;">
-                  <input type="range" id="comp-pct" min="1" max="100" value="50" style="flex:1;" oninput="updatePctLabel(); calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
-                  <span id="comp-pct-lbl" style="font-size:16px; font-weight:700; color:var(--text); width:45px; text-align:right;">50%</span>
-                </div>
-              </div>
+              <input type="number" class="in" id="comp-pct" placeholder="Tu porcentaje (Ej: 50)" style="margin-bottom:0;" onkeyup="calcularCuotaInfoGasto()" onchange="calcularCuotaInfoGasto()">
             </div>
           </div>
           
@@ -196,14 +192,16 @@
           </div>
 
           <input type="date" class="in input-fecha">
+          
+          <!-- NOTAS Y USD EN MOVIMIENTOS -->
           <input type="text" id="gnota" class="in" placeholder="Nota o detalle adicional (Opcional)">
           
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
-              <input type="checkbox" id="chk-usd" class="check-rojo" onchange="toggleUsdFields()"> Operación en Moneda Extranjera (USD)
+              <input type="checkbox" id="chk-usd" onchange="toggleUsdFields()"> Operación en Moneda Extranjera (USD)
           </label>
           <div id="caja-usd" style="display:none; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; padding: 15px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
-              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto en USD</label><input type="number" id="gusd-monto" class="in" placeholder="Ej: 250" style="margin-bottom:0;"></div>
-              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="number" id="gusd-cotizacion" class="in" placeholder="Ej: 1200" style="margin-bottom:0;"></div>
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto en USD</label><input type="text" id="gusd-monto" class="in" placeholder="Ej: 250" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
+              <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="text" id="gusd-cotizacion" class="in" placeholder="Ej: 1200" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
           </div>
 
           <button class="btn" id="btnagregar" style="margin-top:10px;background:var(--red);">Guardar registro</button>
@@ -217,6 +215,7 @@
         </div>
       </div>
 
+      <!-- PAGE HISTORIAL -->
       <div id="page-historial" class="page">
         <div class="header">
           <h2><i data-lucide="history" class="icon-lg"></i> Historial y Auditoría</h2>
@@ -256,13 +255,14 @@
         <div id="lista-historial-global" style="display:flex; flex-direction:column; gap:15px;"></div>
       </div>
 
+      <!-- PAGE AHORROS -->
       <div id="page-ahorros" class="page">
         <div class="header"><h2><i data-lucide="piggy-bank" class="icon-lg"></i> Ahorros</h2></div>
         
         <div class="mg-ahorro">
           <div class="met compact"><div class="ml">Total Ahorrado</div><div class="mv" id="ahorro-total">$0</div></div>
           <div class="met compact"><div class="ml">Billeteras Activas</div><div class="mv" style="color:var(--text);" id="ahorro-billeteras-count">0</div></div>
-          <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" style="color:var(--text2);">$0</div></div>
+          <div class="met compact"><div class="ml">Meta Mes</div><div class="mv" id="ahorro-meta-mes" style="color:var(--text2);">$0</div></div>
         </div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="ahorros-grid">
@@ -292,8 +292,16 @@
                 <option value="retiro">Retiro de ahorro</option>
                 <option value="transferencia">Transferencia entre billeteras</option>
               </select>
-              <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($)" onkeyup="fmtI(this)">
-              <input type="text" id="ahorro-cotizacion" class="in" placeholder="Cotización USD / Monto Destino (Opcional)" onkeyup="fmtI(this)">
+              <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($ ARS)" onkeyup="fmtI(this)">
+              
+              <!-- NOTAS Y USD EN AHORROS -->
+              <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
+                  <input type="checkbox" id="chk-usd-ahorro" onchange="toggleUsdAhorroFields()"> Operación en Moneda Extranjera (USD)
+              </label>
+              <div id="caja-usd-ahorro" style="display:none; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; padding: 15px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
+                  <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Monto Destino (USD)</label><input type="text" id="ahorro-monto-usd" class="in" placeholder="Ej: 250" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
+                  <div><label style="font-size:11px;color:var(--text3);font-weight:600;">Cotización (ARS)</label><input type="text" id="ahorro-cotizacion" class="in" placeholder="Ej: 1200" onkeyup="fmtI(this)" style="margin-bottom:0;"></div>
+              </div>
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div><label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
@@ -304,7 +312,7 @@
                 </div>
               </div>
               <input type="date" id="ahorro-fecha" class="in input-fecha">
-              <input type="text" id="ahorro-nota" class="in" placeholder="Nota (Opcional)">
+              <input type="text" id="ahorro-nota" class="in" placeholder="Nota o detalle adicional (Opcional)">
               <button class="btn" style="background:var(--accent);" onclick="guardarAhorro()">Guardar Movimiento</button>
 
               <div id="modal-nueva-billetera" class="modal-inline" style="display:none;">
@@ -323,6 +331,7 @@
         </div>
       </div>
 
+      <!-- PAGE PRÉSTAMOS -->
       <div id="page-prestamos" class="page">
         <div class="header">
           <h2><i data-lucide="hand-coins" class="icon-lg"></i> Préstamos y Deudas</h2>
@@ -330,6 +339,7 @@
         </div>
         
         <div class="filter-scroll" id="p-filtros">
+          <!-- FILTRO ARCHIVADOS -->
           <button class="pill active" onclick="filtrarPrestamosUI('todos', this)">Todos / Pendientes</button>
           <button class="pill" onclick="filtrarPrestamosUI('medeben', this)">Me deben</button>
           <button class="pill" onclick="filtrarPrestamosUI('yodebo', this)">Yo debo</button>
@@ -386,22 +396,66 @@
         </div>
       </div>
 
+      <!-- PAGE CONFIGURACIÓN -->
       <div id="page-config" class="page">
         <div class="header"><h2><i data-lucide="settings" class="icon-lg"></i> Configuración y Estructura</h2></div>
+        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;" class="cfg-grid-2">
           
-          <div class="card">
-            <div class="ct"><i data-lucide="sliders-horizontal" class="icon-sm"></i> Regla de Distribución</div>
-            <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Necesidades</span><span style="color:var(--text); font-size:14px;" id="lbl-nec">50%</span></div><input type="range" id="sl-nec" min="0" max="100" value="50"></div>
-            <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Deseos</span><span style="color:var(--text); font-size:14px;" id="lbl-des">30%</span></div><input type="range" id="sl-des" min="0" max="100" value="30"></div>
-            <div>
-              <div style="font-size:12px; font-weight:700; color:var(--text3); margin-bottom:12px; text-transform:uppercase;">Ahorro (Calculado)</div>
-              <div style="background:var(--bg); padding:16px; border-radius:12px; border:1px solid var(--border); font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px;"><span id="lbl-aho" style="color:var(--accent);">20%</span> <span style="color:var(--text3);">→</span> <span style="color:var(--text3); font-weight:500; font-size:13px;">Restante</span></div>
-            </div>
-            <button class="btn" style="margin-top:25px;" onclick="guardarEstado(); showToast('Configuración guardada');">Guardar Configuración</button>
+          <!-- COLUMNA IZQUIERDA -->
+          <div style="display:flex; flex-direction:column; gap:25px;">
+              <div class="card">
+                <div class="ct"><i data-lucide="sliders-horizontal" class="icon-sm"></i> Regla de Distribución</div>
+                <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Necesidades</span><span style="color:var(--text); font-size:14px;" id="lbl-nec">50%</span></div><input type="range" id="sl-nec" min="0" max="100" value="50"></div>
+                <div style="margin-bottom:25px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--text3); margin-bottom:10px; text-transform:uppercase;"><span>Deseos</span><span style="color:var(--text); font-size:14px;" id="lbl-des">30%</span></div><input type="range" id="sl-des" min="0" max="100" value="30"></div>
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:var(--text3); margin-bottom:12px; text-transform:uppercase;">Ahorro (Calculado)</div>
+                  <div style="background:var(--bg); padding:16px; border-radius:12px; border:1px solid var(--border); font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px;"><span id="lbl-aho" style="color:var(--accent);">20%</span> <span style="color:var(--text3);">→</span> <span style="color:var(--text3); font-weight:500; font-size:13px;">Restante</span></div>
+                </div>
+                <button class="btn" style="margin-top:25px;" onclick="guardarEstado(); showToast('Configuración guardada');">Guardar Configuración</button>
+              </div>
+
+              <!-- SOBRES MOVIMIENTOS A LA COLUMNA IZQUIERDA -->
+              <div class="card">
+                <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> Destinos Presupuestarios (Sobres)</div>
+                <div style="display:flex; flex-direction:column; gap: 20px;">
+                  
+                  <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                      <h4 style="color: var(--accent); font-size: 14px; display:flex; align-items:center; gap:8px;"><i data-lucide="home" class="icon-sm"></i> Necesidades</h4>
+                      <span style="font-size:12px; color:var(--text3); font-weight:700;" id="total-nec-presupuesto">$0</span>
+                    </div>
+                    <div id="lista-destinos-nec" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
+                    <button class="btn-icon" style="width:100%; font-size: 12px;" onclick="abrirModalDestino('Necesidades')">+ Agregar destino</button>
+                  </div>
+
+                  <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                      <h4 style="color: var(--accent); font-size: 14px; display:flex; align-items:center; gap:8px;"><i data-lucide="coffee" class="icon-sm"></i> Deseos</h4>
+                      <span style="font-size:12px; color:var(--text3); font-weight:700;" id="total-des-presupuesto">$0</span>
+                    </div>
+                    <div id="lista-destinos-des" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
+                    <button class="btn-icon" style="width:100%; font-size: 12px;" onclick="abrirModalDestino('Deseos')">+ Agregar destino</button>
+                  </div>
+
+                </div>
+              </div>
           </div>
 
+          <!-- COLUMNA DERECHA -->
           <div style="display:flex; flex-direction:column; gap:25px;">
+            
+            <!-- CHECKLIST CONFIGURACIÓN -->
+            <div class="card">
+              <div class="ct"><i data-lucide="check-square" class="icon-sm"></i> Obligaciones Mensuales (Checklist)</div>
+              <p style="font-size:11px; color:var(--text3); margin-bottom:10px; line-height:1.4;">Agrega obligaciones libres sin categorías (Alquiler, Expensas, etc.). Los préstamos activos se integrarán automáticamente.</p>
+              <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="chk-nuevo-nombre" class="in" placeholder="Ej: Seguro Auto..." style="margin-bottom:0;">
+                <button class="btn" style="width:auto; padding:0 15px;" onclick="agregarChecklist()">Añadir</button>
+              </div>
+              <div id="lista-checklist-admin" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
             <div class="card">
               <div class="ct"><i data-lucide="globe" class="icon-sm"></i> Formato Regional</div>
               <select class="in" style="margin-bottom: 0;">
@@ -410,6 +464,7 @@
                 <option value="CL">Chile</option>
               </select>
             </div>
+
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
@@ -423,31 +478,6 @@
             <div class="card">
               <div class="ct"><i data-lucide="users" class="icon-sm"></i> Personas Frecuentes</div>
               <div id="lista-personas-admin" style="display:flex; flex-direction:column; gap:10px; margin-bottom:5px;"></div>
-            </div>
-          </div>
-          
-          <div class="card" style="grid-column: 1 / -1;">
-            <div class="ct"><i data-lucide="folder-open" class="icon-sm"></i> Destinos Presupuestarios (Sobres)</div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-              
-              <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                  <h4 style="color: var(--accent); font-size: 14px; display:flex; align-items:center; gap:8px;"><i data-lucide="home" class="icon-sm"></i> Necesidades</h4>
-                  <span style="font-size:12px; color:var(--text3); font-weight:700;" id="total-nec-presupuesto">$0</span>
-                </div>
-                <div id="lista-destinos-nec" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-                <button class="btn-icon" style="width:100%; font-size: 12px;" onclick="abrirModalDestino('Necesidades')">+ Agregar destino</button>
-              </div>
-
-              <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                  <h4 style="color: var(--accent); font-size: 14px; display:flex; align-items:center; gap:8px;"><i data-lucide="coffee" class="icon-sm"></i> Deseos</h4>
-                  <span style="font-size:12px; color:var(--text3); font-weight:700;" id="total-des-presupuesto">$0</span>
-                </div>
-                <div id="lista-destinos-des" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-                <button class="btn-icon" style="width:100%; font-size: 12px;" onclick="abrirModalDestino('Deseos')">+ Agregar destino</button>
-              </div>
-
             </div>
           </div>
 
@@ -474,6 +504,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=33"></script>
+  <script src="app.js?v=41"></script>
 </body>
 </html>
