@@ -1,5 +1,5 @@
 // ==========================================
-// app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y ESTABILIZACIÓN)
+// app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y DECIMALES)
 // ==========================================
 
 let EstadoApp = {
@@ -226,7 +226,7 @@ window.calcularCuotaInfoGasto = function() {
         return; 
     }
     
-    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
+    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '').replace(',', '.');
     const cuotasStr = document.getElementById('gcuotas').value;
     const pctCompartidoStr = document.getElementById('comp-pct').value;
     
@@ -241,13 +241,13 @@ window.calcularCuotaInfoGasto = function() {
         let msg = `Total: $${formatearDinero(monto)}`;
         
         if (cuotas > 1) {
-            msg += `<br>Cuotas: ${cuotas} | Valor cuota: $${formatearDinero(valorCuota.toFixed(0))}`;
+            msg += `<br>Cuotas: ${cuotas} | Valor cuota: $${formatearDinero(valorCuota)}`;
         }
         
         if (isCompartido && pctCompartidoStr) {
             let pct = parseFloat(pctCompartidoStr);
             let tuParte = valorCuota * (pct / 100);
-            msg += `<br>Tu parte (${pct}%): $${formatearDinero(tuParte.toFixed(0))}`;
+            msg += `<br>Tu parte (${pct}%): $${formatearDinero(tuParte)}`;
         }
         
         infoText.innerHTML = msg;
@@ -269,7 +269,7 @@ function guardarMovimiento() {
     const tipo = esGasto ? 'gasto' : 'ingreso';
     
     const concepto = document.getElementById('gdesc').value.trim();
-    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '');
+    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '').replace(',', '.');
     const monto = parseFloat(montoStr);
     
     const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
@@ -284,8 +284,8 @@ function guardarMovimiento() {
 
     const chkUsd = document.getElementById('chk-usd');
     const isUsd = chkUsd ? chkUsd.checked : false;
-    const montoUsd = isUsd ? parseFloat(document.getElementById('gusd-monto').value.replace(/\D/g, '')) || 0 : null;
-    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('gusd-cotizacion').value.replace(/\D/g, '')) || 0 : null;
+    const montoUsd = isUsd ? parseFloat(document.getElementById('gusd-monto').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
+    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('gusd-cotizacion').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
 
     if (!concepto || isNaN(monto) || monto <= 0 || !medioPagoId) { 
         showToast("Completa los campos obligatorios."); 
@@ -387,10 +387,10 @@ function recalcularMotorFinanciero() {
     const elDisp = document.getElementById('resumen-disp');
     
     if (elIn) elIn.innerText = '$' + formatearDinero(ingresos);
-    if (elOut) elOut.innerText = '$' + formatearDinero(gastos.toFixed(0));
+    if (elOut) elOut.innerText = '$' + formatearDinero(gastos);
     
     if (elDisp) { 
-        elDisp.innerText = '$' + formatearDinero(balance.toFixed(0)); 
+        elDisp.innerText = '$' + formatearDinero(balance); 
         elDisp.className = balance >= 0 ? 'mv ok' : 'mv bad'; 
     }
 }
@@ -446,7 +446,7 @@ function calcularRegla503020() {
             window.alertasGeneradas.push(generarAlertaObj("Regla Necesidades", pctNec));
         }
         
-        txtNec.innerText = '$' + formatearDinero(gastadoNec.toFixed(0)) + ' / $' + formatearDinero(limiteNec.toFixed(0));
+        txtNec.innerText = '$' + formatearDinero(gastadoNec) + ' / $' + formatearDinero(limiteNec);
         fillNec.style.background = colorNec;
         fillNec.style.width = (pctNec > 100 ? 100 : pctNec) + '%';
         txtNec.style.color = pctNec >= 100 ? 'var(--red)' : '';
@@ -463,7 +463,7 @@ function calcularRegla503020() {
             window.alertasGeneradas.push(generarAlertaObj("Regla Deseos", pctDes));
         }
         
-        txtDes.innerText = '$' + formatearDinero(gastadoDes.toFixed(0)) + ' / $' + formatearDinero(limiteDes.toFixed(0));
+        txtDes.innerText = '$' + formatearDinero(gastadoDes) + ' / $' + formatearDinero(limiteDes);
         fillDes.style.background = colorDes;
         fillDes.style.width = (pctDes > 100 ? 100 : pctDes) + '%';
         txtDes.style.color = pctDes >= 100 ? 'var(--red)' : '';
@@ -474,14 +474,14 @@ function calcularRegla503020() {
     
     if (txtAho && fillAho) {
         let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
-        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho.toFixed(0));
+        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
         fillAho.style.background = 'var(--green)'; 
         fillAho.style.width = (pctAho > 100 ? 100 : pctAho) + '%';
     }
 
     const metaMesEl = document.getElementById('ahorro-meta-mes');
     if (metaMesEl) {
-        metaMesEl.innerText = '$' + formatearDinero(limiteAho.toFixed(0));
+        metaMesEl.innerText = '$' + formatearDinero(limiteAho);
     }
 }
 
@@ -527,8 +527,8 @@ function renderSobresResumen() {
         }
 
         let statusText = excedido > 0 
-            ? `<span style="color:var(--red); font-weight:700;">Excedido: $${formatearDinero(excedido.toFixed(0))}</span>` 
-            : `<span style="color:var(--text3);">Disponible: $${formatearDinero(disponible.toFixed(0))}</span>`;
+            ? `<span style="color:var(--red); font-weight:700;">Excedido: $${formatearDinero(excedido)}</span>` 
+            : `<span style="color:var(--text3);">Disponible: $${formatearDinero(disponible)}</span>`;
 
         html += `
         <div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border);">
@@ -539,7 +539,7 @@ function renderSobresResumen() {
                         <span style="font-size:10px; font-weight:500; color:var(--text3); padding:2px 6px; background:var(--bg3); border-radius:4px; margin-left:5px;">${dest.grupo}</span>
                     </div>
                     <div style="font-size:12px; color:var(--text2);">
-                        Gastado: $${formatearDinero(gastado.toFixed(0))} / Presupuesto: $${formatearDinero(dest.presupuesto)}
+                        Gastado: $${formatearDinero(gastado)} / Presupuesto: $${formatearDinero(dest.presupuesto)}
                     </div>
                 </div>
                 <div style="text-align:right;">
@@ -720,7 +720,7 @@ function renderPorMedioPago() {
                 <span class="dot" style="background:${mp.color};"></span>
                 <span style="font-size:13px; font-weight:600; color:var(--text);">${mp.nombre}</span>
             </div>
-            <span style="font-size:14px; font-weight:700; color:var(--text);">$${formatearDinero(monto.toFixed(0))}</span>
+            <span style="font-size:14px; font-weight:700; color:var(--text);">$${formatearDinero(monto)}</span>
         </div>`;
     }
     
@@ -837,12 +837,12 @@ function renderHistorialGlobal(data) {
                 let baseCuota = m.monto;
                 if (m.cuotas?.esCuota) {
                     baseCuota = m.monto / m.cuotas.total;
-                    detallesHtml += `<b>Cuota ${m.cuotas.actual}/${m.cuotas.total}:</b> $${formatearDinero(baseCuota.toFixed(0))}<br>`;
+                    detallesHtml += `<b>Cuota ${m.cuotas.actual}/${m.cuotas.total}:</b> $${formatearDinero(baseCuota)}<br>`;
                 }
                 
                 if (m.compartido?.esCompartido) {
                     detallesHtml += `<b>Compartido con:</b> ${m.compartido.persona} (${m.compartido.porcentaje}%)<br>`;
-                    detallesHtml += `<b>Tu parte:</b> $${formatearDinero(impactoReal.toFixed(0))}`;
+                    detallesHtml += `<b>Tu parte:</b> $${formatearDinero(impactoReal)}`;
                 }
                 detallesHtml += `</div>`;
             }
@@ -860,7 +860,7 @@ function renderHistorialGlobal(data) {
                 </div>
                 <div style="display:flex; align-items:center; gap:15px; flex-shrink:0; padding-left:10px;">
                     <div style="font-weight:700; font-size:16px; color:${colorMonto}; text-align:right;">
-                        ${signo}$${formatearDinero(impactoReal.toFixed(0))}
+                        ${signo}$${formatearDinero(impactoReal)}
                     </div>
                     <button class="ui-icon-btn" onclick="eliminarMovimiento('${m.id}')" title="Eliminar Movimiento">
                         <i data-lucide="trash-2" class="icon-sm" style="color:var(--text3); opacity: 0.6;"></i>
@@ -885,7 +885,7 @@ function renderHistorialGlobal(data) {
 
     if (document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
     if (document.getElementById('h-in')) document.getElementById('h-in').innerText = '$' + formatearDinero(totalIn);
-    if (document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut.toFixed(0));
+    if (document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut);
     if (document.getElementById('h-aho')) document.getElementById('h-aho').innerText = '$' + formatearDinero(totalAho);
 }
 
@@ -950,7 +950,7 @@ function guardarDestino() {
     const id = document.getElementById('dest-id').value; 
     const grupo = document.getElementById('dest-grupo').value; 
     const nombre = document.getElementById('dest-nombre').value.trim(); 
-    const presupuesto = parseFloat(document.getElementById('dest-presupuesto').value.replace(/\D/g, '')) || 0; 
+    const presupuesto = parseFloat(document.getElementById('dest-presupuesto').value.replace(/\./g, '').replace(',', '.')) || 0; 
     const activo = document.getElementById('dest-activo').checked;
     
     if (!nombre) return;
@@ -1168,17 +1168,28 @@ function togglePanel(panelId) {
     panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; 
 }
 
+// CAPTURA ESTÉTICA DE DECIMALES Y PUNTOS DE MILES
 function fmtI(input) { 
-    let val = input.value.replace(/\D/g, ''); 
+    let val = input.value.replace(/[^0-9,]/g, '');
     if (val === '') { 
         input.value = ''; 
         return; 
-    } 
-    input.value = new Intl.NumberFormat('es-AR').format(val); 
+    }
+    let partes = val.split(',');
+    let entero = partes[0].replace(/\D/g, '');
+    if (entero !== '') {
+        entero = new Intl.NumberFormat('es-AR').format(parseInt(entero, 10));
+    }
+    if (partes.length > 1) {
+        input.value = entero + ',' + partes[1].substring(0, 2);
+    } else {
+        input.value = entero;
+    }
 }
 
+// VISUALIZACIÓN DE DECIMALES (REDONDEO SOLO VISUAL)
 function formatearDinero(val) { 
-    return new Intl.NumberFormat('es-AR').format(val); 
+    return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(val); 
 }
 
 function formatearFecha(dateStr) { 
@@ -1376,12 +1387,12 @@ window.guardarAhorro = function() {
     const tipo = document.getElementById('ahorro-tipo').value; 
     const origenId = document.getElementById('ahorro-origen').value; 
     const destinoId = document.getElementById('ahorro-destino').value;
-    const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\D/g, '')); 
+    const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\./g, '').replace(',', '.')); 
     
     const chkUsd = document.getElementById('chk-usd-ahorro');
     const isUsd = chkUsd ? chkUsd.checked : false;
-    const montoUsd = isUsd ? parseFloat(document.getElementById('ahorro-monto-usd').value.replace(/\D/g, '')) || 0 : null;
-    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('ahorro-cotizacion').value.replace(/\D/g, '')) || null : null;
+    const montoUsd = isUsd ? parseFloat(document.getElementById('ahorro-monto-usd').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
+    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('ahorro-cotizacion').value.replace(/\./g, '').replace(',', '.')) || null : null;
 
     const nota = document.getElementById('ahorro-nota').value.trim(); 
     const fecha = document.getElementById('ahorro-fecha').value || new Date().toISOString().split('T')[0];
@@ -1592,13 +1603,13 @@ window.setTipoPrestamo = function(tipo) {
 }
 
 window.calcularPrestamoInfo = function() {
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, '')); 
+    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\./g, '').replace(',', '.')); 
     const cuotas = parseInt(document.getElementById('pcuotas').value); 
     const infoText = document.getElementById('p-info-cuota');
     const fechaInicio = document.getElementById('pfecha').value;
     
     if (monto && cuotas > 0) {
-        infoText.innerText = `Cuota estimada: $${formatearDinero((monto / cuotas).toFixed(0))}`; 
+        infoText.innerText = `Cuota estimada: $${formatearDinero(monto / cuotas)}`; 
     } else {
         infoText.innerText = '';
     }
@@ -1617,7 +1628,7 @@ window.guardarPrestamo = function() {
     const tipo = document.getElementById('p-btn-medeben').classList.contains('active') ? 'medeben' : 'yodebo';
     const persona = document.getElementById('ppersona').value.trim(); 
     const concepto = document.getElementById('pdesc').value.trim(); 
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\D/g, ''));
+    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\./g, '').replace(',', '.'));
     
     if (!persona || !concepto || isNaN(monto)) return;
     
@@ -1717,7 +1728,6 @@ function renderPrestamos() {
         let tieneYoDebo = false;
 
         prestamosPersona.forEach(p => {
-            // LÓGICA DE FILTRADO REGISTRO POR REGISTRO (Restaurada y Perfecta)
             if (window.filtroPrestamo === 'archivados' && !p.archivado) return;
             if (window.filtroPrestamo !== 'archivados' && p.archivado) return;
             
@@ -1750,7 +1760,7 @@ function renderPrestamos() {
                     <span class="li-desc" style="font-size:13px;">
                         <input type="checkbox" ${chk} onchange="toggleCuota('${p.id}', ${cIndex})"> Cuota ${c.numero}
                     </span>
-                    <span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto.toFixed(0))}</span>
+                    <span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto)}</span>
                 </div>`; 
             });
             
