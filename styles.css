@@ -191,3 +191,134 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
   #resumen-distribucion > div { flex-direction: column; text-align: center; }
   .dona-placeholder { margin: 0 auto 20px auto; }
 }
+
+/* ==========================================
+   RESPONSIVE MÓVIL - SPRINT 1.1 (DENSIDAD VISUAL)
+========================================== */
+@media (max-width: 768px) {
+    /* 1. Reducción de espacios verticales y padding general */
+    .main-content {
+        padding: 65px 10px 80px 10px !important; 
+    }
+    .card {
+        padding: 15px !important;
+        margin-bottom: 12px !important;
+        border-radius: 12px !important;
+    }
+    .page {
+        gap: 12px !important;
+    }
+
+    /* 2. Compactar Tarjetas Ingresos/Gastado/Disponible (.mg) */
+    .mg {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    .met {
+        padding: 10px 5px !important;
+        border-radius: 8px !important;
+        text-align: center !important;
+    }
+    .ml {
+        font-size: 10px !important;
+        margin-bottom: 4px !important;
+        text-align: center !important;
+    }
+    .mv {
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    /* 3. Compactar Regla de Distribución (50/30/20) */
+    .progress-wrap {
+        margin-bottom: 10px !important;
+    }
+    .progress-header {
+        font-size: 11px !important;
+        margin-bottom: 4px !important;
+    }
+    .progress-bar {
+        height: 6px !important;
+    }
+    #resumen-barras > div.ct {
+        margin-bottom: 15px !important;
+    }
+
+    /* 4. Botones de Exportación (PDF/Excel) alineados a la derecha */
+    .header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        padding: 10px 0 15px 0 !important;
+        margin-bottom: 5px !important;
+    }
+    .header h2 {
+        font-size: 20px !important;
+    }
+    .header > button.btn-icon,
+    .header > div[style*="flex-wrap"] {
+        margin-left: auto !important;
+        justify-content: flex-end !important;
+        margin-top: 0 !important;
+    }
+
+    /* 5. Menú Inferior Móvil: Reorganización y limpieza */
+    .sidebar {
+        height: 65px !important;
+        padding: 0 !important;
+        background: var(--bg) !important;
+        border-top: 1px solid var(--border) !important;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.03) !important;
+    }
+    
+    /* Eliminar cualquier forma visual sobrante (fondos activos raros o indicadores flotantes) */
+    .sidebar::before,
+    .sidebar::after,
+    .nav-indicator {
+        display: none !important;
+    }
+
+    .sidebar .nav {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+        height: 100% !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        gap: 0 !important;
+        overflow-x: auto !important; /* Previene roturas si la pantalla es de 320px */
+    }
+    
+    /* Separación precisa entre ícono y texto */
+    .sidebar .nb {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important; 
+        padding: 5px !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        flex: 1 !important;
+        min-width: 50px !important;
+    }
+    
+    /* Asegurar que los íconos se mantengan proporcionados */
+    .sidebar .nb i {
+        display: block !important;
+        margin: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    /* Mostrar textos legibles y centrados */
+    .sidebar .nb span {
+        display: block !important;
+        font-size: 9px !important;
+        line-height: 1.1 !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+    }
+}
