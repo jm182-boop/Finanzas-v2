@@ -322,3 +322,73 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         text-align: center !important;
     }
 }
+
+/* ==========================================
+   CORRECCIONES VISUALES MÓVIL Y UI
+========================================== */
+
+/* 1. ELIMINAR ESPACIO VACÍO SUPERIOR */
+@media (max-width: 768px) {
+    .main-content {
+        padding-top: 15px !important; /* Revierte el exceso de espacio del parche anterior */
+    }
+}
+
+/* 2. CORREGIR FORMA BLANCA DEL TOAST AL FINALIZAR ANIMACIÓN */
+#toast:not(.show) {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: translateY(100px) !important;
+    pointer-events: none !important;
+}
+
+/* 3. ALINEACIÓN Y ALTURA EXACTA DEL BOTÓN "AÑADIR" (CHECKLIST) */
+#chk-nuevo-nombre {
+    height: 45px !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+}
+#chk-nuevo-nombre + button {
+    height: 45px !important;
+    margin-top: 0 !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 4. ENCABEZADOS EN UNA SOLA LÍNEA (RESUMEN E HISTORIAL) */
+@media (max-width: 768px) {
+    .header {
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+        overflow: hidden !important;
+    }
+    /* Contenedor interno del mes/título */
+    .header > div {
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 5px !important;
+        flex-shrink: 1 !important;
+        overflow: hidden !important;
+    }
+    /* Títulos y etiqueta de mes */
+    .header h2, 
+    .header #mlabel {
+        font-size: 15px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+    }
+    /* Botones de PDF/Excel/CSV */
+    .header button, 
+    .header .btn-icon {
+        white-space: nowrap !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        flex-shrink: 0 !important; /* Impide que el botón se aplaste */
+        height: auto !important;
+    }
+}
