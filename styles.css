@@ -452,3 +452,42 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         display: block !important;
     }
 }
+
+/* ==========================================
+   PARCHE VISUAL: TOASTS Y SCROLL OCULTO (MÓVIL)
+========================================== */
+
+@media (max-width: 768px) {
+    /* 1. TOASTS EN UNA SOLA LÍNEA Y CENTRADOS */
+    #toast {
+        white-space: nowrap !important;
+        width: max-content !important;
+        max-width: 90vw !important; /* Margen de seguridad para que no toque los bordes del celular */
+        text-align: center !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        /* Asumiendo que tu toast ya tiene left:50% y transform: translateX(-50%), 
+           width: max-content asegura que crezca simétricamente desde el centro */
+    }
+
+    /* 2. OCULTAR BARRA DE SCROLL VISUAL (ESTILO APP NATIVA) */
+    html, body {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE y Edge antiguo */
+    }
+    
+    html::-webkit-scrollbar, 
+    body::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari, Opera y navegadores móviles */
+    }
+    
+    /* Extender la regla a cualquier contenedor interno que tenga scroll (listas, menús) */
+    *::-webkit-scrollbar {
+        display: none !important;
+    }
+    * {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+}
