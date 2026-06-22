@@ -491,3 +491,49 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         -ms-overflow-style: none !important;
     }
 }
+
+/* ==========================================
+   PARCHE VISUAL: HISTORIAL MÓVIL (FECHAS Y MONTOS GRANDES)
+========================================== */
+
+@media (max-width: 768px) {
+    /* 1. Ganar espacio en la tarjeta general */
+    #lista-historial-global > div {
+        padding: 12px 10px !important;
+    }
+    
+    /* 2. Reducir separación entre icono izquierdo y textos */
+    #lista-historial-global > div > div:first-child {
+        gap: 8px !important;
+    }
+    
+    /* Reducir sutilmente la caja del icono para más espacio */
+    #lista-historial-global > div > div:first-child > div:first-child {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* 3. Reducir separación entre el monto y el icono de eliminar */
+    #lista-historial-global > div > div:last-child {
+        gap: 8px !important;
+        padding-left: 5px !important;
+    }
+    
+    /* 4. Compactar sutilmente el Monto para soportar decimales sin empujar */
+    #lista-historial-global > div > div:last-child > div:first-child {
+        font-size: 14.5px !important;
+        letter-spacing: -0.3px !important;
+    }
+    
+    /* 5. PROHIBIR el salto de línea para la Fecha y Hora (texto raíz) */
+    #lista-historial-global > div > div:first-child > div:last-child > div:last-child {
+        white-space: nowrap !important;
+        font-size: 11px !important;
+        letter-spacing: -0.1px !important;
+    }
+    
+    /* 6. PERMITIR el salto de línea para elementos internos (Notas, Cuotas, etc) */
+    #lista-historial-global > div > div:first-child > div:last-child > div:last-child * {
+        white-space: normal !important;
+    }
+}
