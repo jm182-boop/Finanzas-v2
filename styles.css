@@ -537,3 +537,73 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         white-space: normal !important;
     }
 }
+
+/* ==========================================
+   PARCHE VISUAL: SPRINT FINAL RESPONSIVE
+========================================== */
+
+@media (max-width: 768px) {
+
+    /* 1. PLACEHOLDERS (Selector Exacto Ultra-Específico) */
+    input[placeholder="Total de cuotas (Opcional)"]::-webkit-input-placeholder,
+    input[placeholder="Cuota actual pagada (Opcional)"]::-webkit-input-placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+    input[placeholder="Total de cuotas (Opcional)"]::-moz-placeholder,
+    input[placeholder="Cuota actual pagada (Opcional)"]::-moz-placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+    input[placeholder="Total de cuotas (Opcional)"]::placeholder,
+    input[placeholder="Cuota actual pagada (Opcional)"]::placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+
+    /* 2. REGLA DE DISTRIBUCIÓN: OCULTAR (LÍMITES POR INGRESO) */
+    #page-resumen .card h3 span,
+    #page-resumen .card h3 small,
+    .progress-header span,
+    .progress-header small {
+        display: none !important;
+    }
+
+    /* 3. AHORROS: AJUSTAR ESPACIADO DEL GRÁFICO */
+    #page-ahorros canvas {
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+    }
+    #ahorros-con-billeteras {
+        margin-top: 0 !important;
+    }
+
+    /* 4. HISTORIAL: ALINEACIÓN VERTICAL DE LA LUPA */
+    #h-busqueda {
+        padding-left: 32px !important; /* Protege el texto para que no pise el icono */
+        position: relative !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* El contenedor padre debe ser relativo para que la lupa se posicione bien */
+    .search-container {
+        position: relative !important;
+    }
+
+    /* Centrado vertical matemático de la lupa */
+    #h-busqueda ~ i[data-lucide="search"],
+    #h-busqueda ~ svg.lucide-search,
+    .search-container i,
+    .search-container svg {
+        position: absolute !important;
+        top: 50% !important;
+        left: 10px !important;
+        transform: translateY(-50%) !important;
+        margin-top: 0 !important;
+        pointer-events: none !important;
+    }
+}
