@@ -603,7 +603,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
     /* 2. Apuntamos a la lupa usando la ruta estructural clásica (compatible con 100% de celulares) */
     #page-historial .card div[style*="relative"] i,
     #page-historial .card div[style*="relative"] svg {
-        top: 50% !important;
+        top: 40% !important;
         transform: translateY(-50%) !important;
         margin-top: -1px !important; /* Si aún lo ves desalineado, cambia este valor a -2px o 0 */
         z-index: 10 !important;
