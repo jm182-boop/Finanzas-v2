@@ -607,3 +607,54 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         pointer-events: none !important;
     }
 }
+
+/* ==========================================
+   PARCHE VISUAL: HISTORIAL, AHORROS Y CUOTAS
+========================================== */
+
+@media (max-width: 768px) {
+    
+    /* 1. HISTORIAL: ALINEACIÓN DE LA LUPA Y BUSCADOR */
+    /* Forzamos una altura estricta para que la caja no colapse y el top:50% de la lupa quede centrado */
+    #h-busqueda {
+        height: 45px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. AHORROS: REDUCIR ESPACIOS DEL GRÁFICO */
+    /* Sobrescribir el gap: 30px declarado en línea en el HTML */
+    #ahorros-con-billeteras > div {
+        gap: 10px !important;
+    }
+    
+    /* Eliminar el margen inferior de 20px de la clase y ajustar el canvas */
+    .dona-placeholder, 
+    #page-ahorros canvas {
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* 3. PLACEHOLDERS DE CUOTAS (IDs EXACTOS) */
+    /* Apunta de forma directa y exclusiva a los 3 inputs problemáticos */
+    #gcuotas::-webkit-input-placeholder,
+    #pcuotas::-webkit-input-placeholder,
+    #pcuota-actual::-webkit-input-placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+    #gcuotas::-moz-placeholder,
+    #pcuotas::-moz-placeholder,
+    #pcuota-actual::-moz-placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+    #gcuotas::placeholder,
+    #pcuotas::placeholder,
+    #pcuota-actual::placeholder {
+        font-size: 11.5px !important;
+        letter-spacing: -0.3px !important;
+        white-space: nowrap !important;
+    }
+}
