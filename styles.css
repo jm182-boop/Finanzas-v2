@@ -602,7 +602,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 
     /* Anulamos los porcentajes y fijamos la lupa en píxeles duros */
     #page-historial svg.lucide-search {
-        top: 16px !important; /* Fija la distancia exacta desde arriba */
+        top: 20px !important; /* Fija la distancia exacta desde arriba */
         transform: none !important; /* Anula el 50% del HTML que estaba fallando */
         margin-top: 0 !important;
     }
