@@ -658,3 +658,46 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         white-space: nowrap !important;
     }
 }
+
+/* ==========================================
+   CORRECCIONES DE BUGS VISUALES REPORTADOS
+========================================== */
+
+@media (max-width: 768px) {
+
+    /* 1. LUPA VISIBLE: Traer al frente sobre el fondo del input */
+    div:has(> #h-busqueda) i {
+        z-index: 10 !important;
+        pointer-events: none !important;
+    }
+
+    /* 2. GRÁFICO AHORROS: Anular el margin-bottom residual para centrar */
+    .dona-placeholder,
+    #page-ahorros canvas {
+        margin: 0 auto !important; 
+    }
+    #ahorros-con-billeteras > div {
+        gap: 20px !important; 
+    }
+
+    /* 3. PLACEHOLDERS CUOTAS: Revertir tamaño y apilar en 1 columna */
+    /* Revierte el texto al tamaño original normal */
+    #gcuotas::-webkit-input-placeholder, #pcuotas::-webkit-input-placeholder, #pcuota-actual::-webkit-input-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
+    #gcuotas::-moz-placeholder, #pcuotas::-moz-placeholder, #pcuota-actual::-moz-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
+    #gcuotas::placeholder, #pcuotas::placeholder, #pcuota-actual::placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
+
+    /* Fuerza a que el contenedor de cuotas en Préstamos pase a 1 columna */
+    div:has(> div > #pcuotas) {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+
+    /* 4. TÍTULO REGLA DISTRIBUCIÓN: Alinear icono a la primera línea */
+    #resumen-barras .ct {
+        align-items: flex-start !important;
+        line-height: 1.4 !important;
+    }
+    #resumen-barras .ct i {
+        margin-top: 2px !important; /* Empuja el icono sutilmente para igualarlo al texto */
+    }
+}
