@@ -539,165 +539,49 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 }
 
 /* ==========================================
-   PARCHE VISUAL: SPRINT FINAL RESPONSIVE
+   CORRECCIÓN DEFINITIVA BUGS VISUALES MÓVIL
 ========================================== */
 
 @media (max-width: 768px) {
 
-    /* 1. PLACEHOLDERS (Selector Exacto Ultra-Específico) */
-    input[placeholder="Total de cuotas (Opcional)"]::-webkit-input-placeholder,
-    input[placeholder="Cuota actual pagada (Opcional)"]::-webkit-input-placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
+    /* 1. LUPA VISIBLE: Traer el SVG generado por Lucide al frente */
+    div:has(> #h-busqueda) svg {
+        z-index: 10 !important;
     }
-    input[placeholder="Total de cuotas (Opcional)"]::-moz-placeholder,
-    input[placeholder="Cuota actual pagada (Opcional)"]::-moz-placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
-    }
-    input[placeholder="Total de cuotas (Opcional)"]::placeholder,
-    input[placeholder="Cuota actual pagada (Opcional)"]::placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
-    }
-
-    /* 2. REGLA DE DISTRIBUCIÓN: OCULTAR (LÍMITES POR INGRESO) */
-    #page-resumen .card h3 span,
-    #page-resumen .card h3 small,
-    .progress-header span,
-    .progress-header small {
-        display: none !important;
-    }
-
-    /* 3. AHORROS: AJUSTAR ESPACIADO DEL GRÁFICO */
-    #page-ahorros canvas {
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
-    }
-    #ahorros-con-billeteras {
-        margin-top: 0 !important;
-    }
-
-    /* 4. HISTORIAL: ALINEACIÓN VERTICAL DE LA LUPA */
-    #h-busqueda {
-        padding-left: 32px !important; /* Protege el texto para que no pise el icono */
-        position: relative !important;
-        height: 42px !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* El contenedor padre debe ser relativo para que la lupa se posicione bien */
-    .search-container {
-        position: relative !important;
-    }
-
-    /* Centrado vertical matemático de la lupa */
-    #h-busqueda ~ i[data-lucide="search"],
-    #h-busqueda ~ svg.lucide-search,
-    .search-container i,
-    .search-container svg {
-        position: absolute !important;
-        top: 50% !important;
-        left: 10px !important;
-        transform: translateY(-50%) !important;
-        margin-top: 0 !important;
-        pointer-events: none !important;
-    }
-}
-
-/* ==========================================
-   PARCHE VISUAL: HISTORIAL, AHORROS Y CUOTAS
-========================================== */
-
-@media (max-width: 768px) {
-    
-    /* 1. HISTORIAL: ALINEACIÓN DE LA LUPA Y BUSCADOR */
-    /* Forzamos una altura estricta para que la caja no colapse y el top:50% de la lupa quede centrado */
     #h-busqueda {
         height: 45px !important;
         box-sizing: border-box !important;
     }
 
-    /* 2. AHORROS: REDUCIR ESPACIOS DEL GRÁFICO */
-    /* Sobrescribir el gap: 30px declarado en línea en el HTML */
-    #ahorros-con-billeteras > div {
-        gap: 10px !important;
-    }
-    
-    /* Eliminar el margen inferior de 20px de la clase y ajustar el canvas */
-    .dona-placeholder, 
-    #page-ahorros canvas {
-        margin-top: 5px !important;
-        margin-bottom: 5px !important;
-    }
-
-    /* 3. PLACEHOLDERS DE CUOTAS (IDs EXACTOS) */
-    /* Apunta de forma directa y exclusiva a los 3 inputs problemáticos */
-    #gcuotas::-webkit-input-placeholder,
-    #pcuotas::-webkit-input-placeholder,
-    #pcuota-actual::-webkit-input-placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
-    }
-    #gcuotas::-moz-placeholder,
-    #pcuotas::-moz-placeholder,
-    #pcuota-actual::-moz-placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
-    }
-    #gcuotas::placeholder,
-    #pcuotas::placeholder,
-    #pcuota-actual::placeholder {
-        font-size: 11.5px !important;
-        letter-spacing: -0.3px !important;
-        white-space: nowrap !important;
-    }
-}
-
-/* ==========================================
-   CORRECCIONES DE BUGS VISUALES REPORTADOS
-========================================== */
-
-@media (max-width: 768px) {
-
-    /* 1. LUPA VISIBLE: Traer al frente sobre el fondo del input */
-    div:has(> #h-busqueda) i {
-        z-index: 10 !important;
-        pointer-events: none !important;
-    }
-
-    /* 2. GRÁFICO AHORROS: Anular el margin-bottom residual para centrar */
+    /* 2. GRÁFICO AHORROS: Centrado simétrico exacto */
     .dona-placeholder,
     #page-ahorros canvas {
-        margin: 0 auto !important; 
+        margin: 15px auto !important; 
     }
+    /* Separación natural con la lista de billeteras */
     #ahorros-con-billeteras > div {
         gap: 20px !important; 
     }
 
-    /* 3. PLACEHOLDERS CUOTAS: Revertir tamaño y apilar en 1 columna */
-    /* Revierte el texto al tamaño original normal */
-    #gcuotas::-webkit-input-placeholder, #pcuotas::-webkit-input-placeholder, #pcuota-actual::-webkit-input-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
-    #gcuotas::-moz-placeholder, #pcuotas::-moz-placeholder, #pcuota-actual::-moz-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
-    #gcuotas::placeholder, #pcuotas::placeholder, #pcuota-actual::placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: normal !important; }
-
-    /* Fuerza a que el contenedor de cuotas en Préstamos pase a 1 columna */
+    /* 3. PLACEHOLDERS: Restaurar tamaño original y pasar a 1 columna */
+    /* Forzamos 14px para limpiar cualquier rastro de parches anteriores */
+    #gcuotas::-webkit-input-placeholder, #pcuotas::-webkit-input-placeholder, #pcuota-actual::-webkit-input-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    #gcuotas::-moz-placeholder, #pcuotas::-moz-placeholder, #pcuota-actual::-moz-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    #gcuotas::placeholder, #pcuotas::placeholder, #pcuota-actual::placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    
+    /* Convertimos la grilla de préstamos de 2 columnas a 1 para que el texto entre completo */
     div:has(> div > #pcuotas) {
         grid-template-columns: 1fr !important;
         gap: 0 !important;
     }
 
-    /* 4. TÍTULO REGLA DISTRIBUCIÓN: Alinear icono a la primera línea */
+    /* 4. TÍTULO REGLA DISTRIBUCIÓN: Anclar SVG a la primera línea */
     #resumen-barras .ct {
         align-items: flex-start !important;
         line-height: 1.4 !important;
     }
-    #resumen-barras .ct i {
-        margin-top: 2px !important; /* Empuja el icono sutilmente para igualarlo al texto */
+    #resumen-barras .ct svg {
+        margin-top: 2px !important; /* Ajuste óptico a la altura de la letra R */
+        flex-shrink: 0 !important; /* Evita que el icono se deforme */
     }
 }
