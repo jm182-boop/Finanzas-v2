@@ -587,11 +587,12 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 }
 
 /* ==========================================
-   MICRO-AJUSTE ÓPTICO: LUPA DEL HISTORIAL
+   MICRO-AJUSTE ÓPTICO: LUPA DEL HISTORIAL (V2)
 ========================================== */
 
 @media (max-width: 768px) {
     div:has(> #h-busqueda) svg {
-        margin-top: -2px !important; /* Ajuste milimétrico hacia arriba */
+        /* Sobrescribe el estilo en línea del HTML forzando el empuje desde su eje Y */
+        transform: translateY(calc(-50% - 3px)) !important; 
     }
 }
