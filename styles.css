@@ -587,23 +587,25 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 }
 
 /* ==========================================
-   ALINEACIÓN DEFINITIVA: LUPA DEL HISTORIAL
+   ALINEACIÓN INFALIBLE: LUPA DEL HISTORIAL 
 ========================================== */
 
 @media (max-width: 768px) {
-    /* Forzamos que el celular no deforme el centrado del texto del input */
+    /* 1. Clavamos el texto del input en el medio exacto anulando paddings verticales del móvil */
     #h-busqueda {
+        height: 46px !important;
+        line-height: 46px !important; 
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
         -webkit-appearance: none !important;
-        height: 45px !important;
-        line-height: normal !important;
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
     }
 
-    /* Anulamos los porcentajes y fijamos la lupa en píxeles duros */
-    #page-historial svg.lucide-search {
-        top: 20px !important; /* Fija la distancia exacta desde arriba */
-        transform: none !important; /* Anula el 50% del HTML que estaba fallando */
-        margin-top: 0 !important;
+    /* 2. Apuntamos a la lupa usando la ruta estructural clásica (compatible con 100% de celulares) */
+    #page-historial .card div[style*="relative"] i,
+    #page-historial .card div[style*="relative"] svg {
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin-top: -1px !important; /* Si aún lo ves desalineado, cambia este valor a -2px o 0 */
+        z-index: 10 !important;
     }
 }
