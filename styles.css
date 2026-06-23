@@ -609,3 +609,17 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         z-index: 10 !important;
     }
 }
+
+/* ==========================================
+   PRUEBA AISLADA: CENTRADO DE TEXTO EN BUSCADOR
+========================================== */
+
+@media (max-width: 768px) {
+    #h-busqueda {
+        height: 44px !important;
+        line-height: 44px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        -webkit-appearance: none !important; /* Evita estilos nativos de iOS/Android */
+    }
+}
