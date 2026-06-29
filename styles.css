@@ -623,3 +623,11 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
         -webkit-appearance: none !important; /* Evita estilos nativos de iOS/Android */
     }
 }
+
+/* ==========================================
+   PARCHE GLOBAL: ELIMINAR RESALTADO TÁCTIL (ANDROID/IOS)
+========================================== */
+
+* {
+    -webkit-tap-highlight-color: transparent !important;
+}
