@@ -631,3 +631,26 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 * {
     -webkit-tap-highlight-color: transparent !important;
 }
+
+/* ==========================================
+   MODULO CONFIGURACIÓN: SELECTOR DE COLOR MP
+========================================== */
+.color-grid-6 {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    justify-items: center;
+}
+.c-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px solid transparent;
+}
+.c-circle.active {
+    transform: scale(1.15);
+    /* Crea un anillo doble muy estético del color del tema */
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
+}
