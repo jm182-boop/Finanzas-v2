@@ -1528,7 +1528,10 @@ function renderBilleterasUI() {
 }
 
 window.abrirModalNuevaBilletera = function() { 
-    document.getElementById('modal-nueva-billetera').style.display = 'block'; 
+    document.getElementById('modal-nueva-billetera').style.display = 'block';
+    if (typeof initBilleteraColorPicker === 'function') {
+        initBilleteraColorPicker('#f5a623');
+    }
 }
 
 window.verificarNuevaBilletera = function(s) { 
@@ -1854,3 +1857,152 @@ window.toggleCuota = function(pId, cIndex) {
         renderizarTodo(); 
     } 
 }
+
+// ==========================================
+// BARRA CROMÁTICA (COLOR PICKER)
+// ==========================================
+function initColorPicker(canvasId, thumbId, previewId, hiddenId, initialColor) {
+  try {
+    const canvas = document.getElementById(canvasId);
+    const thumb = document.getElementById(thumbId);
+    const preview = document.getElementById(previewId);
+    const hidden = document.getElementById(hiddenId);
+
+    if (!canvas || !thumb || !preview || !hidden) return;
+
+    const ctx = canvas.getContext('2d');
+
+    function drawBar() {
+        const w = canvas.offsetWidth || canvas.parentElement.offsetWidth || 200;
+        canvas.width = w;
+        const h = canvas.height;
+
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0,    '#000000');
+        grad.addColorStop(0.08, '#ff0000');
+        grad.addColorStop(0.22, '#ff8800');
+        grad.addColorStop(0.33, '#ffff00');
+        grad.addColorStop(0.45, '#00ff00');
+        grad.addColorStop(0.55, '#00ffff');
+        grad.addColorStop(0.67, '#0088ff');
+        grad.addColorStop(0.78, '#0000ff');
+        grad.addColorStop(0.88, '#ff00ff');
+        grad.addColorStop(0.94, '#ff0088');
+        grad.addColorStop(1,    '#ffffff');
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Fallback si roundRect no existe en el navegador
+        if (typeof ctx.roundRect === 'function') {
+            const r = h / 2;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, w, h, r);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        } else {
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+        }
+    }
+
+    function colorFromX(x) {
+        try {
+            const w = canvas.width;
+            const px = Math.max(0, Math.min(w - 1, x));
+            const data = ctx.getImageData(px, canvas.height / 2, 1, 1).data;
+            return `rgb(${data[0]},${data[1]},${data[2]})`;
+        } catch (e) {
+            return 'rgb(255,183,77)';
+        }
+    }
+
+    function rgbToHex(rgb) {
+        const m = rgb.match(/\d+/g);
+        if (!m) return '#ffb74d';
+        return '#' + m.map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
+    }
+
+    function hexToRgb(hex) {
+        const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return r ? { r: parseInt(r[1],16), g: parseInt(r[2],16), b: parseInt(r[3],16) } : null;
+    }
+
+    function positionFromColor(hexColor) {
+        try {
+            const w = canvas.width;
+            let bestX = Math.floor(w / 2);
+            let bestDist = Infinity;
+            const target = hexToRgb(hexColor);
+            if (!target) return bestX;
+
+            for (let x = 0; x < w; x += 3) {
+                const data = ctx.getImageData(x, canvas.height / 2, 1, 1).data;
+                const dist = Math.abs(data[0] - target.r) + Math.abs(data[1] - target.g) + Math.abs(data[2] - target.b);
+                if (dist < bestDist) { bestDist = dist; bestX = x; }
+            }
+            return bestX;
+        } catch (e) {
+            return Math.floor(canvas.width / 2);
+        }
+    }
+
+    function setColor(x) {
+        const color = colorFromX(x);
+        const hex = rgbToHex(color);
+        preview.style.background = hex;
+        hidden.value = hex;
+        const pct = (x / canvas.width) * 100;
+        thumb.style.left = pct + '%';
+    }
+
+    function getX(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        return clientX - rect.left;
+    }
+
+    let dragging = false;
+
+    canvas.addEventListener('mousedown', e => { dragging = true; setColor(getX(e)); });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); dragging = true; setColor(getX(e)); }, { passive: false });
+    window.addEventListener('mousemove', e => { if (dragging) setColor(getX(e)); });
+    window.addEventListener('touchmove', e => { if (dragging) { e.preventDefault(); setColor(getX(e)); } }, { passive: false });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    window.addEventListener('touchend', () => { dragging = false; });
+
+    setTimeout(() => {
+        try {
+            drawBar();
+            const initX = positionFromColor(initialColor);
+            setColor(initX);
+        } catch (e) {
+            console.warn('Color picker init error:', e);
+        }
+    }, 50);
+
+    window.addEventListener('resize', () => {
+        try { drawBar(); } catch (e) {}
+    });
+  } catch (err) {
+    console.warn('initColorPicker error:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        initColorPicker('medio-color-bar', 'medio-color-thumb', 'medio-color-preview', 'nuevo-medio-color', '#ffb74d');
+    }, 100);
+});
+
+window.initBilleteraColorPicker = function(color) {
+    color = color || '#f5a623';
+    try {
+        document.getElementById('bill-color-preview').style.background = color;
+        document.getElementById('nueva-bill-color').value = color;
+        setTimeout(() => {
+            initColorPicker('bill-color-bar', 'bill-color-thumb', 'bill-color-preview', 'nueva-bill-color', color);
+        }, 80);
+    } catch (e) {
+        console.warn('initBilleteraColorPicker error:', e);
+    }
+};
