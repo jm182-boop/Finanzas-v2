@@ -441,7 +441,14 @@
                 <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Nombre</label>
                 <input type="text" id="nueva-bill-nombre" class="in" placeholder="Ej: Binance, Nexo..." style="margin-bottom:10px;">
                 <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Color</label>
-                <input type="color" id="nueva-bill-color" class="in" value="#f5a623" style="padding:0; height:48px; border:none; cursor:pointer;">
+                <div class="color-picker-wrap" style="margin-bottom:15px;">
+                  <div class="color-picker-preview" id="bill-color-preview" style="background:#f5a623;"></div>
+                  <div class="color-picker-bar-wrap">
+                    <canvas id="bill-color-bar" class="color-picker-bar" height="28"></canvas>
+                    <div class="color-picker-thumb" id="bill-color-thumb"></div>
+                  </div>
+                </div>
+                <input type="hidden" id="nueva-bill-color" value="#f5a623">
                 <div style="display:flex; gap:10px; margin-top:15px;">
                   <button class="btn" style="background:var(--bg3); color:var(--text);" onclick="cerrarNuevaBilletera()">Cancelar</button>
                   <button class="btn" style="background:var(--accent);" onclick="guardarNuevaBilletera()">Guardar</button>
@@ -629,9 +636,16 @@
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-              <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
-                <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
-                <input type="color" id="nuevo-medio-color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#ffb74d">
+              <div>
+                <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:10px;">
+                <div class="color-picker-wrap">
+                  <div class="color-picker-preview" id="medio-color-preview" style="background:#ffb74d;"></div>
+                  <div class="color-picker-bar-wrap">
+                    <canvas id="medio-color-bar" class="color-picker-bar" height="28"></canvas>
+                    <div class="color-picker-thumb" id="medio-color-thumb"></div>
+                  </div>
+                </div>
+                <input type="hidden" id="nuevo-medio-color" value="#ffb74d">
               </div>
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
             </div>
