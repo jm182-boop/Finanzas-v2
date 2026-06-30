@@ -1,1987 +1,625 @@
-// ==========================================
-// app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y DECIMALES)
-// ==========================================
-
-let EstadoApp = {
-    movimientos: [],
-    billeteras: [],
-    prestamos: [],
-    destinos: [], 
-    presupuestos: { 
-        necesidades: { limite: 0, gastado: 0 }, 
-        deseos: { limite: 0, gastado: 0 } 
-    },
-    configuracion: { 
-        regla: { necesidades: 50, deseos: 30, ahorro: 20 }, 
-        moneda: 'AR', 
-        mediosPago: [], 
-        personasFrecuentes: [], 
-        checklist: [] 
-    },
-    checklistEstado: { 
-        mes: '', 
-        completados: [] 
-    }
-};
-
-window.alertasGeneradas = [];
-
-function guardarEstado() { 
-    localStorage.setItem('finApp_estado', JSON.stringify(EstadoApp)); 
-}
-
-function cargarEstado() {
-    const estadoGuardado = localStorage.getItem('finApp_estado');
-    if (estadoGuardado) {
-        const parsed = JSON.parse(estadoGuardado);
-        EstadoApp = { ...EstadoApp, ...parsed };
-        
-        if (!EstadoApp.destinos) EstadoApp.destinos = [];
-        if (!EstadoApp.configuracion) EstadoApp.configuracion = {};
-        if (!EstadoApp.configuracion.mediosPago) EstadoApp.configuracion.mediosPago = [];
-        if (!EstadoApp.configuracion.personasFrecuentes) EstadoApp.configuracion.personasFrecuentes = [];
-        if (!EstadoApp.configuracion.checklist) EstadoApp.configuracion.checklist = [];
-        if (!EstadoApp.checklistEstado) EstadoApp.checklistEstado = { mes: '', completados: [] };
-    } else {
-        EstadoApp.configuracion.mediosPago = [
-            { id: generarID('mp'), nombre: 'Efectivo', color: '#12e091' },
-            { id: generarID('mp'), nombre: 'Naranja X', color: '#ffb74d' }
-        ];
-        EstadoApp.configuracion.personasFrecuentes = [];
-    }
-}
-
-function generarID(prefijo) { 
-    return prefijo + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7); 
-}
-
-// ==========================================
-// SEMÁFORO UNIVERSAL DE ALERTAS
-// ==========================================
-function getAlertColor(pct, defaultColor) {
-    if (pct >= 100) return 'var(--red)';
-    if (pct >= 90) return '#f97316';
-    if (pct >= 80) return '#eab308';
-    return defaultColor;
-}
-
-function generarAlertaObj(nombre, pct) {
-    let nivel = pct >= 100 ? 'Crítico' : (pct >= 90 ? 'Precaución' : 'Advertencia');
-    let color = pct >= 100 ? 'var(--red)' : (pct >= 90 ? '#f97316' : '#eab308');
-    let icon = pct >= 100 ? 'alert-octagon' : 'alert-triangle';
-    
-    return { 
-        msg: `${nombre} al ${pct.toFixed(0)}%`, 
-        color: color, 
-        icon: icon, 
-        nivel: nivel 
-    };
-}
-
-function renderAlertas() {
-    const contenedor = document.getElementById('alertas-list');
-    if (!contenedor) return;
-    
-    if (window.alertasGeneradas.length === 0) {
-        contenedor.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text3);">
-                <i data-lucide="check-circle" class="icon-sm" style="color:var(--green);"></i>
-                <span>Todo en orden. Sin alertas activas.</span>
-            </div>`;
-        return;
-    }
-    
-    window.alertasGeneradas.sort((a, b) => {
-        let valA = a.nivel === 'Crítico' ? 3 : (a.nivel === 'Precaución' ? 2 : 1);
-        let valB = b.nivel === 'Crítico' ? 3 : (b.nivel === 'Precaución' ? 2 : 1);
-        return valB - valA;
-    });
-    
-    let html = '';
-    window.alertasGeneradas.forEach(a => {
-        html += `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; font-weight:600; color:${a.color};">
-                <i data-lucide="${a.icon}" class="icon-sm"></i>
-                <span>${a.msg}</span>
-            </div>`;
-    });
-    
-    contenedor.innerHTML = html;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ==========================================
-// MOTOR MATEMÁTICO UNIVERSAL
-// ==========================================
-function getImpactoNeto(m) {
-    if (m.tipo !== 'gasto') return m.monto;
-    
-    let base = (m.cuotas && m.cuotas.esCuota && m.cuotas.total > 0) ? (m.monto / m.cuotas.total) : m.monto;
-    
-    if (m.compartido && m.compartido.esCompartido && m.compartido.porcentaje) {
-        return base * (m.compartido.porcentaje / 100);
-    }
-    
-    return base;
-}
-
-// ==========================================
-// INICIALIZACIÓN Y RENDERIZADO GLOBAL
-// ==========================================
-function renderizarTodo() {
-    window.alertasGeneradas = []; 
-    
-    renderDestinosConfig();
-    actualizarSelectsMovimientos();
-    renderMediosPago();
-    actualizarSelectsMediosPago();
-    renderPersonasFrecuentes(); 
-    
-    if (typeof renderPersonasAdmin === 'function') {
-        renderPersonasAdmin();
-    }
-    
-    renderChecklistConfig(); 
-    actualizarSelectsAhorro(); 
-    
-    renderBilleterasUI();
-    renderPrestamos();
-    
-    recalcularMotorFinanciero();
-    calcularRegla503020(); 
-    renderSobresResumen();
-    renderPorMedioPago();
-    renderChecklistResumen(); 
-    renderAlertas(); 
-    
-    if (typeof poblarFiltrosHistorial === 'function') poblarFiltrosHistorial();
-    if (typeof filtrarHistorial === 'function') filtrarHistorial();
-    
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    cargarEstado();
-    
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const hoy = new Date();
-    const mlabel = document.getElementById('mlabel');
-    
-    if (mlabel) {
-        mlabel.innerHTML = `<i data-lucide="layout-dashboard" class="icon-lg" style="margin-right:8px;"></i> ${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
-    }
-
-    const fechaHoyString = hoy.toISOString().split('T')[0];
-    document.querySelectorAll('input[type="date"], .input-fecha').forEach(input => { 
-        if (!input.value) input.value = fechaHoyString; 
-    });
-
-    if (localStorage.getItem('theme') === 'light') {
-        toggleTheme(true);
-    }
-    
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('uemail').innerText = 'usuario@finanzas.com';
-
-    renderizarTodo();
-
-    const slNec = document.getElementById('sl-nec'); 
-    const slDes = document.getElementById('sl-des');
-    
-    if (slNec) slNec.addEventListener('input', updateRegla);
-    if (slDes) slDes.addEventListener('input', updateRegla);
-    
-    if (slNec && slDes && EstadoApp.configuracion.regla) {
-        slNec.value = EstadoApp.configuracion.regla.necesidades || 50;
-        slDes.value = EstadoApp.configuracion.regla.deseos || 30;
-        updateRegla();
-    }
-
-    const btnAgregarMovimiento = document.getElementById('btnagregar');
-    if (btnAgregarMovimiento) {
-        btnAgregarMovimiento.addEventListener('click', guardarMovimiento);
-    }
-});
-
-// ==========================================
-// REGISTRO Y PREVISUALIZACIÓN (MOVIMIENTOS)
-// ==========================================
-window.updatePctLabel = function() {
-    const val = document.getElementById('comp-pct').value;
-    const lbl = document.getElementById('comp-pct-lbl');
-    if (lbl) {
-        lbl.innerText = val + '%';
-    }
-}
-
-window.calcularCuotaInfoGasto = function() {
-    const esGasto = document.getElementById('btg').classList.contains('active');
-    const infoText = document.getElementById('g-info-cuota');
-    
-    if (!infoText) return;
-    
-    if (!esGasto) { 
-        infoText.innerHTML = ''; 
-        return; 
-    }
-    
-    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '').replace(',', '.');
-    const cuotasStr = document.getElementById('gcuotas').value;
-    const pctCompartidoStr = document.getElementById('comp-pct').value;
-    
-    const chkCompartidoEl = document.getElementById('chk-compartido');
-    const isCompartido = chkCompartidoEl ? chkCompartidoEl.checked : false;
-
-    if (montoStr && parseFloat(montoStr) > 0) {
-        let monto = parseFloat(montoStr);
-        let cuotas = parseInt(cuotasStr) > 0 ? parseInt(cuotasStr) : 1;
-        let valorCuota = monto / cuotas;
-        
-        let msg = `Total: $${formatearDinero(monto)}`;
-        
-        if (cuotas > 1) {
-            msg += `<br>Cuotas: ${cuotas} | Valor cuota: $${formatearDinero(valorCuota)}`;
-        }
-        
-        if (isCompartido && pctCompartidoStr) {
-            let pct = parseFloat(pctCompartidoStr);
-            let tuParte = valorCuota * (pct / 100);
-            msg += `<br>Tu parte (${pct}%): $${formatearDinero(tuParte)}`;
-        }
-        
-        infoText.innerHTML = msg;
-    } else {
-        infoText.innerHTML = '';
-    }
-}
-
-window.toggleUsdFields = function() {
-    const chkUsd = document.getElementById('chk-usd');
-    const cajaUsd = document.getElementById('caja-usd');
-    if (cajaUsd) {
-        cajaUsd.style.display = (chkUsd && chkUsd.checked) ? 'grid' : 'none';
-    }
-}
-
-function guardarMovimiento() {
-    const esGasto = document.getElementById('btg').classList.contains('active');
-    const tipo = esGasto ? 'gasto' : 'ingreso';
-    
-    const concepto = document.getElementById('gdesc').value.trim();
-    const montoStr = document.getElementById('gmonto').value.replace(/\./g, '').replace(',', '.');
-    const monto = parseFloat(montoStr);
-    
-    const medioPagoId = esGasto ? document.getElementById('gmedio').value : document.getElementById('imedio').value;
-    const destinoSelect = document.querySelector('select[data-type="destino"]');
-    const destinoId = esGasto && destinoSelect ? destinoSelect.value : null;
-    
-    const inputFecha = document.querySelector('.input-fecha');
-    const fecha = inputFecha && inputFecha.value ? inputFecha.value : new Date().toISOString().split('T')[0];
-    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    
-    const nota = document.getElementById('gnota').value.trim();
-
-    const chkUsd = document.getElementById('chk-usd');
-    const isUsd = chkUsd ? chkUsd.checked : false;
-    const montoUsd = isUsd ? parseFloat(document.getElementById('gusd-monto').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
-    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('gusd-cotizacion').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
-
-    if (!concepto || isNaN(monto) || monto <= 0 || !medioPagoId) { 
-        showToast("Completa los campos obligatorios."); 
-        return; 
-    }
-    
-    if (esGasto && !destinoId) { 
-        showToast("Selecciona un destino presupuestario."); 
-        return; 
-    }
-
-    let cuotasObj = { esCuota: false, total: 1, actual: 1 };
-    let compartidoObj = { esCompartido: false, persona: null, porcentaje: null };
-
-    if (esGasto) {
-        const cuotasTotal = parseInt(document.getElementById('gcuotas').value) || 0;
-        const cuotaActual = parseInt(document.getElementById('gcuota-num').value) || 0;
-        const chkCompartido = document.getElementById('chk-compartido').checked;
-
-        if (cuotasTotal > 0) {
-            cuotasObj = { esCuota: true, total: cuotasTotal, actual: cuotaActual > 0 ? cuotaActual : 1 };
-        }
-        
-        if (chkCompartido) {
-            const nombrePers = document.getElementById('comp-quien').value.trim();
-            compartidoObj = { 
-                esCompartido: true, 
-                persona: nombrePers, 
-                porcentaje: parseFloat(document.getElementById('comp-pct').value) || 50 
-            };
-            
-            if (document.getElementById('comp-guardar').checked && nombrePers) {
-                if (!EstadoApp.configuracion.personasFrecuentes) {
-                    EstadoApp.configuracion.personasFrecuentes = [];
-                }
-                if (!EstadoApp.configuracion.personasFrecuentes.includes(nombrePers)) {
-                    EstadoApp.configuracion.personasFrecuentes.push(nombrePers);
-                }
-            }
-        }
-    }
-
-    EstadoApp.movimientos.unshift({ 
-        id: generarID('mov'), 
-        tipo: tipo, 
-        concepto: concepto, 
-        monto: monto, 
-        fecha: fecha, 
-        hora: hora, 
-        medioPagoId: medioPagoId, 
-        destinoId: destinoId, 
-        cuotas: cuotasObj, 
-        compartido: compartidoObj,
-        nota: nota, 
-        isUsd: isUsd, 
-        montoUsd: montoUsd, 
-        cotizacionUsd: cotizacionUsd
-    });
-
-    guardarEstado(); 
-    limpiarInputs('panel-registro'); 
-    toggleCompartido(); 
-    
-    if (chkUsd) { 
-        chkUsd.checked = false; 
-        toggleUsdFields(); 
-    }
-    
-    document.getElementById('panel-registro').style.display = 'none';
-    renderizarTodo(); 
-    showToast("Movimiento registrado");
-}
-
-window.eliminarMovimiento = function(id) {
-    if (confirm("¿Estás seguro de eliminar este movimiento?")) {
-        EstadoApp.movimientos = EstadoApp.movimientos.filter(m => m.id !== id);
-        guardarEstado(); 
-        renderizarTodo(); 
-        showToast("Movimiento eliminado");
-    }
-}
-
-// ==========================================
-// CALCULOS MATEMÁTICOS Y REGLA 50/30/20
-// ==========================================
-function recalcularMotorFinanciero() {
-    let ingresos = 0;
-    let gastos = 0;
-    
-    EstadoApp.movimientos.forEach(m => {
-        if (m.tipo === 'ingreso') ingresos += m.monto;
-        if (m.tipo === 'gasto') gastos += getImpactoNeto(m);
-    });
-
-    let balance = ingresos - gastos;
-    
-    const elIn = document.getElementById('resumen-in'); 
-    const elOut = document.getElementById('resumen-out'); 
-    const elDisp = document.getElementById('resumen-disp');
-    
-    if (elIn) elIn.innerText = '$' + formatearDinero(ingresos);
-    if (elOut) elOut.innerText = '$' + formatearDinero(gastos);
-    
-    if (elDisp) { 
-        elDisp.innerText = '$' + formatearDinero(balance); 
-        elDisp.className = balance >= 0 ? 'mv ok' : 'mv bad'; 
-    }
-}
-
-function calcularRegla503020() {
-    let gastadoNec = 0;
-    let gastadoDes = 0;
-    let ingresosMes = 0;
-    let ahorradoReal = 0; 
-    
-    const hoy = new Date(); 
-    const mesActual = hoy.getMonth() + 1; 
-    const anioActual = hoy.getFullYear();
-
-    EstadoApp.movimientos.forEach(mov => {
-        if (!mov.fecha) return;
-        const partes = mov.fecha.split('-');
-        if (parseInt(partes[1]) !== mesActual || parseInt(partes[0]) !== anioActual) return;
-
-        if (mov.tipo === 'ingreso') { 
-            ingresosMes += mov.monto; 
-            return; 
-        }
-        
-        if (mov.tipo === 'ahorro' && mov.subtipo === 'aporte') { 
-            ahorradoReal += mov.monto; 
-            return; 
-        }
-        
-        if (mov.tipo === 'gasto') {
-            const dest = EstadoApp.destinos.find(d => d.id === mov.destinoId);
-            if (!dest) return;
-            
-            let impactoReal = getImpactoNeto(mov);
-            if (dest.grupo === 'Necesidades') gastadoNec += impactoReal;
-            if (dest.grupo === 'Deseos') gastadoDes += impactoReal;
-        }
-    });
-
-    let regla = EstadoApp.configuracion.regla || { necesidades: 50, deseos: 30, ahorro: 20 };
-    let limiteNec = ingresosMes * (regla.necesidades / 100);
-    let limiteDes = ingresosMes * (regla.deseos / 100);
-    let limiteAho = ingresosMes * (regla.ahorro / 100);
-
-    const txtNec = document.getElementById('resumen-nec-txt'); 
-    const fillNec = document.getElementById('resumen-nec-fill');
-    
-    if (txtNec && fillNec) {
-        let pctNec = limiteNec > 0 ? (gastadoNec / limiteNec) * 100 : (gastadoNec > 0 ? 100 : 0);
-        let colorNec = getAlertColor(pctNec, 'var(--green)');
-        
-        if (pctNec >= 80) {
-            window.alertasGeneradas.push(generarAlertaObj("Regla Necesidades", pctNec));
-        }
-        
-        txtNec.innerText = '$' + formatearDinero(gastadoNec) + ' / $' + formatearDinero(limiteNec);
-        fillNec.style.background = colorNec;
-        fillNec.style.width = (pctNec > 100 ? 100 : pctNec) + '%';
-        txtNec.style.color = pctNec >= 100 ? 'var(--red)' : '';
-    }
-
-    const txtDes = document.getElementById('resumen-des-txt'); 
-    const fillDes = document.getElementById('resumen-des-fill');
-    
-    if (txtDes && fillDes) {
-        let pctDes = limiteDes > 0 ? (gastadoDes / limiteDes) * 100 : (gastadoDes > 0 ? 100 : 0);
-        let colorDes = getAlertColor(pctDes, 'var(--accent)');
-        
-        if (pctDes >= 80) {
-            window.alertasGeneradas.push(generarAlertaObj("Regla Deseos", pctDes));
-        }
-        
-        txtDes.innerText = '$' + formatearDinero(gastadoDes) + ' / $' + formatearDinero(limiteDes);
-        fillDes.style.background = colorDes;
-        fillDes.style.width = (pctDes > 100 ? 100 : pctDes) + '%';
-        txtDes.style.color = pctDes >= 100 ? 'var(--red)' : '';
-    }
-
-    const txtAho = document.getElementById('resumen-aho-txt'); 
-    const fillAho = document.getElementById('resumen-aho-fill');
-    
-    if (txtAho && fillAho) {
-        let pctAho = limiteAho > 0 ? (ahorradoReal / limiteAho) * 100 : 0;
-        txtAho.innerText = '$' + formatearDinero(ahorradoReal) + ' / $' + formatearDinero(limiteAho);
-        fillAho.style.background = 'var(--green)'; 
-        fillAho.style.width = (pctAho > 100 ? 100 : pctAho) + '%';
-    }
-
-    const metaMesEl = document.getElementById('ahorro-meta-mes');
-    if (metaMesEl) {
-        metaMesEl.innerText = '$' + formatearDinero(limiteAho);
-    }
-}
-
-// ==========================================
-// MÓDULO VISUAL DE SOBRES INDEPENDIENTES
-// ==========================================
-function renderSobresResumen() {
-    const contenedor = document.getElementById('resumen-sobres-lista');
-    if (!contenedor) return;
-
-    const hoy = new Date(); 
-    const mesActual = hoy.getMonth() + 1; 
-    const anioActual = hoy.getFullYear();
-    
-    let activos = EstadoApp.destinos.filter(d => d.activo);
-    if (activos.length === 0) { 
-        contenedor.innerHTML = '<p style="color:var(--text3); font-size:13px; text-align:center;">No hay sobres activos.</p>'; 
-        return; 
-    }
-
-    let html = '';
-    activos.forEach(dest => {
-        let gastado = 0;
-        EstadoApp.movimientos.forEach(m => {
-            if (m.tipo === 'gasto' && m.destinoId === dest.id && m.fecha) {
-                const partes = m.fecha.split('-');
-                if (parseInt(partes[1]) === mesActual && parseInt(partes[0]) === anioActual) {
-                    gastado += getImpactoNeto(m);
-                }
-            }
-        });
-
-        let disponible = dest.presupuesto - gastado;
-        let excedido = gastado > dest.presupuesto ? gastado - dest.presupuesto : 0;
-        let pctConsumido = dest.presupuesto > 0 ? (gastado / dest.presupuesto) * 100 : (gastado > 0 ? 100 : 0);
-        let pctBarra = pctConsumido > 100 ? 100 : pctConsumido;
-        
-        let baseColor = dest.grupo === 'Necesidades' ? 'var(--green)' : 'var(--accent)';
-        let colorBarra = getAlertColor(pctConsumido, baseColor);
-        
-        if (pctConsumido >= 80) {
-            window.alertasGeneradas.push(generarAlertaObj(`Sobre ${dest.nombre}`, pctConsumido));
-        }
-
-        let statusText = excedido > 0 
-            ? `<span style="color:var(--red); font-weight:700;">Excedido: $${formatearDinero(excedido)}</span>` 
-            : `<span style="color:var(--text3);">Disponible: $${formatearDinero(disponible)}</span>`;
-
-        html += `
-        <div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px;">
-                <div>
-                    <div style="font-weight:700; font-size:14px; color:var(--text); margin-bottom:2px;">
-                        ${dest.nombre} 
-                        <span style="font-size:10px; font-weight:500; color:var(--text3); padding:2px 6px; background:var(--bg3); border-radius:4px; margin-left:5px;">${dest.grupo}</span>
-                    </div>
-                    <div style="font-size:12px; color:var(--text2);">
-                        Gastado: $${formatearDinero(gastado)} / Presupuesto: $${formatearDinero(dest.presupuesto)}
-                    </div>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-size:16px; font-weight:800; color:${colorBarra};">${pctConsumido.toFixed(0)}%</div>
-                </div>
-            </div>
-            <div style="width:100%; height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; margin-bottom:8px;">
-                <div style="height:100%; width:${pctBarra}%; background:${colorBarra}; border-radius:3px; transition:width 0.3s ease;"></div>
-            </div>
-            <div style="text-align:right; font-size:12px;">${statusText}</div>
-        </div>`;
-    });
-    
-    contenedor.innerHTML = html;
-}
-
-// ==========================================
-// MÓDULO OBLIGACIONES MENSUALES (CHECKLIST)
-// ==========================================
-window.agregarChecklist = function() {
-    const nombre = document.getElementById('chk-nuevo-nombre').value.trim();
-    if (!nombre) return;
-    
-    EstadoApp.configuracion.checklist.push({ 
-        id: generarID('chk'), 
-        nombre: nombre 
-    });
-    
-    guardarEstado(); 
-    renderizarTodo(); 
-    document.getElementById('chk-nuevo-nombre').value = ''; 
-    showToast("Obligación agregada");
-}
-
-window.eliminarChecklist = function(id) {
-    EstadoApp.configuracion.checklist = EstadoApp.configuracion.checklist.filter(c => c.id !== id);
-    guardarEstado(); 
-    renderizarTodo(); 
-    showToast("Obligación eliminada");
-}
-
-function renderChecklistConfig() {
-    const contenedor = document.getElementById('lista-checklist-admin'); 
-    if (!contenedor) return;
-    
-    let html = '';
-    EstadoApp.configuracion.checklist.forEach(c => {
-        html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
-            <span style="font-size:13px; font-weight:600; color:var(--text);">${c.nombre}</span>
-            <button class="ui-icon-btn" onclick="eliminarChecklist('${c.id}')">
-                <i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i>
-            </button>
-        </div>`;
-    });
-    
-    contenedor.innerHTML = html || '<p style="color:var(--text3); font-size:13px; text-align:center;">Sin obligaciones.</p>';
-}
-
-function getSaldosPrestamosPuros() {
-    let agrupados = {};
-    
-    EstadoApp.prestamos.forEach(p => {
-        if (p.archivado) return;
-        
-        let key = p.persona.trim().toLowerCase();
-        if (!agrupados[key]) {
-            agrupados[key] = { nombre: p.persona, neto: 0 };
-        }
-        
-        let saldo = 0; 
-        p.cuotas.forEach(c => { 
-            if (!c.pagada) saldo += c.monto; 
-        });
-        
-        if (p.tipo === 'medeben') {
-            agrupados[key].neto += saldo; 
-        } else {
-            agrupados[key].neto -= saldo;
-        }
-    });
-    
-    return Object.values(agrupados);
-}
-
-function renderChecklistResumen() {
-    const contenedor = document.getElementById('resumen-checklist-lista'); 
-    if (!contenedor) return;
-    
-    const hoy = new Date(); 
-    const mesActualStr = `${hoy.getFullYear()}-${hoy.getMonth() + 1}`;
-    
-    if (!EstadoApp.checklistEstado || EstadoApp.checklistEstado.mes !== mesActualStr) {
-        EstadoApp.checklistEstado = { mes: mesActualStr, completados: [] }; 
-        guardarEstado();
-    }
-
-    let items = [];
-    
-    if (EstadoApp.configuracion.checklist) {
-        EstadoApp.configuracion.checklist.forEach(c => {
-            items.push({ id: c.id, nombre: c.nombre, tipo: 'manual' });
-        });
-    }
-    
-    let saldos = getSaldosPrestamosPuros();
-    saldos.forEach(s => {
-        if (s.neto > 0) {
-            items.push({ id: 'prest_me_' + s.nombre.toLowerCase().replace(/\s+/g, ''), nombre: 'Me debe ' + s.nombre, tipo: 'auto' });
-        }
-        if (s.neto < 0) {
-            items.push({ id: 'prest_yo_' + s.nombre.toLowerCase().replace(/\s+/g, ''), nombre: 'Yo debo a ' + s.nombre, tipo: 'auto' });
-        }
-    });
-
-    if (items.length === 0) { 
-        contenedor.innerHTML = '<p style="color:var(--text3); font-size:13px; text-align:center; margin:15px 0;">Sin obligaciones registradas.</p>'; 
-        return; 
-    }
-
-    let html = '';
-    items.forEach(item => {
-        let isChecked = EstadoApp.checklistEstado.completados.includes(item.id);
-        let checkAttr = isChecked ? 'checked' : '';
-        let labelStyle = isChecked ? 'opacity: 0.5; text-decoration: line-through; color: var(--text3);' : 'color: var(--text);';
-        let autoBadge = item.tipo === 'auto' ? '<span style="font-size:10px; background:var(--bg3); padding:2px 6px; border-radius:4px; margin-left:8px; color:var(--text3);">Auto</span>' : '';
-
-        html += `
-        <div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px dashed var(--border); transition: all 0.2s;">
-            <input type="checkbox" ${checkAttr} onchange="toggleChecklistItem('${item.id}')" style="margin:0 12px 0 0; cursor:pointer;">
-            <span style="font-size:13px; font-weight:600; ${labelStyle}">${item.nombre} ${autoBadge}</span>
-        </div>`;
-    });
-    
-    contenedor.innerHTML = html;
-}
-
-window.toggleChecklistItem = function(id) {
-    let idx = EstadoApp.checklistEstado.completados.indexOf(id);
-    if (idx > -1) {
-        EstadoApp.checklistEstado.completados.splice(idx, 1); 
-    } else {
-        EstadoApp.checklistEstado.completados.push(id);
-    }
-    guardarEstado(); 
-    renderChecklistResumen();
-}
-
-function renderPorMedioPago() {
-    const contenedor = document.getElementById('resumen-medios-pago-lista');
-    if (!contenedor) return;
-    
-    const hoy = new Date(); 
-    const mesActual = hoy.getMonth() + 1; 
-    const anioActual = hoy.getFullYear();
-    let agrupados = {};
-    
-    EstadoApp.movimientos.forEach(m => {
-        if (!m.fecha) return; 
-        const partes = m.fecha.split('-');
-        if (parseInt(partes[1]) !== mesActual || parseInt(partes[0]) !== anioActual) return;
-        
-        let targetId = m.tipo === 'gasto' ? m.medioPagoId : (m.tipo === 'ahorro' && m.subtipo === 'aporte' ? m.origenId : null);
-        if (!targetId) return;
-        
-        if (!agrupados[targetId]) agrupados[targetId] = 0;
-        agrupados[targetId] += getImpactoNeto(m);
-    });
-
-    let html = '';
-    for (const [id, monto] of Object.entries(agrupados)) {
-        let mp = EstadoApp.configuracion.mediosPago.find(m => m.id === id); 
-        if (!mp) continue;
-        
-        html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="dot" style="background:${mp.color};"></span>
-                <span style="font-size:13px; font-weight:600; color:var(--text);">${mp.nombre}</span>
-            </div>
-            <span style="font-size:14px; font-weight:700; color:var(--text);">$${formatearDinero(monto)}</span>
-        </div>`;
-    }
-    
-    contenedor.innerHTML = html || '<p style="color:var(--text3); font-size:13px; text-align:center;">Sin movimientos este mes.</p>';
-}
-
-// ==========================================
-// FILTROS E HISTORIAL CON NOTAS Y USD
-// ==========================================
-window.poblarFiltrosHistorial = function() {
-    const sMes = document.getElementById('h-mes'); 
-    const sAnio = document.getElementById('h-anio');
-    if (!sMes || !sAnio) return;
-    
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    
-    let hMes = '<option value="">Mes: Todos</option>'; 
-    meses.forEach((m, i) => {
-        hMes += `<option value="${i+1}">${m}</option>`;
-    }); 
-    sMes.innerHTML = hMes;
-    
-    let hAnio = '<option value="">Año: Todos</option>';
-    let anios = new Set(EstadoApp.movimientos.map(m => m.fecha ? m.fecha.split('-')[0] : new Date().getFullYear()));
-    
-    [...anios].sort((a,b) => b-a).forEach(a => {
-        hAnio += `<option value="${a}">${a}</option>`;
-    }); 
-    sAnio.innerHTML = hAnio;
-}
-
-window.filtrarHistorial = function() {
-    let texto = document.getElementById('h-busqueda').value.toLowerCase();
-    let mes = document.getElementById('h-mes').value; 
-    let anio = document.getElementById('h-anio').value; 
-    let tipo = document.getElementById('h-tipo').value;
-
-    let filtrados = EstadoApp.movimientos.filter(m => {
-        let coincTexto = m.concepto.toLowerCase().includes(texto) || 
-                         (m.compartido && m.compartido.persona && m.compartido.persona.toLowerCase().includes(texto)) || 
-                         (m.nota && m.nota.toLowerCase().includes(texto));
-                         
-        let coincMes = true; 
-        let coincAnio = true;
-        
-        if (m.fecha) { 
-            let p = m.fecha.split('-'); 
-            if (mes) coincMes = parseInt(p[1]) === parseInt(mes); 
-            if (anio) coincAnio = parseInt(p[0]) === parseInt(anio); 
-        }
-        
-        let coincTipo = true;
-        if (tipo === 'ingreso') coincTipo = m.tipo === 'ingreso';
-        if (tipo === 'gasto') coincTipo = m.tipo === 'gasto' && (!m.compartido || !m.compartido.esCompartido);
-        if (tipo === 'ahorro') coincTipo = m.tipo === 'ahorro';
-        if (tipo === 'compartido') coincTipo = m.tipo === 'gasto' && m.compartido && m.compartido.esCompartido;
-        
-        return coincTexto && coincMes && coincAnio && coincTipo;
-    });
-    
-    renderHistorialGlobal(filtrados);
-}
-
-function renderHistorialGlobal(data) {
-    const container = document.getElementById('lista-historial-global');
-    if (!container) return;
-
-    if (data.length === 0) {
-        container.innerHTML = `
-        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px; border: 1px dashed var(--text3); background:transparent;">
-            <i data-lucide="inbox" style="width:48px; height:48px; color:var(--text3); margin-bottom:15px; stroke-width:1.5;"></i>
-            <p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">Aún no hay movimientos registrados<br>o que coincidan con estos filtros.</p>
-        </div>`;
-    } else {
-        let html = '';
-        data.forEach(m => {
-            const isGasto = m.tipo === 'gasto';
-            const isAhorro = m.tipo === 'ahorro';
-            
-            let colorIcono = 'var(--green)'; 
-            let colorBg = 'rgba(18, 224, 145, 0.1)'; 
-            let colorMonto = 'var(--green)'; 
-            let signo = '+'; 
-            let iconoLucide = 'arrow-up-right';
-            
-            if (isGasto) { 
-                colorIcono = 'var(--red)'; 
-                colorBg = 'rgba(255, 87, 87, 0.1)'; 
-                colorMonto = 'var(--text)'; 
-                signo = '-'; 
-                iconoLucide = 'arrow-down-right'; 
-            } else if (isAhorro) { 
-                colorIcono = 'var(--accent)'; 
-                colorBg = 'rgba(124, 109, 250, 0.1)'; 
-                colorMonto = 'var(--accent)'; 
-                signo = ''; 
-                iconoLucide = 'piggy-bank'; 
-            }
-            
-            let impactoReal = getImpactoNeto(m);
-            let detallesHtml = `${formatearFecha(m.fecha)} • ${m.hora}`;
-            
-            if (m.nota) {
-                detallesHtml += `<br><span style="font-size:11px; font-style:italic; color:var(--text2); display:inline-block; margin-top:2px;">"${m.nota}"</span>`;
-            }
-            if (m.isUsd && m.montoUsd && m.cotizacionUsd) {
-                detallesHtml += `<br><span style="font-size:11px; color:var(--accent); font-weight:600; display:inline-block; margin-top:2px;">Equivalente: $${formatearDinero(m.montoUsd)} USD (Cotización: $${formatearDinero(m.cotizacionUsd)})</span>`;
-            }
-            
-            if (isGasto && (m.cuotas?.esCuota || m.compartido?.esCompartido)) {
-                detallesHtml += `<br><div style="margin-top:6px; padding:8px 10px; background:var(--bg3); border-radius:6px; font-size:11px; line-height:1.6; color:var(--text2);">`;
-                detallesHtml += `<b>Total compra:</b> $${formatearDinero(m.monto)}<br>`;
-                
-                let baseCuota = m.monto;
-                if (m.cuotas?.esCuota) {
-                    baseCuota = m.monto / m.cuotas.total;
-                    detallesHtml += `<b>Cuota ${m.cuotas.actual}/${m.cuotas.total}:</b> $${formatearDinero(baseCuota)}<br>`;
-                }
-                
-                if (m.compartido?.esCompartido) {
-                    detallesHtml += `<b>Compartido con:</b> ${m.compartido.persona} (${m.compartido.porcentaje}%)<br>`;
-                    detallesHtml += `<b>Tu parte:</b> $${formatearDinero(impactoReal)}`;
-                }
-                detallesHtml += `</div>`;
-            }
-
-            html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--bg2); border-radius:12px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="display:flex; align-items:flex-start; gap:15px; flex:1;">
-                    <div style="width:42px; height:42px; border-radius:10px; background:${colorBg}; color:${colorIcono}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <i data-lucide="${iconoLucide}" class="icon-md"></i>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-weight:600; font-size:14px; color:var(--text); margin-bottom:4px;">${m.concepto}</div>
-                        <div style="font-size:12px; color:var(--text3); line-height:1.4;">${detallesHtml}</div>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:15px; flex-shrink:0; padding-left:10px;">
-                    <div style="font-weight:700; font-size:16px; color:${colorMonto}; text-align:right;">
-                        ${signo}$${formatearDinero(impactoReal)}
-                    </div>
-                    <button class="ui-icon-btn" onclick="eliminarMovimiento('${m.id}')" title="Eliminar Movimiento">
-                        <i data-lucide="trash-2" class="icon-sm" style="color:var(--text3); opacity: 0.6;"></i>
-                    </button>
-                </div>
-            </div>`;
-        });
-        
-        container.innerHTML = html;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-    
-    let totalIn = 0;
-    let totalOut = 0;
-    let totalAho = 0;
-    
-    data.forEach(m => {
-        if (m.tipo === 'ingreso') totalIn += m.monto;
-        if (m.tipo === 'gasto') totalOut += getImpactoNeto(m);
-        if (m.tipo === 'ahorro') totalAho += m.monto;
-    });
-
-    if (document.getElementById('h-count')) document.getElementById('h-count').innerText = data.length;
-    if (document.getElementById('h-in')) document.getElementById('h-in').innerText = '$' + formatearDinero(totalIn);
-    if (document.getElementById('h-out')) document.getElementById('h-out').innerText = '$' + formatearDinero(totalOut);
-    if (document.getElementById('h-aho')) document.getElementById('h-aho').innerText = '$' + formatearDinero(totalAho);
-}
-
-// ==========================================
-// FUNCIONES DE UI, MENÚS Y UTILIDADES
-// ==========================================
-function updateRegla() {
-    const slNec = document.getElementById('sl-nec'); 
-    const slDes = document.getElementById('sl-des');
-    
-    if (!slNec || !slDes) return;
-    
-    let n = parseInt(slNec.value); 
-    let d = parseInt(slDes.value);
-    
-    if (n + d > 100) { 
-        d = 100 - n; 
-        slDes.value = d; 
-    }
-    
-    let a = 100 - (n + d); 
-    
-    document.getElementById('lbl-nec').innerText = `${n}%`; 
-    document.getElementById('lbl-des').innerText = `${d}%`; 
-    document.getElementById('lbl-aho').innerText = `${a}%`;
-    
-    if (document.getElementById('resumen-pct-nec')) { 
-        document.getElementById('resumen-pct-nec').innerText = n; 
-        document.getElementById('resumen-pct-des').innerText = d; 
-        document.getElementById('resumen-pct-aho').innerText = a; 
-    }
-    
-    EstadoApp.configuracion.regla = { necesidades: n, deseos: d, ahorro: a }; 
-    calcularRegla503020(); 
-}
-
-function abrirModalDestino(grupo, id = null) {
-    const modal = document.getElementById('modal-destino'); 
-    document.getElementById('dest-grupo').value = grupo; 
-    document.getElementById('modal-dest-titulo').innerText = id ? `Editar ${grupo}` : `Nuevo: ${grupo}`;
-    
-    if (id) { 
-        const dest = EstadoApp.destinos.find(d => d.id === id); 
-        document.getElementById('dest-id').value = dest.id; 
-        document.getElementById('dest-nombre').value = dest.nombre; 
-        document.getElementById('dest-presupuesto').value = formatearDinero(dest.presupuesto); 
-        document.getElementById('dest-activo').checked = dest.activo; 
-    } else { 
-        document.getElementById('dest-id').value = ''; 
-        document.getElementById('dest-nombre').value = ''; 
-        document.getElementById('dest-presupuesto').value = ''; 
-        document.getElementById('dest-activo').checked = true; 
-    }
-    modal.style.display = 'block';
-}
-
-function cerrarModalDestino() { 
-    document.getElementById('modal-destino').style.display = 'none'; 
-}
-
-function guardarDestino() {
-    const id = document.getElementById('dest-id').value; 
-    const grupo = document.getElementById('dest-grupo').value; 
-    const nombre = document.getElementById('dest-nombre').value.trim(); 
-    const presupuesto = parseFloat(document.getElementById('dest-presupuesto').value.replace(/\./g, '').replace(',', '.')) || 0; 
-    const activo = document.getElementById('dest-activo').checked;
-    
-    if (!nombre) return;
-    
-    if (id) { 
-        let dest = EstadoApp.destinos.find(d => d.id === id); 
-        dest.nombre = nombre; 
-        dest.presupuesto = presupuesto; 
-        dest.activo = activo; 
-    } else { 
-        EstadoApp.destinos.push({ 
-            id: generarID('dest'), 
-            nombre: nombre, 
-            grupo: grupo, 
-            presupuesto: presupuesto, 
-            activo: activo 
-        }); 
-    }
-    
-    guardarEstado(); 
-    renderizarTodo(); 
-    cerrarModalDestino(); 
-    showToast("Destino guardado");
-}
-
-function renderDestinosConfig() {
-    const listNec = document.getElementById('lista-destinos-nec'); 
-    const listDes = document.getElementById('lista-destinos-des');
-    const lblNec = document.getElementById('total-nec-presupuesto'); 
-    const lblDes = document.getElementById('total-des-presupuesto');
-    
-    if (!listNec || !listDes) return;
-    
-    let htmlNec = '';
-    let htmlDes = ''; 
-    let totalNec = 0; 
-    let totalDes = 0;
-    
-    EstadoApp.destinos.forEach(d => {
-        const itemHtml = `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg2); border-radius:8px; border:1px solid var(--border); margin-bottom: 5px; opacity: ${d.activo ? '1' : '0.5'};">
-            <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">${d.nombre}</div>
-                <div style="font-size:11px; color:var(--text3);">$${formatearDinero(d.presupuesto)} / mes</div>
-            </div>
-            <button class="ui-icon-btn" onclick="abrirModalDestino('${d.grupo}', '${d.id}')">
-                <i data-lucide="edit-2" class="icon-sm"></i>
-            </button>
-        </div>`;
-        
-        if (d.grupo === 'Necesidades') { 
-            htmlNec += itemHtml; 
-            totalNec += d.presupuesto; 
-        } else { 
-            htmlDes += itemHtml; 
-            totalDes += d.presupuesto; 
-        }
-    });
-    
-    listNec.innerHTML = htmlNec || '<p style="font-size:12px; color:var(--text3); text-align:center;">Sin destinos</p>';
-    listDes.innerHTML = htmlDes || '<p style="font-size:12px; color:var(--text3); text-align:center;">Sin destinos</p>';
-    lblNec.innerText = `$${formatearDinero(totalNec)}`; 
-    lblDes.innerText = `$${formatearDinero(totalDes)}`;
-}
-
-function actualizarSelectsMovimientos() {
-    const selectsDestino = document.querySelectorAll('select[data-type="destino"]'); 
-    if (selectsDestino.length === 0) return;
-    
-    let opcionesHTML = '<option value="" selected>Seleccionar Destino...</option>'; 
-    let activos = EstadoApp.destinos.filter(d => d.activo);
-    let nec = activos.filter(d => d.grupo === 'Necesidades'); 
-    let des = activos.filter(d => d.grupo === 'Deseos');
-    
-    if (nec.length > 0) { 
-        opcionesHTML += `<optgroup label="Necesidades">`; 
-        nec.forEach(d => opcionesHTML += `<option value="${d.id}">${d.nombre}</option>`); 
-        opcionesHTML += `</optgroup>`; 
-    }
-    
-    if (des.length > 0) { 
-        opcionesHTML += `<optgroup label="Deseos">`; 
-        des.forEach(d => opcionesHTML += `<option value="${d.id}">${d.nombre}</option>`); 
-        opcionesHTML += `</optgroup>`; 
-    }
-    
-    selectsDestino.forEach(select => { 
-        const val = select.value; 
-        select.innerHTML = opcionesHTML; 
-        if (val) select.value = val; 
-    });
-}
-
-function renderPersonasFrecuentes() { 
-    const dl = document.getElementById('lista-personas'); 
-    if (!dl) return; 
-    
-    let html = ''; 
-    if (EstadoApp.configuracion.personasFrecuentes) {
-        EstadoApp.configuracion.personasFrecuentes.forEach(p => { 
-            html += `<option value="${p}">`; 
-        }); 
-    }
-    dl.innerHTML = html; 
-}
-
-window.renderPersonasAdmin = function() {
-    const contenedor = document.getElementById('lista-personas-admin'); 
-    if (!contenedor) return; 
-    
-    let html = '';
-    if (EstadoApp.configuracion.personasFrecuentes && EstadoApp.configuracion.personasFrecuentes.length > 0) { 
-        EstadoApp.configuracion.personasFrecuentes.forEach(p => { 
-            html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
-                <span style="font-size:13px; font-weight:600; color:var(--text);">${p}</span>
-                <button class="ui-icon-btn" onclick="eliminarPersonaFrecuente('${p}')">
-                    <i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i>
-                </button>
-            </div>`; 
-        }); 
-    } else { 
-        html = '<p style="color:var(--text3); font-size:13px; text-align:center;">Sin personas guardadas.</p>'; 
-    }
-    
-    contenedor.innerHTML = html;
-}
-
-window.eliminarPersonaFrecuente = function(nombre) { 
-    EstadoApp.configuracion.personasFrecuentes = EstadoApp.configuracion.personasFrecuentes.filter(p => p !== nombre); 
-    guardarEstado(); 
-    renderizarTodo(); 
-    showToast(`Persona "${nombre}" eliminada.`); 
-}
-
-function agregarMedioPago() { 
-    const nombre = document.getElementById('nuevo-medio-nombre').value.trim(); 
-    const color = document.getElementById('nuevo-medio-color').value; 
-    
-    if (!nombre) return; 
-    
-    EstadoApp.configuracion.mediosPago.push({ id: generarID('mp'), nombre: nombre, color: color }); 
-    document.getElementById('nuevo-medio-nombre').value = ''; 
-    guardarEstado(); 
-    renderizarTodo(); 
-    showToast("Medio de pago añadido"); 
-}
-
-function renderMediosPago() {
-    const lista = document.getElementById('lista-medios-pago'); 
-    if (!lista) return; 
-    
-    let html = '';
-    EstadoApp.configuracion.mediosPago.forEach(mp => { 
-        html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom: 5px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="dot" style="background:${mp.color};"></span>
-                <span style="font-size:13px; font-weight:600; color:var(--text);">${mp.nombre}</span>
-            </div>
-            <button class="ui-icon-btn" onclick="eliminarMedioPago('${mp.id}')">
-                <i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i>
-            </button>
-        </div>`; 
-    });
-    
-    lista.innerHTML = html || '<p style="font-size:12px; color:var(--text3); text-align:center;">Sin medios registrados</p>';
-}
-
-function eliminarMedioPago(id) { 
-    EstadoApp.configuracion.mediosPago = EstadoApp.configuracion.mediosPago.filter(mp => mp.id !== id); 
-    guardarEstado(); 
-    renderizarTodo(); 
-    showToast("Medio de pago eliminado"); 
-}
-
-function actualizarSelectsMediosPago() {
-    const selectGasto = document.getElementById('gmedio'); 
-    const selectIngreso = document.getElementById('imedio'); 
-    let opts = '<option value="" selected>Seleccionar Medio...</option>';
-    
-    EstadoApp.configuracion.mediosPago.forEach(mp => { 
-        opts += `<option value="${mp.id}">${mp.nombre}</option>`; 
-    });
-    
-    if (selectGasto) { 
-        const v = selectGasto.value; 
-        selectGasto.innerHTML = opts; 
-        if (v) selectGasto.value = v; 
-    }
-    
-    if (selectIngreso) { 
-        const v = selectIngreso.value; 
-        selectIngreso.innerHTML = opts; 
-        if (v) selectIngreso.value = v; 
-    }
-}
-
-function logout() { 
-    document.getElementById('app').style.display = 'none'; 
-    document.getElementById('auth-screen').style.display = 'flex'; 
-}
-
-function sp(id, btn) { 
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
-    document.querySelectorAll('.nb').forEach(b => b.classList.remove('active')); 
-    document.getElementById('page-' + id).classList.add('active'); 
-    
-    if (btn) btn.classList.add('active'); 
-    if (typeof lucide !== 'undefined') lucide.createIcons(); 
-}
-
-function togglePanel(panelId) { 
-    const panel = document.getElementById(panelId); 
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; 
-}
-
-// CAPTURA ESTÉTICA DE DECIMALES Y PUNTOS DE MILES
-function fmtI(input) { 
-    let val = input.value.replace(/[^0-9,]/g, '');
-    if (val === '') { 
-        input.value = ''; 
-        return; 
-    }
-    let partes = val.split(',');
-    let entero = partes[0].replace(/\D/g, '');
-    if (entero !== '') {
-        entero = new Intl.NumberFormat('es-AR').format(parseInt(entero, 10));
-    }
-    if (partes.length > 1) {
-        input.value = entero + ',' + partes[1].substring(0, 2);
-    } else {
-        input.value = entero;
-    }
-}
-
-// VISUALIZACIÓN DE DECIMALES (REDONDEO SOLO VISUAL)
-function formatearDinero(val) { 
-    return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(val); 
-}
-
-function formatearFecha(dateStr) { 
-    if (!dateStr) return ''; 
-    const partes = dateStr.split('-'); 
-    return `${partes[2]}/${partes[1]}/${partes[0]}`; 
-}
-
-function limpiarInputs(contenedorId) {
-    const contenedor = document.getElementById(contenedorId); 
-    if (!contenedor) return;
-    
-    contenedor.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => el.value = ''); 
-    contenedor.querySelectorAll('select').forEach(el => el.value = ''); 
-    contenedor.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
-    
-    const fechaHoyString = new Date().toISOString().split('T')[0]; 
-    contenedor.querySelectorAll('input[type="date"], .input-fecha').forEach(el => el.value = fechaHoyString);
-    
-    if (document.getElementById('g-info-cuota')) {
-        document.getElementById('g-info-cuota').innerHTML = '';
-    }
-    
-    const cajaUsd = document.getElementById('caja-usd'); 
-    if (cajaUsd) {
-        cajaUsd.style.display = 'none';
-    }
-    
-    const cajaUsdAhorro = document.getElementById('caja-usd-ahorro'); 
-    if (cajaUsdAhorro) {
-        cajaUsdAhorro.style.display = 'none';
-    }
-
-    const pctRange = document.getElementById('comp-pct');
-    if (pctRange && contenedor.contains(pctRange)) {
-        pctRange.value = 50;
-        const lbl = document.getElementById('comp-pct-lbl');
-        if (lbl) {
-            lbl.innerText = '50%';
-        }
-    }
-}
-
-function showToast(msg) { 
-    const t = document.getElementById('toast'); 
-    t.innerText = msg; 
-    t.classList.add('show'); 
-    setTimeout(() => t.classList.remove('show'), 3000); 
-}
-
-function setTipoMov(tipo) {
-    document.getElementById('btg').classList.remove('active'); 
-    document.getElementById('bti').classList.remove('active');
-    
-    const btnAgregar = document.getElementById('btnagregar'); 
-    const chkCompartido = document.getElementById('chk-compartido'); 
-    const chkUsd = document.getElementById('chk-usd');
-    const chkGuardar = document.getElementById('comp-guardar');
-    
-    limpiarInputs('panel-registro'); 
-    toggleCompartido();
-    
-    if (tipo === 'gasto') { 
-        document.getElementById('btg').classList.add('active'); 
-        document.getElementById('campos-gasto').style.display = 'block'; 
-        document.getElementById('campos-ingreso').style.display = 'none'; 
-        btnAgregar.style.background = 'var(--red)'; 
-        
-        if (chkCompartido) chkCompartido.classList.add('check-rojo'); 
-        if (chkUsd) chkUsd.classList.add('check-rojo'); 
-        if (chkGuardar) chkGuardar.classList.add('check-rojo');
-    } else { 
-        document.getElementById('bti').classList.add('active'); 
-        document.getElementById('campos-gasto').style.display = 'none'; 
-        document.getElementById('campos-ingreso').style.display = 'block'; 
-        btnAgregar.style.background = 'var(--green)'; 
-        
-        if (chkCompartido) chkCompartido.classList.remove('check-rojo'); 
-        if (chkUsd) chkUsd.classList.remove('check-rojo'); 
-        if (chkGuardar) chkGuardar.classList.remove('check-rojo');
-    }
-}
-
-function toggleCompartido() { 
-    const checkEl = document.getElementById('chk-compartido'); 
-    document.getElementById('caja-compartido').style.display = (checkEl && checkEl.checked) ? 'block' : 'none'; 
-    window.calcularCuotaInfoGasto(); 
-}
-
-function toggleTheme(forceLight = false) {
-    const body = document.body; 
-    const isLight = forceLight || body.getAttribute('data-theme') !== 'light';
-    
-    if (isLight) { 
-        body.setAttribute('data-theme', 'light'); 
-        document.getElementById('icon-dark').style.display = 'none'; 
-        document.getElementById('icon-light').style.display = 'inline-block'; 
-        document.getElementById('icon-dark-m').style.display = 'none'; 
-        document.getElementById('icon-light-m').style.display = 'inline-block'; 
-        localStorage.setItem('theme', 'light'); 
-    } else { 
-        body.removeAttribute('data-theme'); 
-        document.getElementById('icon-dark').style.display = 'inline-block'; 
-        document.getElementById('icon-light').style.display = 'none'; 
-        document.getElementById('icon-dark-m').style.display = 'inline-block'; 
-        document.getElementById('icon-light-m').style.display = 'none'; 
-        localStorage.setItem('theme', 'dark'); 
-    }
-}
-
-function togglePwd() { 
-    const pwd = document.getElementById('a-pwd'); 
-    pwd.type = pwd.type === 'password' ? 'text' : 'password'; 
-}
-
-function doAuth() { 
-    document.getElementById('auth-screen').style.display = 'none'; 
-    document.getElementById('app').style.display = 'flex'; 
-}
-
-window.exportarResumenPDF = function() { 
-    showToast("Generando Informe..."); 
-}
-
-window.exportarHistorial = function(formato) { 
-    showToast(`Generando ${formato.toUpperCase()}...`); 
-}
-
-// ==========================================
-// AHORROS
-// ==========================================
-window.actualizarSelectsAhorro = function() {
-    const tipo = document.getElementById('ahorro-tipo'); 
-    const origen = document.getElementById('ahorro-origen'); 
-    const destino = document.getElementById('ahorro-destino');
-    
-    if (!tipo || !origen || !destino) return;
-    
-    const valO = origen.value; 
-    const valD = destino.value;
-    
-    let optsMedios = '<option value="">Seleccionar...</option>'; 
-    EstadoApp.configuracion.mediosPago.forEach(mp => { 
-        optsMedios += `<option value="${mp.id}">${mp.nombre}</option>`; 
-    });
-    
-    let optsBilleteras = '<option value="">Seleccionar...</option>'; 
-    EstadoApp.billeteras.forEach(b => { 
-        optsBilleteras += `<option value="${b.id}">${b.nombre}</option>`; 
-    });
-    
-    if (tipo.value === 'aporte') { 
-        origen.innerHTML = optsMedios; 
-        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>'; 
-    } else if (tipo.value === 'retiro') { 
-        origen.innerHTML = optsBilleteras; 
-        destino.innerHTML = optsMedios; 
-    } else { 
-        origen.innerHTML = optsBilleteras; 
-        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>'; 
-    }
-    
-    if (origen.querySelector(`option[value="${valO}"]`)) origen.value = valO; 
-    if (destino.querySelector(`option[value="${valD}"]`)) destino.value = valD;
-}
-
-window.setAhorroTipo = function() {
-    const tipo = document.getElementById('ahorro-tipo').value; 
-    const lblOrigen = document.getElementById('lbl-origen'); 
-    const lblDestino = document.getElementById('lbl-destino');
-    
-    if (tipo === 'aporte') { 
-        lblOrigen.innerText = 'Origen (Medio de pago)'; 
-        lblDestino.innerText = 'Destino (Billetera Ahorro)'; 
-    } else if (tipo === 'retiro') { 
-        lblOrigen.innerText = 'Origen (Billetera Ahorro)'; 
-        lblDestino.innerText = 'Destino (Medio de pago)'; 
-    } else { 
-        lblOrigen.innerText = 'Origen (Billetera Ahorro)'; 
-        lblDestino.innerText = 'Destino (Billetera Ahorro)'; 
-    }
-    
-    actualizarSelectsAhorro();
-}
-
-window.toggleUsdAhorroFields = function() {
-    const chkUsd = document.getElementById('chk-usd-ahorro');
-    const cajaUsd = document.getElementById('caja-usd-ahorro');
-    if (cajaUsd) {
-        cajaUsd.style.display = (chkUsd && chkUsd.checked) ? 'grid' : 'none';
-    }
-}
-
-window.guardarAhorro = function() {
-    const tipo = document.getElementById('ahorro-tipo').value; 
-    const origenId = document.getElementById('ahorro-origen').value; 
-    const destinoId = document.getElementById('ahorro-destino').value;
-    const monto = parseFloat(document.getElementById('ahorro-monto').value.replace(/\./g, '').replace(',', '.')); 
-    
-    const chkUsd = document.getElementById('chk-usd-ahorro');
-    const isUsd = chkUsd ? chkUsd.checked : false;
-    const montoUsd = isUsd ? parseFloat(document.getElementById('ahorro-monto-usd').value.replace(/\./g, '').replace(',', '.')) || 0 : null;
-    const cotizacionUsd = isUsd ? parseFloat(document.getElementById('ahorro-cotizacion').value.replace(/\./g, '').replace(',', '.')) || null : null;
-
-    const nota = document.getElementById('ahorro-nota').value.trim(); 
-    const fecha = document.getElementById('ahorro-fecha').value || new Date().toISOString().split('T')[0];
-    
-    if (!origenId || !destinoId || isNaN(monto) || monto <= 0) { 
-        showToast("Completa origen, destino y monto válido."); 
-        return; 
-    }
-    
-    if (origenId === destinoId) { 
-        showToast("Origen y destino idénticos."); 
-        return; 
-    }
-    
-    if (tipo === 'aporte') { 
-        let b = EstadoApp.billeteras.find(b => b.id === destinoId); 
-        if (b) {
-            b.saldo = (b.saldo || 0) + monto; 
-        }
-    } else if (tipo === 'retiro') { 
-        let b = EstadoApp.billeteras.find(b => b.id === origenId); 
-        if (b) { 
-            if ((b.saldo || 0) < monto) { 
-                showToast("Saldo insuficiente."); 
-                return; 
-            } 
-            b.saldo -= monto; 
-        } 
-    } else if (tipo === 'transferencia') { 
-        let bO = EstadoApp.billeteras.find(b => b.id === origenId); 
-        let bD = EstadoApp.billeteras.find(b => b.id === destinoId); 
-        if (bO && bD) { 
-            if ((bO.saldo || 0) < monto) { 
-                showToast("Saldo insuficiente."); 
-                return; 
-            } 
-            bO.saldo -= monto; 
-            bD.saldo = (bD.saldo || 0) + monto; 
-        } 
-    }
-    
-    EstadoApp.movimientos.unshift({ 
-        id: generarID('mov'), 
-        tipo: 'ahorro', 
-        subtipo: tipo, 
-        concepto: nota || `Ahorro (${tipo})`, 
-        monto: monto, 
-        nota: nota, 
-        isUsd: isUsd, 
-        montoUsd: montoUsd, 
-        cotizacionUsd: cotizacionUsd,
-        fecha: fecha, 
-        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }), 
-        origenId: origenId, 
-        destinoId: destinoId 
-    });
-    
-    guardarEstado(); 
-    limpiarInputs('page-ahorros'); 
-    
-    if (chkUsd) { 
-        chkUsd.checked = false; 
-        toggleUsdAhorroFields(); 
-    }
-    
-    renderizarTodo(); 
-    showToast("Ahorro guardado.");
-}
-
-function renderBilleterasUI() {
-    const emptyState = document.getElementById('ahorros-empty-billeteras'); 
-    const dataState = document.getElementById('ahorros-con-billeteras');
-    const countBilleteras = document.getElementById('ahorro-billeteras-count'); 
-    const listaUI = document.getElementById('lista-billeteras-ui');
-    
-    if (countBilleteras) {
-        countBilleteras.innerText = EstadoApp.billeteras.length; 
-    }
-    
-    let totalGlobalAhorro = 0;
-    
-    let saldosUsd = {};
-    EstadoApp.movimientos.forEach(m => {
-        if (m.tipo === 'ahorro' && m.isUsd && m.montoUsd) {
-            if (m.subtipo === 'aporte') { 
-                saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; 
-            }
-            if (m.subtipo === 'retiro') { 
-                saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; 
-            }
-            if (m.subtipo === 'transferencia') { 
-                saldosUsd[m.origenId] = (saldosUsd[m.origenId] || 0) - m.montoUsd; 
-                saldosUsd[m.destinoId] = (saldosUsd[m.destinoId] || 0) + m.montoUsd; 
-            }
-        }
-    });
-
-    if (EstadoApp.billeteras.length === 0) { 
-        if (emptyState) emptyState.style.display = 'flex'; 
-        if (dataState) dataState.style.display = 'none'; 
-    } else {
-        if (emptyState) emptyState.style.display = 'none'; 
-        if (dataState) dataState.style.display = 'flex';
-        
-        if (listaUI) {
-            let listaHTML = '';
-            EstadoApp.billeteras.forEach(b => { 
-                totalGlobalAhorro += (b.saldo || 0); 
-                
-                let usdText = saldosUsd[b.id] && saldosUsd[b.id] > 0 
-                    ? `<span style="font-weight:700; font-size:15px; color:var(--accent); margin-left:20px;">$${formatearDinero(saldosUsd[b.id])} USD</span>` 
-                    : '';
-                    
-                listaHTML += `
-                <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span class="dot" style="background:${b.color};"></span>
-                        <span style="font-size:14px; font-weight:600;">${b.nombre}</span>
-                    </div>
-                    <div style="display:flex; align-items:center;">
-                        <span style="font-weight:700; font-size:15px; color:var(--text);">$${formatearDinero(b.saldo || 0)} ARS</span>
-                        ${usdText}
-                    </div>
-                </div>`; 
-            });
-            listaUI.innerHTML = listaHTML;
-        }
-    }
-    
-    if (document.getElementById('ahorro-total')) {
-        document.getElementById('ahorro-total').innerText = '$' + formatearDinero(totalGlobalAhorro);
-    }
-}
-
-window.abrirModalNuevaBilletera = function() { 
-    document.getElementById('modal-nueva-billetera').style.display = 'block';
-    if (typeof initBilleteraColorPicker === 'function') {
-        initBilleteraColorPicker('#f5a623');
-    }
-}
-
-window.verificarNuevaBilletera = function(s) { 
-    if (s.value === 'nueva') { 
-        s.value = ""; 
-        abrirModalNuevaBilletera(); 
-    } 
-}
-
-window.cerrarNuevaBilletera = function() { 
-    document.getElementById('modal-nueva-billetera').style.display = 'none'; 
-    document.getElementById('nueva-bill-nombre').value = ''; 
-}
-
-window.guardarNuevaBilletera = function() { 
-    const nombre = document.getElementById('nueva-bill-nombre').value; 
-    const color = document.getElementById('nueva-bill-color').value; 
-    
-    if (nombre.trim() === '') return; 
-    
-    EstadoApp.billeteras.push({ 
-        id: generarID('bill'), 
-        nombre: nombre, 
-        color: color, 
-        saldo: 0 
-    }); 
-    
-    guardarEstado(); 
-    renderizarTodo(); 
-    cerrarNuevaBilletera(); 
-    showToast("Billetera guardada"); 
-}
-
-// ==========================================
-// PRÉSTAMOS Y DEUDAS
-// ==========================================
-window.filtroPrestamo = 'todos';
-let prestamoAccordionAbierto = null; 
-
-window.filtrarPrestamosUI = function(tipo, btn) {
-    window.filtroPrestamo = tipo;
-    document.querySelectorAll('#p-filtros .pill').forEach(b => b.classList.remove('active'));
-    
-    if (btn) btn.classList.add('active');
-    
-    renderPrestamos();
-}
-
-window.toggleAccordion = function(contentId) {
-    const content = document.getElementById(contentId);
-    if (content.classList.contains('show')) { 
-        content.classList.remove('show'); 
-        prestamoAccordionAbierto = null; 
-    } else { 
-        document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('show')); 
-        content.classList.add('show'); 
-        prestamoAccordionAbierto = contentId; 
-    }
-}
-
-window.setTipoPrestamo = function(tipo) {
-    document.getElementById('p-btn-medeben').classList.remove('active'); 
-    document.getElementById('p-btn-yodebo').classList.remove('active');
-    
-    if (tipo === 'medeben') { 
-        document.getElementById('p-btn-medeben').classList.add('active'); 
-        document.getElementById('btn-submit-prestamo').style.background = 'var(--green)'; 
-    } else { 
-        document.getElementById('p-btn-yodebo').classList.add('active'); 
-        document.getElementById('btn-submit-prestamo').style.background = 'var(--red)'; 
-    }
-}
-
-window.calcularPrestamoInfo = function() {
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\./g, '').replace(',', '.')); 
-    const cuotas = parseInt(document.getElementById('pcuotas').value); 
-    const infoText = document.getElementById('p-info-cuota');
-    const fechaInicio = document.getElementById('pfecha').value;
-    
-    if (monto && cuotas > 0) {
-        infoText.innerText = `Cuota estimada: $${formatearDinero(monto / cuotas)}`; 
-    } else {
-        infoText.innerText = '';
-    }
-    
-    if (fechaInicio && cuotas > 0) {
-        let d = new Date(fechaInicio + 'T12:00:00');
-        d.setMonth(d.getMonth() + cuotas);
-        const fechCompromisoEl = document.getElementById('pfechacompromiso');
-        if (fechCompromisoEl) {
-            fechCompromisoEl.value = d.toISOString().split('T')[0];
-        }
-    }
-}
-
-window.guardarPrestamo = function() {
-    const tipo = document.getElementById('p-btn-medeben').classList.contains('active') ? 'medeben' : 'yodebo';
-    const persona = document.getElementById('ppersona').value.trim(); 
-    const concepto = document.getElementById('pdesc').value.trim(); 
-    const monto = parseFloat(document.getElementById('pmonto').value.replace(/\./g, '').replace(',', '.'));
-    
-    if (!persona || !concepto || isNaN(monto)) return;
-    
-    let cuotasCount = parseInt(document.getElementById('pcuotas').value) || 1; 
-    let cuotas = []; 
-    let cuotaMonto = monto / cuotasCount; 
-    let fechaInicio = document.getElementById('pfecha').value;
-    
-    if (document.getElementById('pcuotas').value && cuotasCount > 0) { 
-        let dInicio = new Date(fechaInicio + 'T12:00:00'); 
-        for (let i = 1; i <= cuotasCount; i++) { 
-            let fVenc = new Date(dInicio); 
-            fVenc.setMonth(fVenc.getMonth() + (i - 1)); 
-            cuotas.push({ 
-                numero: i, 
-                monto: cuotaMonto, 
-                vencimiento: fVenc.toISOString().split('T')[0], 
-                pagada: false 
-            }); 
-        } 
-    } else { 
-        cuotas.push({ 
-            numero: 1, 
-            monto: monto, 
-            vencimiento: fechaInicio, 
-            pagada: false 
-        }); 
-    }
-    
-    EstadoApp.prestamos.push({ 
-        id: generarID('prest'), 
-        tipo: tipo, 
-        persona: persona, 
-        concepto: concepto, 
-        montoTotal: monto, 
-        cuotas: cuotas, 
-        archivado: false 
-    });
-    
-    guardarEstado(); 
-    renderizarTodo(); 
-    limpiarInputs('panel-prestamo'); 
-    document.getElementById('panel-prestamo').style.display = 'none'; 
-    showToast("Préstamo guardado");
-}
-
-window.eliminarPrestamo = function(id) {
-    if (confirm("¿Seguro que deseas eliminar permanentemente este registro?")) {
-        EstadoApp.prestamos = EstadoApp.prestamos.filter(p => p.id !== id);
-        guardarEstado(); 
-        renderizarTodo(); 
-        showToast("Préstamo eliminado");
-    }
-}
-
-window.archivarPrestamo = function(id) {
-    let p = EstadoApp.prestamos.find(p => p.id === id);
-    if (p) { 
-        p.archivado = !p.archivado; 
-        guardarEstado(); 
-        renderizarTodo(); 
-        showToast(p.archivado ? "Préstamo archivado" : "Préstamo restaurado"); 
-    }
-}
-
-function renderPrestamos() {
-    const container = document.getElementById('lista-prestamos-cards'); 
-    if (!container) return;
-    
-    if (EstadoApp.prestamos.length === 0) { 
-        container.innerHTML = `
-        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:200px; border: 1px dashed var(--text3); background:transparent;">
-            <i data-lucide="handshake" style="width:48px; height:48px; color:var(--text3); margin-bottom:15px; stroke-width:1.5;"></i>
-            <p style="color:var(--text3); font-size:14px; font-weight:500; text-align:center;">No tienes deudas registradas.</p>
-        </div>`; 
-        return; 
+/* =========================================
+   VARIABLES GLOBALES (Premium, Gris oscuro en modo claro)
+   ========================================= */
+:root {
+  --bg: #141416;
+  --bg2: #1e1e24;
+  --bg3: #2a2a35;
+  --text: #ffffff;
+  --text2: #a0a0a0;
+  --text3: #666666;
+  --border: #2a2a35;
+  --accent: #7c6dfa;
+  --accent-hover: #9285ff;
+  --red: #ff5757;
+  --red-dark: #cc3333;
+  --green: #12e091;
+  --warning: #ffb74d;
+  --blue: #4da6ff;
+  --font: 'Poppins', sans-serif;
+}
+
+[data-theme="light"] {
+  --bg: #f8f9fa;
+  --bg2: #ffffff;
+  --bg3: #e0e0e0;
+  --text: #2b2b2b;
+  --text2: #555555;
+  --text3: #888888;
+  --border: #d5d5d5;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; filter: invert(1); }
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; padding-right: 40px !important; }
+
+/* =========================================
+   COMPONENTES UI & ICONOGRAFÍA (LUCIDE)
+   ========================================= */
+.lucide { stroke-width: 2; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+.icon-sm { width: 14px; height: 14px; }
+.icon-md { width: 18px; height: 18px; }
+.icon-lg { width: 22px; height: 22px; }
+
+.in { width: 100%; padding: 14px 16px; margin-bottom: 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; outline: none; transition: 0.3s; font-weight: 500; }
+.in:focus { border-color: var(--accent); background: var(--bg2); }
+.in::placeholder { color: var(--text3); font-weight: 400; }
+
+.btn { width: 100%; padding: 14px; height: 51px; border-radius: 10px; border: none; background: var(--accent); color: #ffffff; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; gap: 8px; font-weight: 600; }
+.btn-icon:hover { background: var(--bg2); }
+
+input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 22px; height: 22px; background-color: transparent; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s ease; flex-shrink: 0; }
+input[type="checkbox"]:checked { background-color: var(--green); border-color: var(--green); }
+input[type="checkbox"]:checked::after { content: '✔'; color: #ffffff; font-size: 13px; font-weight: 900; font-family: sans-serif; }
+input[type="checkbox"].check-rojo:checked { background-color: var(--red); border-color: var(--red); }
+input[type="checkbox"].check-rojo:checked::after { color: #ffffff; }
+
+.item-completado { text-decoration: line-through; opacity: 0.4; transition: 0.3s; }
+
+.badge { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;}
+.badge-green { background: var(--green); color: #ffffff; }
+.badge-red { background: var(--red); color: #ffffff; }
+.badge-darkred { background: var(--red-dark); color: #ffffff; }
+.badge-warning { background: var(--warning); color: #141416; }
+.badge-blue { background: var(--blue); color: #141416; }
+.badge-gray { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
+.badge-neutral { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
+
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-red { background: var(--red); }
+.dot-warning { background: var(--warning); }
+.dot-neutral { background: var(--text2); }
+
+.ui-icon-btn { background: transparent; border: none; cursor: pointer; color: var(--text3); display: flex; align-items: center; justify-content: center; padding: 5px; border-radius: 4px; transition: 0.2s; }
+.ui-icon-btn:hover { color: var(--text); background: var(--bg); }
+
+.accordion-content { display: none; margin-top: 15px; flex-direction: column; gap: 10px; opacity: 0; transition: opacity 0.3s ease; }
+.accordion-content.show { display: flex; opacity: 1; }
+.icon-chevron { transition: transform 0.3s ease; }
+.icon-chevron.open { transform: rotate(180deg); }
+
+input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: var(--border); border-radius: 4px; outline: none; margin: 15px 0; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg2); box-shadow: 0 0 0 4px rgba(124, 109, 250, 0.1); transition: 0.2s; }
+.dona-placeholder { width: 140px; height: 140px; border-radius: 50%; border: 18px solid var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text3); font-weight: 600; flex-shrink: 0; margin: 0 auto; }
+.chart-empty { background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 13px; font-weight: 500; border: 1px dashed var(--border); padding: 20px; text-align: center; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.form-panel { display: none; animation: slideDown 0.3s ease; margin-bottom: 30px; border: 1px solid var(--accent) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+.modal-inline { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 10; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: slideDown 0.3s ease; }
+
+/* =========================================
+   ESTRUCTURA DASHBOARD WEB (Escritorio)
+   ========================================= */
+.auth-wrap { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+.auth-box { background: var(--bg2); padding: 40px; border-radius: 20px; width: 100%; max-width: 420px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.auth-box h1 { color: var(--accent); margin-bottom: 5px; font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+.auth-switch { text-align: center; margin-top: 25px; font-size: 13px; color: var(--text2); cursor: pointer; }
+.auth-switch span { color: var(--accent); font-weight: 600; }
+
+.page { display: none; padding-bottom: 40px; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+#app { display: flex; width: 100%; height: 100vh; overflow: hidden; }
+.mobile-header { display: none; }
+
+.sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 25px 20px; flex-shrink: 0; z-index: 100; }
+.sidebar .logo { color: var(--accent); font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; }
+.uemail { font-size: 12px; color: var(--text2); margin-bottom: 40px; font-weight: 500; }
+.nav { display: flex; flex-direction: column; gap: 8px; margin-bottom: auto; }
+.nb { background: transparent; border: none; color: var(--text2); padding: 14px 16px; text-align: left; border-radius: 12px; cursor: pointer; font-size: 14px; transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 14px; }
+.nb:hover { color: var(--text); background: var(--bg); }
+.nb.active { background: var(--accent); color: #fff; }
+
+.main-content { flex: 1; overflow-y: auto; padding: 40px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+.header h2 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px; display:flex; align-items:center; gap:10px; }
+
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
+.ct { font-size: 12px; color: var(--text3); font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1.5px; display:flex; align-items:center; gap:6px; }
+
+.tabs { display: flex; gap: 12px; margin-bottom: 25px; }
+.tb { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.3s; }
+.tb.b-rojo.active { background: var(--red); color: #fff; border-color: var(--red); }
+.tb.b-verde.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+.filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
+.filter-scroll::-webkit-scrollbar { display: none; }
+.pill { padding: 8px 18px; background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+.pill.active { background: var(--bg3); color: var(--text); border-color: var(--accent); }
+
+/* Grillas UI */
+.mg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+.mg-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+.grid-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.mg-ahorro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+
+.met { background: var(--bg2); border: 1px solid var(--border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.met .ml { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; text-align: center; }
+.met .mv { font-size: 26px; font-weight: 800; letter-spacing: -1px; text-align: center; }
+.met.compact { padding: 15px; }
+.met.compact .mv { font-size: 22px; }
+.mv.bad { color: var(--red); }
+.mv.ok { color: var(--green); }
+.mv.blue { color: var(--blue); }
+
+.progress-wrap { margin-bottom: 22px; }
+.progress-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; font-weight: 600; color: var(--text2); }
+.progress-bar { width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+.li { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.li:last-child { border-bottom: none; padding-bottom: 0; }
+.li-desc { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 12px; color: var(--text); }
+.li-monto { font-size: 15px; font-weight: 700; color: var(--text); }
+
+#toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-size: 14px; z-index: 9999; transition: 0.4s; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+#toast.show { bottom: 30px; }
+
+/* =========================================
+   MÓVIL RESPONSIVE REAL
+   ========================================= */
+@media (max-width: 768px) {
+  #app { flex-direction: column !important; }
+  .mobile-header { display: flex !important; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .sidebar > div:not(.nav) { display: none !important; } 
+  .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; padding: 0; background: rgba(30, 30, 36, 0.98); backdrop-filter: blur(15px); border-right: none; border-top: 1px solid var(--border); flex-direction: row; justify-content: center; z-index: 1000; }
+  [data-theme="light"] .sidebar { background: rgba(255, 255, 255, 0.98); }
+  .nav { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; gap: 0; margin: 0; padding: 0 5px; }
+  .nb { flex: 1; padding: 10px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 10px; border-radius: 0; background: transparent !important; color: var(--text3); }
+  .nb .lucide { display: block !important; width: 24px; height: 24px; margin:0; }
+  .nb span { display: block; font-weight: 600; letter-spacing: -0.2px; }
+  .nb.active { color: var(--accent) !important; }
+  .main-content { padding: 15px; padding-bottom: 100px; height: calc(100vh - 75px); overflow-y: auto; }
+  .card { padding: 20px 15px; border-radius: 16px; margin-bottom: 15px; }
+  
+  .mg, .mg-ahorro, .resumen-grid, .ahorros-grid, .prestamos-grid, .cfg-grid-2 { grid-template-columns: 1fr !important; gap: 15px; display: flex; flex-direction: column; }
+  .mg-4 { grid-template-columns: 1fr 1fr !important; gap: 10px; } 
+  .grid-filtros { grid-template-columns: 1fr !important; }
+  
+  #campos-gasto > div, #campos-prestamo-fechas, #grid-billetera-sobre, #grid-ahorro-mov { grid-template-columns: 1fr !important; gap: 0; }
+  .in { margin-bottom: 15px !important; }
+  .header h2 { font-size: 22px; }
+  .met .mv { font-size: 22px; }
+  #resumen-distribucion > div { flex-direction: column; text-align: center; }
+  .dona-placeholder { margin: 0 auto 20px auto; }
+}
+
+/* ==========================================
+   RESPONSIVE MÓVIL - SPRINT 1.1 (DENSIDAD VISUAL)
+========================================== */
+@media (max-width: 768px) {
+    /* 1. Reducción de espacios verticales y padding general */
+    .main-content {
+        padding: 65px 10px 80px 10px !important; 
+    }
+    .card {
+        padding: 15px !important;
+        margin-bottom: 12px !important;
+        border-radius: 12px !important;
+    }
+    .page {
+        gap: 12px !important;
+    }
+
+    /* 2. Compactar Tarjetas Ingresos/Gastado/Disponible (.mg) */
+    .mg {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    .met {
+        padding: 10px 5px !important;
+        border-radius: 8px !important;
+        text-align: center !important;
+    }
+    .ml {
+        font-size: 10px !important;
+        margin-bottom: 4px !important;
+        text-align: center !important;
+    }
+    .mv {
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    /* 3. Compactar Regla de Distribución (50/30/20) */
+    .progress-wrap {
+        margin-bottom: 10px !important;
+    }
+    .progress-header {
+        font-size: 11px !important;
+        margin-bottom: 4px !important;
+    }
+    .progress-bar {
+        height: 6px !important;
+    }
+    #resumen-barras > div.ct {
+        margin-bottom: 15px !important;
+    }
+
+    /* 4. Botones de Exportación (PDF/Excel) alineados a la derecha */
+    .header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        padding: 10px 0 15px 0 !important;
+        margin-bottom: 5px !important;
+    }
+    .header h2 {
+        font-size: 20px !important;
+    }
+    .header > button.btn-icon,
+    .header > div[style*="flex-wrap"] {
+        margin-left: auto !important;
+        justify-content: flex-end !important;
+        margin-top: 0 !important;
+    }
+
+    /* 5. Menú Inferior Móvil: Reorganización y limpieza */
+    .sidebar {
+        height: 65px !important;
+        padding: 0 !important;
+        background: var(--bg) !important;
+        border-top: 1px solid var(--border) !important;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.03) !important;
+    }
+    
+    /* Eliminar cualquier forma visual sobrante (fondos activos raros o indicadores flotantes) */
+    .sidebar::before,
+    .sidebar::after,
+    .nav-indicator {
+        display: none !important;
+    }
+
+    .sidebar .nav {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+        height: 100% !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        gap: 0 !important;
+        overflow-x: auto !important; /* Previene roturas si la pantalla es de 320px */
+    }
+    
+    /* Separación precisa entre ícono y texto */
+    .sidebar .nb {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important; 
+        padding: 5px !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        flex: 1 !important;
+        min-width: 50px !important;
+    }
+    
+    /* Asegurar que los íconos se mantengan proporcionados */
+    .sidebar .nb i {
+        display: block !important;
+        margin: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    /* Mostrar textos legibles y centrados */
+    .sidebar .nb span {
+        display: block !important;
+        font-size: 9px !important;
+        line-height: 1.1 !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+    }
+}
+
+/* ==========================================
+   PARCHE VISUAL RESPONSIVE MÓVIL (SÓLO CSS)
+========================================== */
+
+/* 1. ELIMINAR ESPACIO VACÍO SUPERIOR EN MÓVIL */
+@media (max-width: 768px) {
+    .main-content {
+        padding-top: 15px !important; 
+        margin-top: 0 !important;
+    }
+}
+
+/* 2. ELIMINAR COMPLETAMENTE EL RESIDUO BLANCO DEL TOAST */
+#toast:not(.show) {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    display: none !important;
+}
+
+/* 3. ENCABEZADOS EN UNA SOLA LÍNEA (TÍTULOS Y EXPORTACIONES) */
+@media (max-width: 768px) {
+    .header {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+        overflow: hidden !important;
+    }
+    .header h2, 
+    .header #mlabel {
+        font-size: 15px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+    }
+    .header > div,
+    .header > div[style*="flex-wrap"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        align-items: center !important;
+    }
+    .header button, 
+    .header .btn-icon {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important; 
+        margin: 0 !important;
+    }
+}
+
+/* 4. MÉTRICAS DE AHORRO EN UNA SOLA FILA HORIZONTAL */
+@media (max-width: 768px) {
+    .mg-ahorro {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+        margin-bottom: 15px !important;
+    }
+    .mg-ahorro .met {
+        padding: 8px 4px !important;
+        border-radius: 8px !important;
+        text-align: center !important;
+    }
+    .mg-ahorro .ml {
+        font-size: 9px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .mg-ahorro .mv {
+        font-size: 13px !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* 5. IGUALAR ALTURA EN CAMPO Y BOTÓN (OBLIGACIONES/CHECKLIST) */
+#chk-nuevo-nombre {
+    height: 42px !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+}
+#chk-nuevo-nombre + button {
+    height: 42px !important;
+    margin-top: 0 !important;
+    padding: 0 15px !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 6 Y 7. DISTRIBUCIÓN MENÚ INFERIOR Y PREVENCIÓN DE DESBORDES */
+@media (max-width: 768px) {
+    .sidebar .nav {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        padding: 0 2px !important;
+        box-sizing: border-box !important;
+    }
+    .sidebar .nb {
+        flex: 1 1 0% !important; 
+        min-width: 0 !important; 
+        padding: 5px 2px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .sidebar .nb span {
+        font-size: 9px !important;
+        letter-spacing: -0.2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important; 
+        width: 100% !important;
+        text-align: center !important;
+        display: block !important;
+    }
+}
+
+/* ==========================================
+   PARCHE VISUAL: TOASTS Y SCROLL OCULTO (MÓVIL)
+========================================== */
+
+@media (max-width: 768px) {
+    /* 1. TOASTS EN UNA SOLA LÍNEA Y CENTRADOS */
+    #toast {
+        white-space: nowrap !important;
+        width: max-content !important;
+        max-width: 90vw !important; /* Margen de seguridad para que no toque los bordes del celular */
+        text-align: center !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        /* Asumiendo que tu toast ya tiene left:50% y transform: translateX(-50%), 
+           width: max-content asegura que crezca simétricamente desde el centro */
+    }
+
+    /* 2. OCULTAR BARRA DE SCROLL VISUAL (ESTILO APP NATIVA) */
+    html, body {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE y Edge antiguo */
+    }
+    
+    html::-webkit-scrollbar, 
+    body::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari, Opera y navegadores móviles */
+    }
+    
+    /* Extender la regla a cualquier contenedor interno que tenga scroll (listas, menús) */
+    *::-webkit-scrollbar {
+        display: none !important;
+    }
+    * {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+}
+
+/* ==========================================
+   PARCHE VISUAL: HISTORIAL MÓVIL (FECHAS Y MONTOS GRANDES)
+========================================== */
+
+@media (max-width: 768px) {
+    /* 1. Ganar espacio en la tarjeta general */
+    #lista-historial-global > div {
+        padding: 12px 10px !important;
+    }
+    
+    /* 2. Reducir separación entre icono izquierdo y textos */
+    #lista-historial-global > div > div:first-child {
+        gap: 8px !important;
+    }
+    
+    /* Reducir sutilmente la caja del icono para más espacio */
+    #lista-historial-global > div > div:first-child > div:first-child {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* 3. Reducir separación entre el monto y el icono de eliminar */
+    #lista-historial-global > div > div:last-child {
+        gap: 8px !important;
+        padding-left: 5px !important;
+    }
+    
+    /* 4. Compactar sutilmente el Monto para soportar decimales sin empujar */
+    #lista-historial-global > div > div:last-child > div:first-child {
+        font-size: 14.5px !important;
+        letter-spacing: -0.3px !important;
+    }
+    
+    /* 5. PROHIBIR el salto de línea para la Fecha y Hora (texto raíz) */
+    #lista-historial-global > div > div:first-child > div:last-child > div:last-child {
+        white-space: nowrap !important;
+        font-size: 11px !important;
+        letter-spacing: -0.1px !important;
+    }
+    
+    /* 6. PERMITIR el salto de línea para elementos internos (Notas, Cuotas, etc) */
+    #lista-historial-global > div > div:first-child > div:last-child > div:last-child * {
+        white-space: normal !important;
+    }
+}
+
+/* ==========================================
+   CORRECCIÓN DEFINITIVA BUGS VISUALES MÓVIL
+========================================== */
+
+@media (max-width: 768px) {
+
+    /* 1. LUPA VISIBLE: Traer el SVG generado por Lucide al frente */
+    div:has(> #h-busqueda) svg {
+        z-index: 10 !important;
+    }
+    #h-busqueda {
+        height: 45px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. GRÁFICO AHORROS: Centrado simétrico exacto */
+    .dona-placeholder,
+    #page-ahorros canvas {
+        margin: 15px auto !important; 
+    }
+    /* Separación natural con la lista de billeteras */
+    #ahorros-con-billeteras > div {
+        gap: 20px !important; 
+    }
+
+    /* 3. PLACEHOLDERS: Restaurar tamaño original y pasar a 1 columna */
+    /* Forzamos 14px para limpiar cualquier rastro de parches anteriores */
+    #gcuotas::-webkit-input-placeholder, #pcuotas::-webkit-input-placeholder, #pcuota-actual::-webkit-input-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    #gcuotas::-moz-placeholder, #pcuotas::-moz-placeholder, #pcuota-actual::-moz-placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    #gcuotas::placeholder, #pcuotas::placeholder, #pcuota-actual::placeholder { font-size: 14px !important; letter-spacing: normal !important; white-space: nowrap !important; }
+    
+    /* Convertimos la grilla de préstamos de 2 columnas a 1 para que el texto entre completo */
+    div:has(> div > #pcuotas) {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+
+    /* 4. TÍTULO REGLA DISTRIBUCIÓN: Anclar SVG a la primera línea */
+    #resumen-barras .ct {
+        align-items: flex-start !important;
+        line-height: 1.4 !important;
+    }
+    #resumen-barras .ct svg {
+        margin-top: 2px !important; /* Ajuste óptico a la altura de la letra R */
+        flex-shrink: 0 !important; /* Evita que el icono se deforme */
+    }
+}
+
+/* ==========================================
+   ALINEACIÓN INFALIBLE: LUPA DEL HISTORIAL 
+========================================== */
+
+@media (max-width: 768px) {
+    /* 1. Clavamos el texto del input en el medio exacto anulando paddings verticales del móvil */
+    #h-busqueda {
+        height: 46px !important;
+        line-height: 46px !important; 
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        -webkit-appearance: none !important;
+    }
+
+    /* 2. Apuntamos a la lupa usando la ruta estructural clásica (compatible con 100% de celulares) */
+    #page-historial .card div[style*="relative"] i,
+    #page-historial .card div[style*="relative"] svg {
+        top: 40% !important;
+        transform: translateY(-50%) !important;
+        margin-top: -1px !important; /* Si aún lo ves desalineado, cambia este valor a -2px o 0 */
+        z-index: 10 !important;
+    }
+}
+
+/* ==========================================
+   PRUEBA AISLADA: CENTRADO DE TEXTO EN BUSCADOR
+========================================== */
+
+@media (max-width: 768px) {
+    #h-busqueda {
+        height: 44px !important;
+        line-height: 44px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        -webkit-appearance: none !important; /* Evita estilos nativos de iOS/Android */
     }
-    
-    let agrupados = {}; 
-    EstadoApp.prestamos.forEach(p => { 
-        let key = p.persona.trim().toLowerCase(); 
-        if (!agrupados[key]) {
-            agrupados[key] = { nombreDisplay: p.persona, prestamos: [] }; 
-        }
-        agrupados[key].prestamos.push(p); 
-    });
-    
-    let html = '';
-    
-    for (const key in agrupados) {
-        let personaDisplay = agrupados[key].nombreDisplay; 
-        let prestamosPersona = agrupados[key].prestamos; 
-        let net = 0; 
-        let htmlDetalles = ''; 
-        let countValidos = 0;
-        let tieneMeDeben = false; 
-        let tieneYoDebo = false;
-
-        prestamosPersona.forEach(p => {
-            if (window.filtroPrestamo === 'archivados' && !p.archivado) return;
-            if (window.filtroPrestamo !== 'archivados' && p.archivado) return;
-            
-            if (window.filtroPrestamo === 'medeben' && p.tipo !== 'medeben') return;
-            if (window.filtroPrestamo === 'yodebo' && p.tipo !== 'yodebo') return;
-
-            countValidos++;
-
-            let saldoPrestamo = 0; 
-            let pagadas = 0; 
-            let cuotasHtml = '';
-            let isMeDeben = p.tipo === 'medeben';
-            let colorTextoCuota = isMeDeben ? 'var(--green)' : 'var(--red)';
-            
-            if (isMeDeben) tieneMeDeben = true;
-            if (!isMeDeben) tieneYoDebo = true;
-
-            p.cuotas.forEach((c, cIndex) => { 
-                if (c.pagada) {
-                    pagadas++; 
-                } else {
-                    saldoPrestamo += c.monto; 
-                }
-                
-                let chk = c.pagada ? 'checked' : ''; 
-                let line = c.pagada ? 'item-completado' : ''; 
-                
-                cuotasHtml += `
-                <div class="li ${line}" style="padding:8px 0; border-bottom:1px dashed var(--border);">
-                    <span class="li-desc" style="font-size:13px;">
-                        <input type="checkbox" ${chk} onchange="toggleCuota('${p.id}', ${cIndex})"> Cuota ${c.numero}
-                    </span>
-                    <span class="li-monto" style="font-size:13px; color:${colorTextoCuota};">$${formatearDinero(c.monto)}</span>
-                </div>`; 
-            });
-            
-            if (isMeDeben) {
-                net += saldoPrestamo; 
-            } else {
-                net -= saldoPrestamo;
-            }
-            
-            let colorTotal = isMeDeben ? 'var(--green)' : 'var(--red)';
-            let badge = isMeDeben 
-                ? '<span style="background:var(--green); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Me debe</span>' 
-                : '<span style="background:var(--red); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">Yo debo</span>';
-            let archiveIcon = p.archivado ? 'refresh-cw' : 'archive';
-
-            htmlDetalles += `
-            <div style="background:var(--bg); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span style="font-weight:600; font-size:14px; color:var(--text);">${p.concepto} ${badge}</span>
-                    <div style="display:flex; gap:5px;">
-                        <button class="ui-icon-btn" onclick="archivarPrestamo('${p.id}')" title="Archivar/Restaurar">
-                            <i data-lucide="${archiveIcon}" class="icon-sm"></i>
-                        </button>
-                        <button class="ui-icon-btn" onclick="eliminarPrestamo('${p.id}')" title="Eliminar">
-                            <i data-lucide="trash-2" class="icon-sm" style="color:var(--red);"></i>
-                        </button>
-                    </div>
-                </div>
-                <div style="font-size:12px; color:var(--text3); margin-bottom:15px;">
-                    Total: <span style="color:${colorTotal}; font-weight:600;">$${formatearDinero(p.montoTotal)}</span> • Pagadas: ${pagadas}/${p.cuotas.length}
-                </div>
-                ${cuotasHtml}
-            </div>`;
-        });
-        
-        if (countValidos === 0) continue;
-
-        let badgeTipo = '';
-        if (tieneMeDeben) badgeTipo += '<span class="badge badge-green">Me deben</span> ';
-        if (tieneYoDebo) badgeTipo += '<span class="badge badge-red">Yo debo</span>';
-        if (!tieneMeDeben && !tieneYoDebo) badgeTipo = '<span class="badge" style="border:1px solid var(--text3); color:var(--text3);">Saldado</span>';
-
-        let personaId = key.replace(/\s+/g, '');
-        let divClass = "accordion-content"; 
-        if (prestamoAccordionAbierto === 'det-' + personaId) {
-            divClass += " show";
-        }
-        
-        let netColor = 'var(--text3)';
-        if (window.filtroPrestamo === 'todos' || window.filtroPrestamo === 'archivados') {
-             netColor = net > 0 ? 'var(--green)' : (net < 0 ? 'var(--red)' : 'var(--text3)');
-        } else if (window.filtroPrestamo === 'medeben') {
-             netColor = 'var(--green)';
-        } else if (window.filtroPrestamo === 'yodebo') {
-             netColor = 'var(--red)';
-        }
-
-        html += `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
-                <div>
-                    <h3 style="font-size:18px; font-weight:700;">${personaDisplay}</h3>
-                    <div style="display:flex; gap:8px; margin-top:8px;">${badgeTipo}</div>
-                </div>
-                <div style="text-align:right;">
-                    <p style="font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase;">Saldo Pendiente</p>
-                    <p style="font-size:22px; font-weight:800; color:${netColor}; letter-spacing:-1px;">$${formatearDinero(Math.abs(net))}</p>
-                </div>
-            </div>
-            <div style="border-top:1px solid var(--border); padding-top:15px;">
-                <button onclick="toggleAccordion('det-${personaId}')" style="background:transparent; border:none; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer;">
-                    Ver detalles de los registros <i data-lucide="chevron-down" class="icon-sm" style="vertical-align:middle;"></i>
-                </button>
-                <div id="det-${personaId}" class="${divClass}">
-                    ${htmlDetalles}
-                </div>
-            </div>
-        </div>`;
-    }
-    
-    container.innerHTML = html || `<p style="color:var(--text3); font-size:13px; text-align:center;">No hay registros para este filtro.</p>`;
-    
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-window.toggleCuota = function(pId, cIndex) { 
-    let prestamo = EstadoApp.prestamos.find(p => p.id === pId); 
-    if (prestamo) { 
-        prestamo.cuotas[cIndex].pagada = !prestamo.cuotas[cIndex].pagada; 
-        guardarEstado(); 
-        renderizarTodo(); 
-    } 
 }
-
-// ==========================================
-// BARRA CROMÁTICA (COLOR PICKER)
-// ==========================================
-function initColorPicker(canvasId, thumbId, previewId, hiddenId, initialColor) {
-    const canvas = document.getElementById(canvasId);
-    const thumb = document.getElementById(thumbId);
-    const preview = document.getElementById(previewId);
-    const hidden = document.getElementById(hiddenId);
-
-    if (!canvas || !thumb || !preview || !hidden) return;
-
-    const ctx = canvas.getContext('2d');
-
-    function drawBar() {
-        const w = canvas.offsetWidth || canvas.parentElement.offsetWidth || 200;
-        canvas.width = w;
-        const h = canvas.height;
-
-        // Degradado: negro → espectro completo → blanco
-        const grad = ctx.createLinearGradient(0, 0, w, 0);
-        grad.addColorStop(0,    '#000000');
-        grad.addColorStop(0.08, '#ff0000');
-        grad.addColorStop(0.22, '#ff8800');
-        grad.addColorStop(0.33, '#ffff00');
-        grad.addColorStop(0.45, '#00ff00');
-        grad.addColorStop(0.55, '#00ffff');
-        grad.addColorStop(0.67, '#0088ff');
-        grad.addColorStop(0.78, '#0000ff');
-        grad.addColorStop(0.88, '#ff00ff');
-        grad.addColorStop(0.94, '#ff0088');
-        grad.addColorStop(1,    '#ffffff');
-
-        ctx.clearRect(0, 0, w, h);
-        const r = h / 2;
-        ctx.beginPath();
-        ctx.roundRect(0, 0, w, h, r);
-        ctx.fillStyle = grad;
-        ctx.fill();
-    }
-
-    function colorFromX(x) {
-        const w = canvas.width;
-        const px = Math.max(0, Math.min(w - 1, x));
-        const data = ctx.getImageData(px, canvas.height / 2, 1, 1).data;
-        return `rgb(${data[0]},${data[1]},${data[2]})`;
-    }
-
-    function rgbToHex(rgb) {
-        const m = rgb.match(/\d+/g);
-        if (!m) return '#ffffff';
-        return '#' + m.map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
-    }
-
-    function positionFromColor(hexColor) {
-        // Find closest position by scanning the bar
-        const w = canvas.width;
-        let bestX = Math.floor(w / 2);
-        let bestDist = Infinity;
-        const target = hexToRgb(hexColor);
-        if (!target) return bestX;
-
-        for (let x = 0; x < w; x += 3) {
-            const data = ctx.getImageData(x, canvas.height / 2, 1, 1).data;
-            const dist = Math.abs(data[0] - target.r) + Math.abs(data[1] - target.g) + Math.abs(data[2] - target.b);
-            if (dist < bestDist) { bestDist = dist; bestX = x; }
-        }
-        return bestX;
-    }
-
-    function hexToRgb(hex) {
-        const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return r ? { r: parseInt(r[1],16), g: parseInt(r[2],16), b: parseInt(r[3],16) } : null;
-    }
-
-    function setColor(x) {
-        const color = colorFromX(x);
-        const hex = rgbToHex(color);
-        preview.style.background = hex;
-        hidden.value = hex;
-        const pct = (x / canvas.width) * 100;
-        thumb.style.left = pct + '%';
-    }
-
-    function getX(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        return clientX - rect.left;
-    }
-
-    let dragging = false;
-
-    canvas.addEventListener('mousedown', e => { dragging = true; setColor(getX(e)); });
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); dragging = true; setColor(getX(e)); }, { passive: false });
-    window.addEventListener('mousemove', e => { if (dragging) setColor(getX(e)); });
-    window.addEventListener('touchmove', e => { if (dragging) { e.preventDefault(); setColor(getX(e)); } }, { passive: false });
-    window.addEventListener('mouseup', () => { dragging = false; });
-    window.addEventListener('touchend', () => { dragging = false; });
-
-    // Init
-    setTimeout(() => {
-        drawBar();
-        const initX = positionFromColor(initialColor);
-        setColor(initX);
-    }, 50);
-
-    // Redraw on resize
-    window.addEventListener('resize', () => {
-        drawBar();
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    // El picker de Medios de Pago siempre visible
-    setTimeout(() => {
-        initColorPicker('medio-color-bar', 'medio-color-thumb', 'medio-color-preview', 'nuevo-medio-color', '#ffb74d');
-    }, 100);
-});
-
-// Inicializar picker de billetera cuando se abre el modal
-window.initBilleteraColorPicker = function(color) {
-    color = color || '#f5a623';
-    document.getElementById('bill-color-preview').style.background = color;
-    document.getElementById('nueva-bill-color').value = color;
-    setTimeout(() => {
-        initColorPicker('bill-color-bar', 'bill-color-thumb', 'bill-color-preview', 'nueva-bill-color', color);
-    }, 80);
-};
