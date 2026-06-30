@@ -1854,3 +1854,22 @@ window.toggleCuota = function(pId, cIndex) {
         renderizarTodo(); 
     } 
 }
+
+// ==========================================
+// MÓDULO CONFIGURACIÓN: SELECTOR DE COLOR
+// ==========================================
+window.selectColorMp = function(elemento, hex) {
+    // 1. Pasa el color seleccionado al input nativo oculto
+    document.getElementById('nuevo-medio-color').value = hex;
+    
+    // 2. Limpia la clase "active" de todos los círculos
+    document.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
+    
+    // 3. Aplica la clase "active" solo al círculo clickeado
+    elemento.classList.add('active');
+}
+
+window.actualizarColorPersonalizadoMp = function() {
+    // Si el usuario elige un color desde el botón "Personalizado", quitamos la selección de la grilla rápida
+    document.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
+}
