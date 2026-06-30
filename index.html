@@ -629,11 +629,12 @@
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-             <div style="display:flex; flex-direction:column; gap:15px;">
+
+            <div style="display:flex; flex-direction:column; gap:15px;">
                 <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
                 
                 <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:15px;">
-                  <label style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;display:block;text-transform:uppercase;">Color identificador</label>
+                  <label style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;display:block;text-transform:uppercase; text-align:center;">Color identificador</label>
                   
                   <div class="color-grid-6">
                     <!-- Fila 1 -->
@@ -652,15 +653,28 @@
                     <div class="c-circle" style="background:#64748b;" onclick="selectColorMp(this, '#64748b')"></div>
                   </div>
                   
-                  <div style="display:flex; justify-content:center; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
-                    <button class="btn-icon" style="padding:6px 12px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="document.getElementById('nuevo-medio-color').click()">
+                  <div style="display:flex; justify-content:center; margin-top:20px;">
+                    <button id="btn-abrir-personalizado" class="btn-icon" style="padding:6px 12px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="abrirColorPersonalizado()">
                       <i data-lucide="palette" class="icon-sm"></i> Personalizado
                     </button>
-                    <!-- Input original OCULTO. Mantiene intacta la lógica de guardado -->
-                    <input type="color" id="nuevo-medio-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#ffb74d" onchange="actualizarColorPersonalizadoMp()">
                   </div>
+
+                  <!-- NUEVO SELECTOR CROMÁTICO (MINIMALISTA) -->
+                  <div id="ui-color-personalizado" style="display:none; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+                     <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+                        <div id="preview-personalizado" style="width:36px; height:36px; border-radius:50%; background:#ff0000; border:2px solid var(--border); flex-shrink:0;"></div>
+                        <div style="flex:1;">
+                           <input type="range" id="rango-tono" min="0" max="360" value="0" class="chromatic-slider" oninput="actualizarPreviewColor()">
+                        </div>
+                     </div>
+                     <button class="btn" style="height:38px; font-size:13px; background:var(--bg3); color:var(--text);" onclick="aplicarColorPersonalizado()">Aplicar color</button>
+                  </div>
+
+                  <!-- Input original OCULTO. Mantiene intacta la lógica de guardado -->
+                  <input type="color" id="nuevo-medio-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#ffb74d">
                 </div>
               </div>
+
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
             </div>
             
