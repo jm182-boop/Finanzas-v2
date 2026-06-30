@@ -629,9 +629,37 @@
             <div class="card">
               <div class="ct"><i data-lucide="credit-card" class="icon-sm"></i> Medios de Pago</div>
               <div id="lista-medios-pago" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
-              <div style="display:grid;grid-template-columns:1fr 50px;gap:10px;">
+             <div style="display:flex; flex-direction:column; gap:15px;">
                 <input type="text" id="nuevo-medio-nombre" class="in" placeholder="Ej: Efectivo, Naranja X..." style="margin-bottom:0;">
-                <input type="color" id="nuevo-medio-color" class="in" style="padding:0;height:48px;width:100%;cursor:pointer;border:none;border-radius:10px;margin-bottom:0;" value="#ffb74d">
+                
+                <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:15px;">
+                  <label style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;display:block;text-transform:uppercase;">Color identificador</label>
+                  
+                  <div class="color-grid-6">
+                    <!-- Fila 1 -->
+                    <div class="c-circle active" style="background:#ffb74d;" onclick="selectColorMp(this, '#ffb74d')"></div>
+                    <div class="c-circle" style="background:#12e091;" onclick="selectColorMp(this, '#12e091')"></div>
+                    <div class="c-circle" style="background:#4da6ff;" onclick="selectColorMp(this, '#4da6ff')"></div>
+                    <div class="c-circle" style="background:#7c6dfa;" onclick="selectColorMp(this, '#7c6dfa')"></div>
+                    <div class="c-circle" style="background:#ff5757;" onclick="selectColorMp(this, '#ff5757')"></div>
+                    <div class="c-circle" style="background:#f97316;" onclick="selectColorMp(this, '#f97316')"></div>
+                    <!-- Fila 2 -->
+                    <div class="c-circle" style="background:#eab308;" onclick="selectColorMp(this, '#eab308')"></div>
+                    <div class="c-circle" style="background:#14b8a6;" onclick="selectColorMp(this, '#14b8a6')"></div>
+                    <div class="c-circle" style="background:#0ea5e9;" onclick="selectColorMp(this, '#0ea5e9')"></div>
+                    <div class="c-circle" style="background:#d946ef;" onclick="selectColorMp(this, '#d946ef')"></div>
+                    <div class="c-circle" style="background:#f43f5e;" onclick="selectColorMp(this, '#f43f5e')"></div>
+                    <div class="c-circle" style="background:#64748b;" onclick="selectColorMp(this, '#64748b')"></div>
+                  </div>
+                  
+                  <div style="display:flex; justify-content:center; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+                    <button class="btn-icon" style="padding:6px 12px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="document.getElementById('nuevo-medio-color').click()">
+                      <i data-lucide="palette" class="icon-sm"></i> Personalizado
+                    </button>
+                    <!-- Input original OCULTO. Mantiene intacta la lógica de guardado -->
+                    <input type="color" id="nuevo-medio-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#ffb74d" onchange="actualizarColorPersonalizadoMp()">
+                  </div>
+                </div>
               </div>
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
             </div>
