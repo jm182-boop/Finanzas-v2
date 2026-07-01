@@ -1860,15 +1860,17 @@ window.toggleCuota = function(pId, cIndex) {
 // ==========================================
 window.selectColorMp = function(elemento, hex) {
     document.getElementById('nuevo-medio-color').value = hex;
+    
     document.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
     elemento.classList.add('active');
     
-    // Oculta el selector personalizado si estaba abierto y reinicia el botón
+    // Ocultar barra personalizada y mostrar botón
     document.getElementById('ui-color-personalizado').style.display = 'none';
-    let btn = document.getElementById('btn-abrir-personalizado');
-    btn.style.display = 'inline-flex';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--text2)';
+    document.getElementById('btn-abrir-personalizado').style.display = 'inline-flex';
+    
+    // Vaciar el círculo del botón personalizado (indicando que usamos color rápido)
+    document.getElementById('btn-color-preview').style.background = 'transparent';
+    document.getElementById('btn-color-preview').style.borderColor = 'var(--text3)';
 }
 
 window.abrirColorPersonalizado = function() {
@@ -1880,23 +1882,26 @@ window.abrirColorPersonalizado = function() {
 
 window.actualizarPreviewColor = function() {
     let h = document.getElementById('rango-tono').value;
-    let hex = hslToHexMatematico(h, 100, 50);
+    // Forzamos Saturación 75% y Luminosidad 60% para mantener tonos planos
+    let hex = hslToHexMatematico(h, 75, 60);
     document.getElementById('preview-personalizado').style.background = hex;
 }
 
 window.aplicarColorPersonalizado = function() {
     let h = document.getElementById('rango-tono').value;
-    let hex = hslToHexMatematico(h, 100, 50);
+    let hex = hslToHexMatematico(h, 75, 60);
     
-    // Inyecta el color al input oculto nativo (mantiene lógica viva)
+    // Guardar en input oculto
     document.getElementById('nuevo-medio-color').value = hex;
     
-    // Cierra el selector y pinta el botón para dar feedback de selección
+    // Cerrar barra y restaurar botón
     document.getElementById('ui-color-personalizado').style.display = 'none';
-    let btn = document.getElementById('btn-abrir-personalizado');
-    btn.style.display = 'inline-flex';
-    btn.style.borderColor = hex;
-    btn.style.color = hex;
+    document.getElementById('btn-abrir-personalizado').style.display = 'inline-flex';
+    
+    // Pintar el círculo del botón personalizado (el borde y el texto del botón quedan intactos)
+    let previewCirculo = document.getElementById('btn-color-preview');
+    previewCirculo.style.background = hex;
+    previewCirculo.style.borderColor = hex;
 }
 
 // Convertidor matemático universal (Tono a Hexadecimal)
