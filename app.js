@@ -1917,7 +1917,7 @@ function hslToHexMatematico(h, s, l) {
   else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
   else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
   else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
-  else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+  else if (300 <= h && h <= 360) { r = c; g = 0; b = x; } // <-- CORRECCIÓN: ahora incluye el 360 exacto
   
   r = Math.round((r + m) * 255).toString(16);
   g = Math.round((g + m) * 255).toString(16);
