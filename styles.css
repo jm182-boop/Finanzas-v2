@@ -637,7 +637,6 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 ========================================== */
 .color-grid-6 {
     display: grid;
-    /* Fuerza columnas estáticas de 26px para evitar que se expanda en escritorio */
     grid-template-columns: repeat(6, 26px);
     gap: 15px;
     justify-content: center;
@@ -656,13 +655,21 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
     box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
 }
 
-/* Estilos del nuevo slider cromático minimalista */
+/* Estilos del slider cromático mate/plano (Familia visual unificada) */
 .chromatic-slider {
     -webkit-appearance: none;
     width: 100%;
     height: 12px;
     border-radius: 6px;
-    background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+    background: linear-gradient(to right, 
+        #E64D4D 0%,   /* Rojo mate */
+        #E6E64D 17%,  /* Amarillo mate */
+        #4DE64D 33%,  /* Verde mate */
+        #4DE6E6 50%,  /* Cian mate */
+        #4D4DE6 67%,  /* Azul mate */
+        #E64DE6 83%,  /* Magenta mate */
+        #E64D4D 100%  /* Rojo mate */
+    );
     outline: none;
     margin: 0;
 }
