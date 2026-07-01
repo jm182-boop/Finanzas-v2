@@ -637,32 +637,33 @@
                   <label style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;display:block;text-transform:uppercase; text-align:center;">Color identificador</label>
                   
                   <div class="color-grid-6">
-                    <!-- Fila 1 -->
-                    <div class="c-circle active" style="background:#ffb74d;" onclick="selectColorMp(this, '#ffb74d')"></div>
-                    <div class="c-circle" style="background:#12e091;" onclick="selectColorMp(this, '#12e091')"></div>
-                    <div class="c-circle" style="background:#4da6ff;" onclick="selectColorMp(this, '#4da6ff')"></div>
-                    <div class="c-circle" style="background:#7c6dfa;" onclick="selectColorMp(this, '#7c6dfa')"></div>
-                    <div class="c-circle" style="background:#ff5757;" onclick="selectColorMp(this, '#ff5757')"></div>
-                    <div class="c-circle" style="background:#f97316;" onclick="selectColorMp(this, '#f97316')"></div>
-                    <!-- Fila 2 -->
-                    <div class="c-circle" style="background:#eab308;" onclick="selectColorMp(this, '#eab308')"></div>
-                    <div class="c-circle" style="background:#14b8a6;" onclick="selectColorMp(this, '#14b8a6')"></div>
-                    <div class="c-circle" style="background:#0ea5e9;" onclick="selectColorMp(this, '#0ea5e9')"></div>
-                    <div class="c-circle" style="background:#d946ef;" onclick="selectColorMp(this, '#d946ef')"></div>
-                    <div class="c-circle" style="background:#f43f5e;" onclick="selectColorMp(this, '#f43f5e')"></div>
-                    <div class="c-circle" style="background:#64748b;" onclick="selectColorMp(this, '#64748b')"></div>
+                    <!-- Fila 1 (Tonos cálidos y verdes mate) -->
+                    <div class="c-circle active" style="background:#E64D4D;" onclick="selectColorMp(this, '#E64D4D')"></div>
+                    <div class="c-circle" style="background:#E6994D;" onclick="selectColorMp(this, '#E6994D')"></div>
+                    <div class="c-circle" style="background:#E6E64D;" onclick="selectColorMp(this, '#E6E64D')"></div>
+                    <div class="c-circle" style="background:#99E64D;" onclick="selectColorMp(this, '#99E64D')"></div>
+                    <div class="c-circle" style="background:#4DE64D;" onclick="selectColorMp(this, '#4DE64D')"></div>
+                    <div class="c-circle" style="background:#4DE699;" onclick="selectColorMp(this, '#4DE699')"></div>
+                    <!-- Fila 2 (Tonos fríos y magentas mate) -->
+                    <div class="c-circle" style="background:#4DE6E6;" onclick="selectColorMp(this, '#4DE6E6')"></div>
+                    <div class="c-circle" style="background:#4D99E6;" onclick="selectColorMp(this, '#4D99E6')"></div>
+                    <div class="c-circle" style="background:#4D4DE6;" onclick="selectColorMp(this, '#4D4DE6')"></div>
+                    <div class="c-circle" style="background:#994DE6;" onclick="selectColorMp(this, '#994DE6')"></div>
+                    <div class="c-circle" style="background:#E64DE6;" onclick="selectColorMp(this, '#E64DE6')"></div>
+                    <div class="c-circle" style="background:#E64D99;" onclick="selectColorMp(this, '#E64D99')"></div>
                   </div>
                   
                   <div style="display:flex; justify-content:center; margin-top:20px;">
-                    <button id="btn-abrir-personalizado" class="btn-icon" style="padding:6px 12px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="abrirColorPersonalizado()">
-                      <i data-lucide="palette" class="icon-sm"></i> Personalizado
+                    <button id="btn-abrir-personalizado" class="btn-icon" style="padding:6px 14px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="abrirColorPersonalizado()">
+                      <div id="btn-color-preview" style="width:14px; height:14px; border-radius:50%; background:transparent; border:1px solid var(--text3);"></div>
+                      Personalizado
                     </button>
                   </div>
 
                   <!-- NUEVO SELECTOR CROMÁTICO (MINIMALISTA) -->
                   <div id="ui-color-personalizado" style="display:none; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
                      <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-                        <div id="preview-personalizado" style="width:36px; height:36px; border-radius:50%; background:#ff0000; border:2px solid var(--border); flex-shrink:0;"></div>
+                        <div id="preview-personalizado" style="width:36px; height:36px; border-radius:50%; background:#E64D4D; border:2px solid var(--border); flex-shrink:0;"></div>
                         <div style="flex:1;">
                            <input type="range" id="rango-tono" min="0" max="360" value="0" class="chromatic-slider" oninput="actualizarPreviewColor()">
                         </div>
@@ -671,10 +672,11 @@
                   </div>
 
                   <!-- Input original OCULTO. Mantiene intacta la lógica de guardado -->
-                  <input type="color" id="nuevo-medio-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#ffb74d">
+                  <input type="color" id="nuevo-medio-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#E64D4D">
                 </div>
               </div>
 
+              
               <button class="btn" style="margin-top:10px; background:var(--bg3); color:var(--text);" onclick="agregarMedioPago()">+ Añadir Medio</button>
             </div>
             
