@@ -655,41 +655,43 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
     box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
 }
 
-/* Estilos del slider cromático mate/plano (Familia visual unificada) */
-.chromatic-slider {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 12px;
-    border-radius: 6px;
+/* ==========================================
+   MODULO CONFIGURACIÓN: BARRA CROMÁTICA
+========================================== */
+input[type="range"].chromatic-slider {
+    -webkit-appearance: none !important;
+    width: 100% !important;
+    height: 12px !important;
+    border-radius: 6px !important;
     background: linear-gradient(to right, 
-        #E64D4D 0%,   /* Rojo mate */
-        #E6E64D 17%,  /* Amarillo mate */
-        #4DE64D 33%,  /* Verde mate */
-        #4DE6E6 50%,  /* Cian mate */
-        #4D4DE6 67%,  /* Azul mate */
-        #E64DE6 83%,  /* Magenta mate */
-        #E64D4D 100%  /* Rojo mate */
-    );
-    outline: none;
-    margin: 0;
+        #E64D4D 0%,   
+        #E6E64D 17%,  
+        #4DE64D 33%,  
+        #4DE6E6 50%,  
+        #4D4DE6 67%,  
+        #E64DE6 83%,  
+        #E64D4D 100%  
+    ) !important;
+    outline: none !important;
+    margin: 0 !important;
 }
-.chromatic-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid var(--text);
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+input[type="range"].chromatic-slider::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    border: 3px solid var(--text) !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
 }
-.chromatic-slider::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid var(--text);
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+input[type="range"].chromatic-slider::-moz-range-thumb {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    border: 3px solid var(--text) !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
 }
