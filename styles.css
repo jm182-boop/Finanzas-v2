@@ -91,8 +91,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 .chart-empty { background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 13px; font-weight: 500; border: 1px dashed var(--border); padding: 20px; text-align: center; }
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes modalEnter { from { opacity: 0; transform: translate(-50%, calc(-50% - 10px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
 .form-panel { display: none; animation: slideDown 0.3s ease; margin-bottom: 30px; border: 1px solid var(--accent) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-.modal-inline { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 100; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: slideDown 0.3s ease; }
+.modal-inline { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 100; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: modalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* =========================================
    ESTRUCTURA DASHBOARD WEB (Escritorio)
