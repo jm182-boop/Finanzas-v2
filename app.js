@@ -1343,13 +1343,13 @@ window.actualizarSelectsAhorro = function() {
     
     if (tipo.value === 'aporte') { 
         origen.innerHTML = optsMedios; 
-        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>'; 
+        destino.innerHTML = optsBilleteras; 
     } else if (tipo.value === 'retiro') { 
         origen.innerHTML = optsBilleteras; 
         destino.innerHTML = optsMedios; 
     } else { 
         origen.innerHTML = optsBilleteras; 
-        destino.innerHTML = optsBilleteras + '<option value="nueva" style="font-weight:600; color:var(--accent);">➕ Crear nueva billetera</option>'; 
+        destino.innerHTML = optsBilleteras; 
     }
     
     if (origen.querySelector(`option[value="${valO}"]`)) origen.value = valO; 
