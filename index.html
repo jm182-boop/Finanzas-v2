@@ -420,19 +420,26 @@
               </div>
               
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
-                <div>
+                <div style="display:flex; flex-direction:column;">
                   <label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
                   <select class="in" id="ahorro-origen" style="margin-bottom:0;">
                     <option value="">Seleccionar...</option>
                   </select>
                 </div>
-                <div>
+                <div style="display:flex; flex-direction:column;">
                   <label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino</label>
-                  <select class="in" id="ahorro-destino" style="margin-bottom:0;" onchange="verificarNuevaBilletera(this)"></select>
+                  <select class="in" id="ahorro-destino" style="margin-bottom:0;"></select>
+                </div>
+                <div style="display:flex; flex-direction:column;">
+                  <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Fecha</label>
+                  <input type="date" id="ahorro-fecha" class="in input-fecha" style="margin-bottom:0;">
+                </div>
+                <div style="display:flex; flex-direction:column; height:100%;">
+                  <label style="font-size:11px; visibility:hidden; margin-left:5px;">-</label>
+                  <button type="button" style="background:transparent; border:none; color:var(--accent); font-size:14px; font-weight:600; cursor:pointer; text-align:left; margin-left:5px; padding:0; flex-grow:1; display:flex; align-items:center; font-family:var(--font);" onclick="abrirModalNuevaBilletera()">+ Crear billetera</button>
                 </div>
               </div>
               
-              <input type="date" id="ahorro-fecha" class="in input-fecha">
               <input type="text" id="ahorro-nota" class="in" placeholder="Nota o detalle adicional (Opcional)">
               <button class="btn" style="background:var(--accent);" onclick="guardarAhorro()">Guardar Movimiento</button>
 
