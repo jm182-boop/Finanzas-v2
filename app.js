@@ -1859,47 +1859,63 @@ window.toggleCuota = function(pId, cIndex) {
 // MÓDULO CONFIGURACIÓN: SELECTOR DE COLOR
 // ==========================================
 window.selectColorMp = function(elemento, hex) {
-    document.getElementById('nuevo-medio-color').value = hex;
+    const isBilletera = elemento.closest('#modal-nueva-billetera');
+    const inputId = isBilletera ? 'nueva-bill-color' : 'nuevo-medio-color';
+    const uiId = isBilletera ? 'ui-color-personalizado-billetera' : 'ui-color-personalizado';
+    const btnId = isBilletera ? 'btn-abrir-personalizado-billetera' : 'btn-abrir-personalizado';
+    const previewId = isBilletera ? 'btn-color-preview-billetera' : 'btn-color-preview';
+
+    document.getElementById(inputId).value = hex;
     
-    document.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
+    elemento.parentElement.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
     elemento.classList.add('active');
     
-    // Ocultar barra personalizada y mostrar botón
-    document.getElementById('ui-color-personalizado').style.display = 'none';
-    document.getElementById('btn-abrir-personalizado').style.display = 'inline-flex';
+    document.getElementById(uiId).style.display = 'none';
+    document.getElementById(btnId).style.display = 'inline-flex';
     
-    // Vaciar el círculo del botón personalizado (indicando que usamos color rápido)
-    document.getElementById('btn-color-preview').style.background = 'transparent';
-    document.getElementById('btn-color-preview').style.borderColor = 'var(--text3)';
+    let previewCirculo = document.getElementById(previewId);
+    previewCirculo.style.background = 'transparent';
+    previewCirculo.style.borderColor = 'var(--text3)';
 }
 
-window.abrirColorPersonalizado = function() {
-    document.querySelectorAll('.c-circle').forEach(el => el.classList.remove('active'));
-    document.getElementById('btn-abrir-personalizado').style.display = 'none';
-    document.getElementById('ui-color-personalizado').style.display = 'block';
-    actualizarPreviewColor();
+window.abrirColorPersonalizado = function(context) {
+    const isBilletera = context && context.closest && context.closest('#modal-nueva-billetera');
+    const gridSelector = isBilletera ? '#modal-nueva-billetera .c-circle' : '#page-config .c-circle';
+    const btnId = isBilletera ? 'btn-abrir-personalizado-billetera' : 'btn-abrir-personalizado';
+    const uiId = isBilletera ? 'ui-color-personalizado-billetera' : 'ui-color-personalizado';
+    
+    document.querySelectorAll(gridSelector).forEach(el => el.classList.remove('active'));
+    document.getElementById(btnId).style.display = 'none';
+    document.getElementById(uiId).style.display = 'block';
+    actualizarPreviewColor(context);
 }
 
-window.actualizarPreviewColor = function() {
-    let h = document.getElementById('rango-tono').value;
-    // Forzamos Saturación 75% y Luminosidad 60% para mantener tonos planos
+window.actualizarPreviewColor = function(context) {
+    const isBilletera = context && context.closest && context.closest('#modal-nueva-billetera');
+    const rangoId = isBilletera ? 'rango-tono-billetera' : 'rango-tono';
+    const previewId = isBilletera ? 'preview-personalizado-billetera' : 'preview-personalizado';
+    
+    let h = document.getElementById(rangoId).value;
     let hex = hslToHexMatematico(h, 75, 60);
-    document.getElementById('preview-personalizado').style.background = hex;
+    document.getElementById(previewId).style.background = hex;
 }
 
-window.aplicarColorPersonalizado = function() {
-    let h = document.getElementById('rango-tono').value;
+window.aplicarColorPersonalizado = function(context) {
+    const isBilletera = context && context.closest && context.closest('#modal-nueva-billetera');
+    const rangoId = isBilletera ? 'rango-tono-billetera' : 'rango-tono';
+    const inputId = isBilletera ? 'nueva-bill-color' : 'nuevo-medio-color';
+    const uiId = isBilletera ? 'ui-color-personalizado-billetera' : 'ui-color-personalizado';
+    const btnId = isBilletera ? 'btn-abrir-personalizado-billetera' : 'btn-abrir-personalizado';
+    const previewId = isBilletera ? 'btn-color-preview-billetera' : 'btn-color-preview';
+    
+    let h = document.getElementById(rangoId).value;
     let hex = hslToHexMatematico(h, 75, 60);
     
-    // Guardar en input oculto
-    document.getElementById('nuevo-medio-color').value = hex;
+    document.getElementById(inputId).value = hex;
+    document.getElementById(uiId).style.display = 'none';
+    document.getElementById(btnId).style.display = 'inline-flex';
     
-    // Cerrar barra y restaurar botón
-    document.getElementById('ui-color-personalizado').style.display = 'none';
-    document.getElementById('btn-abrir-personalizado').style.display = 'inline-flex';
-    
-    // Pintar el círculo del botón personalizado (el borde y el texto del botón quedan intactos)
-    let previewCirculo = document.getElementById('btn-color-preview');
+    let previewCirculo = document.getElementById(previewId);
     previewCirculo.style.background = hex;
     previewCirculo.style.borderColor = hex;
 }
