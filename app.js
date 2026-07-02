@@ -1531,12 +1531,6 @@ window.abrirModalNuevaBilletera = function() {
     document.getElementById('modal-nueva-billetera').style.display = 'block'; 
 }
 
-window.verificarNuevaBilletera = function(s) { 
-    if (s.value === 'nueva') { 
-        s.value = ""; 
-        abrirModalNuevaBilletera(); 
-    } 
-}
 
 window.cerrarNuevaBilletera = function() { 
     document.getElementById('modal-nueva-billetera').style.display = 'none'; 
