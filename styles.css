@@ -92,7 +92,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .form-panel { display: none; animation: slideDown 0.3s ease; margin-bottom: 30px; border: 1px solid var(--accent) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-.modal-inline { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 10; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: slideDown 0.3s ease; }
+.modal-inline { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; z-index: 100; background: var(--bg2); border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(0,0,0,0.4); padding: 25px; border-radius: 16px; animation: slideDown 0.3s ease; }
 
 /* =========================================
    ESTRUCTURA DASHBOARD WEB (Escritorio)
