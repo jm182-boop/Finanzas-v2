@@ -440,8 +440,39 @@
                 <h3 style="font-size:16px; font-weight:700; margin-bottom:15px;">Nueva billetera</h3>
                 <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Nombre</label>
                 <input type="text" id="nueva-bill-nombre" class="in" placeholder="Ej: Binance, Nexo..." style="margin-bottom:10px;">
-                <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Color</label>
-                <input type="color" id="nueva-bill-color" class="in" value="#f5a623" style="padding:0; height:48px; border:none; cursor:pointer;">
+                <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:20px;">
+                  <label style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;display:block;text-transform:uppercase; text-align:center;">Color identificador</label>
+                  <div class="color-grid-6">
+                    <div class="c-circle active" style="background:#E64D4D;" onclick="selectColorMp(this, '#E64D4D')"></div>
+                    <div class="c-circle" style="background:#E6994D;" onclick="selectColorMp(this, '#E6994D')"></div>
+                    <div class="c-circle" style="background:#E6E64D;" onclick="selectColorMp(this, '#E6E64D')"></div>
+                    <div class="c-circle" style="background:#4DE64D;" onclick="selectColorMp(this, '#4DE64D')"></div>
+                    <div class="c-circle" style="background:#4DE6E6;" onclick="selectColorMp(this, '#4DE6E6')"></div>
+                    <div class="c-circle" style="background:#4D4DE6;" onclick="selectColorMp(this, '#4D4DE6')"></div>
+                    <div class="c-circle" style="background:#994DE6;" onclick="selectColorMp(this, '#994DE6')"></div>
+                    <div class="c-circle" style="background:#E64D99;" onclick="selectColorMp(this, '#E64D99')"></div>
+                    <div class="c-circle" style="background:#4DE6B3;" onclick="selectColorMp(this, '#4DE6B3')"></div>
+                    <div class="c-circle" style="background:#E0E0E0;" onclick="selectColorMp(this, '#E0E0E0')"></div>
+                    <div class="c-circle" style="background:#888888;" onclick="selectColorMp(this, '#888888')"></div>
+                    <div class="c-circle" style="background:#2b2b2b;" onclick="selectColorMp(this, '#2b2b2b')"></div>
+                  </div>
+                  <div style="display:flex; justify-content:center; margin-top:20px;">
+                    <button id="btn-abrir-personalizado-billetera" class="btn-icon" style="padding:6px 14px; font-size:12px; border:1px solid var(--border); color:var(--text2); background:transparent; border-radius:20px;" onclick="abrirColorPersonalizado(this)">
+                      <div id="btn-color-preview-billetera" style="width:14px; height:14px; border-radius:50%; background:transparent; border:1px solid var(--text3);"></div>
+                      Personalizado
+                    </button>
+                  </div>
+                  <div id="ui-color-personalizado-billetera" style="display:none; margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+                     <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+                        <div id="preview-personalizado-billetera" style="width:36px; height:36px; border-radius:50%; background:#E64D4D; border:2px solid var(--border); flex-shrink:0;"></div>
+                        <div style="flex:1;">
+                           <input type="range" id="rango-tono-billetera" min="0" max="360" value="0" class="chromatic-slider" oninput="actualizarPreviewColor(this)">
+                        </div>
+                     </div>
+                     <button class="btn" style="height:38px; font-size:13px; background:var(--bg3); color:var(--text);" onclick="aplicarColorPersonalizado(this)">Aplicar color</button>
+                  </div>
+                  <input type="color" id="nueva-bill-color" style="opacity:0; position:absolute; width:0; height:0; pointer-events:none;" value="#E64D4D">
+                </div>
                 <div style="display:flex; gap:10px; margin-top:15px;">
                   <button class="btn" style="background:var(--bg3); color:var(--text);" onclick="cerrarNuevaBilletera()">Cancelar</button>
                   <button class="btn" style="background:var(--accent);" onclick="guardarNuevaBilletera()">Guardar</button>
