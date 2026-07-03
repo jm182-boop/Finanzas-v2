@@ -422,13 +422,19 @@
               <div id="grid-ahorro-mov" style="display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom:15px;">
                 <div style="display:flex; flex-direction:column;">
                   <label id="lbl-origen" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Origen</label>
-                  <select class="in" id="ahorro-origen" style="margin-bottom:0;">
-                    <option value="">Seleccionar...</option>
-                  </select>
+                  <input type="hidden" id="ahorro-origen" value="">
+                  <div class="in fin-select-trigger" data-fin-select="ahorro-origen" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                    <span class="fin-select-value" style="pointer-events:none;">Seleccionar...</span>
+                    <i data-lucide="chevron-down" class="icon-sm" style="pointer-events:none; color:var(--text3);"></i>
+                  </div>
                 </div>
                 <div style="display:flex; flex-direction:column;">
                   <label id="lbl-destino" style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Destino</label>
-                  <select class="in" id="ahorro-destino" style="margin-bottom:0;"></select>
+                  <input type="hidden" id="ahorro-destino" value="">
+                  <div class="in fin-select-trigger" data-fin-select="ahorro-destino" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                    <span class="fin-select-value" style="pointer-events:none;">Seleccionar...</span>
+                    <i data-lucide="chevron-down" class="icon-sm" style="pointer-events:none; color:var(--text3);"></i>
+                  </div>
                 </div>
                 <div style="display:flex; flex-direction:column;">
                   <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Fecha</label>
@@ -752,6 +758,7 @@
     </div>
   </div>
 
+  <div id="fin-select-dropdown" class="fin-select-dropdown" style="display:none;"></div>
   <script src="app.js?v=42"></script>
 </body>
 </html>
