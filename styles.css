@@ -696,3 +696,71 @@ input[type="range"].chromatic-slider::-moz-range-thumb {
     cursor: pointer !important;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
 }
+
+/* ==========================================================================
+   FIN UI - SELECT GLOBAL COMPONENT
+   ========================================================================== */
+
+/* Contenedor flotante único (Singleton) */
+.fin-select-dropdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 90;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ocultar barra de scroll en motores Webkit (Chrome, Safari, Edge) */
+.fin-select-dropdown::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fila de opción individual */
+.fin-select-option {
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fin-select-option:last-child {
+  border-bottom: none;
+}
+
+/* Efecto hover nativo alineado a la aplicación */
+@media (hover: hover) {
+  .fin-select-option:hover {
+    background-color: var(--bg2);
+  }
+}
+
+/* Opción actualmente seleccionada */
+.fin-select-option.selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Estados del texto en el disparador */
+.fin-select-value.has-value {
+  color: var(--text);
+}
+.fin-select-value.placeholder {
+  color: var(--text3);
+}
+
+/* Simular el estado de enfoque (.in:focus) nativo de FIN */
+.fin-select-trigger.fin-select-open {
+  border-color: var(--accent);
+}
