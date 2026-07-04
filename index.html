@@ -398,11 +398,12 @@
             <div class="card" style="border-color:var(--accent); position:relative;">
               <div class="ct"><i data-lucide="plus-circle" class="icon-sm"></i> Registrar Movimiento</div>
               
-              <select id="ahorro-tipo" class="in" onchange="setAhorroTipo()">
-                <option value="aporte">Aporte de ahorro</option>
-                <option value="retiro">Retiro de ahorro</option>
-                <option value="transferencia">Transferencia entre billeteras</option>
-              </select>
+              <input type="hidden" id="ahorro-tipo" value="aporte">
+              <div class="in fin-select-trigger" data-fin-select="ahorro-tipo" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span class="fin-select-value has-value">Aporte de ahorro</span>
+              <i data-lucide="chevron-down" class="icon-sm" style="pointer-events:none; color:var(--text3);"></i>
+              </div>
+              
               <input type="text" id="ahorro-monto" class="in" placeholder="Monto Origen ($ ARS)" onkeyup="fmtI(this)">
               
               <label style="display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600;">
