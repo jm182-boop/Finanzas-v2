@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FIN UI - COMPONENTES GLOBALES
+   FIN UI - COMPONENTES GLOBALES (v2)
    ========================================================================== */
 window.FIN = window.FIN || {};
 window.FIN.UI = window.FIN.UI || {};
@@ -7,21 +7,22 @@ window.FIN.UI = window.FIN.UI || {};
 window.FIN.UI.Select = (function() {
     let currentOpenId = null;
     const dropdown = document.getElementById('fin-select-dropdown');
+    const store = {}; // Caché de memoria
 
-    // 1. Cerrar al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (currentOpenId) {
-            const isClickInsideDropdown = dropdown.contains(e.target);
-            const isClickOnTrigger = e.target.closest('.fin-select-trigger');
-            if (!isClickInsideDropdown && !isClickOnTrigger) {
-                window.FIN.UI.Select.close();
-            }
-        }
-    });
+    if (dropdown) dropdown.classList.add('fin-ui-float');
 
-    // 2. Abrir/Cerrar al tocar un disparador
+    // --- DELEGACIÓN DE EVENTOS ---
     document.addEventListener('click', function(e) {
         const trigger = e.target.closest('.fin-select-trigger');
+        const option = e.target.closest('.fin-select-option');
+        
+        if (option && currentOpenId) {
+            const value = option.getAttribute('data-value');
+            window.FIN.UI.Select.setValue(currentOpenId, value);
+            window.FIN.UI.Select.close();
+            return;
+        }
+
         if (trigger) {
             const id = trigger.getAttribute('data-fin-select');
             if (currentOpenId === id) {
@@ -29,41 +30,45 @@ window.FIN.UI.Select = (function() {
             } else {
                 window.FIN.UI.Select.open(id);
             }
+            return;
         }
-    });
 
-    // 3. Seleccionar una opción de la lista
-    document.addEventListener('click', function(e) {
-        const option = e.target.closest('.fin-select-option');
-        if (option && currentOpenId) {
-            // Se leen los atributos de datos estructurales, no el contenido visual
-            const value = option.getAttribute('data-value');
-            window.FIN.UI.Select.setValue(currentOpenId, value);
+        if (currentOpenId && dropdown && !dropdown.contains(e.target)) {
             window.FIN.UI.Select.close();
         }
     });
 
-    // API Pública
+    // --- AUTO-CIERRE FLUIDO (Scroll & Resize) ---
+    const handleLayoutChange = function(e) {
+        if (!currentOpenId || !dropdown.classList.contains('fin-ui-visible')) return;
+        if (e.type === 'scroll' && dropdown.contains(e.target)) return;
+        window.FIN.UI.Select.close();
+    };
+
+    window.addEventListener('scroll', handleLayoutChange, { passive: true, capture: true });
+    window.addEventListener('resize', handleLayoutChange, { passive: true });
+    window.addEventListener('orientationchange', handleLayoutChange, { passive: true });
+
+    // --- API PÚBLICA ---
     return {
         open: function(id) {
             const trigger = document.querySelector(`[data-fin-select="${id}"]`);
             const input = document.getElementById(id);
-            if (!trigger || !input || !dropdown) return;
+            if (!trigger || !input || !dropdown || !store[id]) return;
+
+            if (currentOpenId && currentOpenId !== id) {
+                const oldTrigger = document.querySelector(`[data-fin-select="${currentOpenId}"]`);
+                if (oldTrigger) oldTrigger.classList.remove('fin-select-open');
+            }
 
             currentOpenId = id;
+            dropdown.innerHTML = store[id].html;
 
-            // Inyectar opciones correspondientes almacenadas previamente
-            dropdown.innerHTML = input.getAttribute('data-fin-options') || '';
+            if (input.value !== '') {
+                const activeOpt = dropdown.querySelector(`[data-value="${input.value}"]`);
+                if (activeOpt) activeOpt.classList.add('selected');
+            }
 
-            // Resaltar visualmente la opción seleccionada
-            const options = dropdown.querySelectorAll('.fin-select-option');
-            options.forEach(opt => {
-                if (opt.getAttribute('data-value') === input.value && input.value !== '') {
-                    opt.classList.add('selected');
-                }
-            });
-
-            // Posicionamiento absoluto sobre el DOM
             const rect = trigger.getBoundingClientRect();
             dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
             dropdown.style.left = rect.left + 'px';
@@ -71,20 +76,34 @@ window.FIN.UI.Select = (function() {
 
             dropdown.style.display = 'block';
             trigger.classList.add('fin-select-open');
+            
+            void dropdown.offsetWidth; // Forzar reflujo nativo
+            dropdown.classList.add('fin-ui-visible');
         },
         
         close: function() {
-            if (currentOpenId) {
-                const trigger = document.querySelector(`[data-fin-select="${currentOpenId}"]`);
-                if (trigger) trigger.classList.remove('fin-select-open');
-            }
-            if (dropdown) {
-                dropdown.style.display = 'none';
-                // REGLA DE LIMPIEZA: Se borra el HTML interno inyectado temporalmente
-                dropdown.innerHTML = ''; 
-            }
-            // REGLA DE LIMPIEZA: Se destruye la referencia activa del componente
-            currentOpenId = null; 
+            // Candado de seguridad matemático integrado
+            if (!currentOpenId || !dropdown || !dropdown.classList.contains('fin-ui-visible')) return;
+
+            const idToClose = currentOpenId;
+            const trigger = document.querySelector(`[data-fin-select="${idToClose}"]`);
+            if (trigger) trigger.classList.remove('fin-select-open');
+
+            dropdown.classList.remove('fin-ui-visible');
+
+            const handleTransitionEnd = function(e) {
+                if (e.target !== dropdown) return;
+                dropdown.removeEventListener('transitionend', handleTransitionEnd);
+                
+                // Evita condiciones de carrera si se reabre durante la animación
+                if (!dropdown.classList.contains('fin-ui-visible')) {
+                    dropdown.style.display = 'none';
+                    dropdown.innerHTML = '';
+                    if (currentOpenId === idToClose) currentOpenId = null;
+                }
+            };
+
+            dropdown.addEventListener('transitionend', handleTransitionEnd);
         },
         
         setValue: function(id, value) {
@@ -92,31 +111,20 @@ window.FIN.UI.Select = (function() {
             const trigger = document.querySelector(`[data-fin-select="${id}"]`);
             if (!input || !trigger) return;
 
-            // 1. Actualizar el valor interno
             input.value = value;
-            
-            // 2. Disparar el evento nativo para no romper reactividad de FIN
             input.dispatchEvent(new Event('change', { bubbles: true }));
 
-            // 3. Deducir automáticamente el Label desde las opciones almacenadas
             const valueDisplay = trigger.querySelector('.fin-select-value');
-            let labelVisible = 'Seleccionar...';
-            let esPlaceholder = true;
+            let label = 'Seleccionar...';
+            let isPlaceholder = true;
 
-            if (value !== '') {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = input.getAttribute('data-fin-options') || '';
-                const optionCorrecta = tempDiv.querySelector(`[data-value="${value}"]`);
-                
-                if (optionCorrecta) {
-                    labelVisible = optionCorrecta.getAttribute('data-label');
-                    esPlaceholder = false;
-                }
+            if (value !== '' && store[id] && store[id].map[value]) {
+                label = store[id].map[value];
+                isPlaceholder = false;
             }
 
-            // 4. Actualizar la interfaz visual
-            valueDisplay.textContent = labelVisible;
-            if (esPlaceholder) {
+            valueDisplay.textContent = label;
+            if (isPlaceholder) {
                 valueDisplay.classList.add('placeholder');
                 valueDisplay.classList.remove('has-value');
             } else {
@@ -134,15 +142,17 @@ window.FIN.UI.Select = (function() {
             const options = tempDiv.querySelectorAll('option');
 
             let finHtml = '';
+            const valueMap = {};
+
             options.forEach(opt => {
                 if (opt.value) { 
                     const label = opt.textContent.trim();
-                    // Separación de responsabilidades: value estructural vs label semántico
-                    finHtml += `<div class="fin-select-option" data-value="${opt.value}" data-label="${label}">${label}</div>`;
+                    finHtml += `<div class="fin-select-option" data-value="${opt.value}">${label}</div>`;
+                    valueMap[opt.value] = label;
                 }
             });
 
-            input.setAttribute('data-fin-options', finHtml);
+            store[id] = { html: finHtml, map: valueMap };
         }
     };
 })();
