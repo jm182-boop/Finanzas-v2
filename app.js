@@ -1,3 +1,153 @@
+/* ==========================================================================
+   FIN UI - COMPONENTES GLOBALES
+   ========================================================================== */
+window.FIN = window.FIN || {};
+window.FIN.UI = window.FIN.UI || {};
+
+window.FIN.UI.Select = (function() {
+    let currentOpenId = null;
+    const dropdown = document.getElementById('fin-select-dropdown');
+
+    // 1. Cerrar al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (currentOpenId) {
+            const isClickInsideDropdown = dropdown.contains(e.target);
+            const isClickOnTrigger = e.target.closest('.fin-select-trigger');
+            if (!isClickInsideDropdown && !isClickOnTrigger) {
+                window.FIN.UI.Select.close();
+            }
+        }
+    });
+
+    // 2. Abrir/Cerrar al tocar un disparador
+    document.addEventListener('click', function(e) {
+        const trigger = e.target.closest('.fin-select-trigger');
+        if (trigger) {
+            const id = trigger.getAttribute('data-fin-select');
+            if (currentOpenId === id) {
+                window.FIN.UI.Select.close();
+            } else {
+                window.FIN.UI.Select.open(id);
+            }
+        }
+    });
+
+    // 3. Seleccionar una opción de la lista
+    document.addEventListener('click', function(e) {
+        const option = e.target.closest('.fin-select-option');
+        if (option && currentOpenId) {
+            // Se leen los atributos de datos estructurales, no el contenido visual
+            const value = option.getAttribute('data-value');
+            window.FIN.UI.Select.setValue(currentOpenId, value);
+            window.FIN.UI.Select.close();
+        }
+    });
+
+    // API Pública
+    return {
+        open: function(id) {
+            const trigger = document.querySelector(`[data-fin-select="${id}"]`);
+            const input = document.getElementById(id);
+            if (!trigger || !input || !dropdown) return;
+
+            currentOpenId = id;
+
+            // Inyectar opciones correspondientes almacenadas previamente
+            dropdown.innerHTML = input.getAttribute('data-fin-options') || '';
+
+            // Resaltar visualmente la opción seleccionada
+            const options = dropdown.querySelectorAll('.fin-select-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === input.value && input.value !== '') {
+                    opt.classList.add('selected');
+                }
+            });
+
+            // Posicionamiento absoluto sobre el DOM
+            const rect = trigger.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+
+            dropdown.style.display = 'block';
+            trigger.classList.add('fin-select-open');
+        },
+        
+        close: function() {
+            if (currentOpenId) {
+                const trigger = document.querySelector(`[data-fin-select="${currentOpenId}"]`);
+                if (trigger) trigger.classList.remove('fin-select-open');
+            }
+            if (dropdown) {
+                dropdown.style.display = 'none';
+                // REGLA DE LIMPIEZA: Se borra el HTML interno inyectado temporalmente
+                dropdown.innerHTML = ''; 
+            }
+            // REGLA DE LIMPIEZA: Se destruye la referencia activa del componente
+            currentOpenId = null; 
+        },
+        
+        setValue: function(id, value) {
+            const input = document.getElementById(id);
+            const trigger = document.querySelector(`[data-fin-select="${id}"]`);
+            if (!input || !trigger) return;
+
+            // 1. Actualizar el valor interno
+            input.value = value;
+            
+            // 2. Disparar el evento nativo para no romper reactividad de FIN
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // 3. Deducir automáticamente el Label desde las opciones almacenadas
+            const valueDisplay = trigger.querySelector('.fin-select-value');
+            let labelVisible = 'Seleccionar...';
+            let esPlaceholder = true;
+
+            if (value !== '') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = input.getAttribute('data-fin-options') || '';
+                const optionCorrecta = tempDiv.querySelector(`[data-value="${value}"]`);
+                
+                if (optionCorrecta) {
+                    labelVisible = optionCorrecta.getAttribute('data-label');
+                    esPlaceholder = false;
+                }
+            }
+
+            // 4. Actualizar la interfaz visual
+            valueDisplay.textContent = labelVisible;
+            if (esPlaceholder) {
+                valueDisplay.classList.add('placeholder');
+                valueDisplay.classList.remove('has-value');
+            } else {
+                valueDisplay.classList.remove('placeholder');
+                valueDisplay.classList.add('has-value');
+            }
+        },
+        
+        setOptions: function(id, optionsString) {
+            const input = document.getElementById(id);
+            if (!input) return;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = optionsString;
+            const options = tempDiv.querySelectorAll('option');
+
+            let finHtml = '';
+            options.forEach(opt => {
+                if (opt.value) { 
+                    const label = opt.textContent.trim();
+                    // Separación de responsabilidades: value estructural vs label semántico
+                    finHtml += `<div class="fin-select-option" data-value="${opt.value}" data-label="${label}">${label}</div>`;
+                }
+            });
+
+            input.setAttribute('data-fin-options', finHtml);
+        }
+    };
+})();
+
+
 // ==========================================
 // app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y DECIMALES)
 // ==========================================
@@ -1341,16 +1491,21 @@ window.actualizarSelectsAhorro = function() {
         optsBilleteras += `<option value="${b.id}">${b.nombre}</option>`; 
     });
     
+    // Inyección delegada a la API de FIN UI
     if (tipo.value === 'aporte') { 
-        origen.innerHTML = optsMedios; 
-        destino.innerHTML = optsBilleteras; 
+        window.FIN.UI.Select.setOptions('ahorro-origen', optsMedios); 
+        window.FIN.UI.Select.setOptions('ahorro-destino', optsBilleteras); 
     } else if (tipo.value === 'retiro') { 
-        origen.innerHTML = optsBilleteras; 
-        destino.innerHTML = optsMedios; 
+        window.FIN.UI.Select.setOptions('ahorro-origen', optsBilleteras); 
+        window.FIN.UI.Select.setOptions('ahorro-destino', optsMedios); 
     } else { 
-        origen.innerHTML = optsBilleteras; 
-        destino.innerHTML = optsBilleteras; 
+        window.FIN.UI.Select.setOptions('ahorro-origen', optsBilleteras); 
+        window.FIN.UI.Select.setOptions('ahorro-destino', optsBilleteras); 
     }
+    
+    // Reseteo de campos usando la firma de 2 parámetros (el componente deduce el texto)
+    window.FIN.UI.Select.setValue('ahorro-origen', '');
+    window.FIN.UI.Select.setValue('ahorro-destino', '');
     
     if (origen.querySelector(`option[value="${valO}"]`)) origen.value = valO; 
     if (destino.querySelector(`option[value="${valD}"]`)) destino.value = valD;
