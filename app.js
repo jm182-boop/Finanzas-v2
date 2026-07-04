@@ -1721,6 +1721,18 @@ window.guardarNuevaBilletera = function() {
     showToast("Billetera guardada"); 
 }
 
+/* ==========================================================================
+   INICIALIZACIÓN ESTÁTICA DE FIN SELECT (Módulo Ahorros)
+   ========================================================================== */
+window.FIN.UI.Select.setOptions('ahorro-tipo', `
+    <option value="aporte">Aporte de ahorro</option>
+    <option value="retiro">Retiro de ahorro</option>
+    <option value="transferencia">Transferencia entre billeteras</option>
+`);
+window.FIN.UI.Select.setValue('ahorro-tipo', 'aporte');
+document.getElementById('ahorro-tipo').addEventListener('change', window.setAhorroTipo);
+
+
 // ==========================================
 // PRÉSTAMOS Y DEUDAS
 // ==========================================
