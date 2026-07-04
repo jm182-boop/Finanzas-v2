@@ -764,3 +764,19 @@ input[type="range"].chromatic-slider::-moz-range-thumb {
 .fin-select-trigger.fin-select-open {
   border-color: var(--accent);
 }
+
+/* ==========================================================================
+   FIN UI - ANIMACIONES ESTÁNDAR
+   ========================================================================== */
+.fin-ui-float {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+}
+
+.fin-ui-float.fin-ui-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
