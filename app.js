@@ -116,6 +116,29 @@ window.FIN.UI.Select = (function() {
 
             const valueDisplay = trigger.querySelector('.fin-select-value');
             let label = 'Seleccionar...';
+
+if (id === 'ahorro-tipo') {
+
+    const icons = {
+
+        aporte:
+            '🐷 Aporte de ahorro',
+
+        retiro:
+            '💸 Retiro de ahorro',
+
+        transferencia:
+            '🔄 Transferencia entre billeteras'
+
+    };
+
+    if (icons[value]) {
+
+        label = icons[value];
+
+    }
+
+}
             let isPlaceholder = true;
 
             if (value !== '' && store[id] && store[id].map[value]) {
