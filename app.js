@@ -178,31 +178,9 @@ if (id === 'ahorro-tipo') {
 
         let icon = '';
 
-        // Iconos exclusivos del selector Tipo de ahorro
-        if (id === 'ahorro-tipo') {
-
-            switch(opt.value){
-
-                case 'aporte':
-                    icon = 'piggy-bank';
-                    break;
-
-                case 'retiro':
-                    icon = 'hand-coins';
-                    break;
-
-                case 'transferencia':
-                    icon = 'arrow-right-left';
-                    break;
-
-            }
-
-        }
-
         finHtml += `
         <div class="fin-select-option" data-value="${opt.value}">
-            ${icon ? `<i data-lucide="${icon}" class="icon-sm" style="margin-right:10px;"></i>` : ''}
-            ${label}
+           ${label}
         </div>
         `;
 
