@@ -1725,11 +1725,23 @@ window.guardarNuevaBilletera = function() {
    INICIALIZACIÓN ESTÁTICA DE FIN SELECT (Módulo Ahorros)
    ========================================================================== */
 window.FIN.UI.Select.setOptions('ahorro-tipo', `
-    <option value="aporte">Aporte de ahorro</option>
-    <option value="retiro">Retiro de ahorro</option>
-    <option value="transferencia">Transferencia entre billeteras</option>
+
+<option value="aporte">
+🐷 Aporte de ahorro
+</option>
+
+<option value="retiro">
+💸 Retiro de ahorro
+</option>
+
+<option value="transferencia">
+🔄 Transferencia entre billeteras
+</option>
+
 `);
+
 window.FIN.UI.Select.setValue('ahorro-tipo', 'aporte');
+window.setAhorroTipo();
 document.getElementById('ahorro-tipo').addEventListener('change', window.setAhorroTipo);
 
 
