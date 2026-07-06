@@ -1795,15 +1795,15 @@ window.guardarNuevaBilletera = function() {
 window.FIN.UI.Select.setOptions('ahorro-tipo', `
 
 <option value="aporte">
-🐷 Aporte de ahorro
+ Aporte de ahorro
 </option>
 
 <option value="retiro">
-💸 Retiro de ahorro
+ Retiro de ahorro
 </option>
 
 <option value="transferencia">
-🔄 Transferencia entre billeteras
+ Transferencia entre billeteras
 </option>
 
 `);
