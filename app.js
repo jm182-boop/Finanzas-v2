@@ -63,6 +63,9 @@ window.FIN.UI.Select = (function() {
 
             currentOpenId = id;
             dropdown.innerHTML = store[id].html;
+           if (typeof lucide !== 'undefined') {
+              lucide.createIcons();
+           }
 
             if (input.value !== '') {
                 const activeOpt = dropdown.querySelector(`[data-value="${input.value}"]`);
@@ -157,26 +160,68 @@ if (id === 'ahorro-tipo') {
         },
         
         setOptions: function(id, optionsString) {
-            const input = document.getElementById(id);
-            if (!input) return;
+    const input = document.getElementById(id);
+    if (!input) return;
 
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = optionsString;
-            const options = tempDiv.querySelectorAll('option');
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = optionsString;
+    const options = tempDiv.querySelectorAll('option');
 
-            let finHtml = '';
-            const valueMap = {};
+    let finHtml = '';
+    const valueMap = {};
 
-            options.forEach(opt => {
-                if (opt.value) { 
-                    const label = opt.textContent.trim();
-                    finHtml += `<div class="fin-select-option" data-value="${opt.value}">${label}</div>`;
-                    valueMap[opt.value] = label;
-                }
-            });
+    options.forEach(opt => {
 
-            store[id] = { html: finHtml, map: valueMap };
+        if (!opt.value) return;
+
+        const label = opt.textContent.trim();
+
+        let icon = '';
+
+        // Iconos exclusivos del selector Tipo de ahorro
+        if (id === 'ahorro-tipo') {
+
+            switch(opt.value){
+
+                case 'aporte':
+                    icon = 'piggy-bank';
+                    break;
+
+                case 'retiro':
+                    icon = 'hand-coins';
+                    break;
+
+                case 'transferencia':
+                    icon = 'arrow-right-left';
+                    break;
+
+            }
+
         }
+
+        finHtml += `
+        <div class="fin-select-option" data-value="${opt.value}">
+            ${icon ? `<i data-lucide="${icon}" class="icon-sm" style="margin-right:10px;"></i>` : ''}
+            ${label}
+        </div>
+        `;
+
+        valueMap[opt.value] = label;
+
+    });
+
+    store[id] = {
+        html: finHtml,
+        map: valueMap
+    };
+
+    // Renderizar automáticamente los iconos Lucide
+    setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }, 0);
+}
     };
 })();
 
