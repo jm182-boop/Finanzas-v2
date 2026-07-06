@@ -456,7 +456,16 @@
                 </div>
                 <div style="display:flex; flex-direction:column;">
                   <label style="font-size:11px;color:var(--text3);font-weight:600;margin-left:5px;">Fecha</label>
-                  <input type="date" id="ahorro-fecha" class="in input-fecha" style="margin-bottom:0;">
+
+                  <div class="fin-date-wrapper" style="margin-bottom:0;">
+    <input
+        type="date"
+        id="ahorro-fecha"
+        class="in input-fecha fin-date-input"
+    >
+    <i data-lucide="calendar-days" class="fin-date-icon"></i>
+</div>
+                  
                 </div>
                 <div style="display:flex; flex-direction:column; height:100%;">
                   <label style="font-size:11px; visibility:hidden; margin-left:5px;">-</label>
