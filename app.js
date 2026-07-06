@@ -120,7 +120,28 @@ window.FIN.UI.Select = (function() {
             const valueDisplay = trigger.querySelector('.fin-select-value');
             let label = 'Seleccionar...';
 
+if (id === 'ahorro-tipo') {
 
+    const icons = {
+
+        aporte:
+            '🐷 Aporte de ahorro',
+
+        retiro:
+            '💸 Retiro de ahorro',
+
+        transferencia:
+            '🔄 Transferencia entre billeteras'
+
+    };
+
+    if (icons[value]) {
+
+        label = icons[value];
+
+    }
+
+}
             let isPlaceholder = true;
 
             if (value !== '' && store[id] && store[id].map[value]) {
@@ -128,27 +149,8 @@ window.FIN.UI.Select = (function() {
                 isPlaceholder = false;
             }
 
-            let icon = '';
-
-if (store[id] && store[id].icons && store[id].icons[value]) {
-    icon = store[id].icons[value];
-}
-
-           
-if (icon) {
-    valueDisplay.innerHTML = `
-        <i data-lucide="${icon}" class="icon-sm" style="margin-right:10px;"></i>
-        <span>${label}</span>
-    `;
-} else {
-    valueDisplay.textContent = label;
-}
-
-if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-}
-
-              if (isPlaceholder) {
+            valueDisplay.textContent = label;
+            if (isPlaceholder) {
                 valueDisplay.classList.add('placeholder');
                 valueDisplay.classList.remove('has-value');
             } else {
@@ -167,16 +169,13 @@ if (typeof lucide !== 'undefined') {
 
     let finHtml = '';
     const valueMap = {};
-    const iconMap = {};
 
     options.forEach(opt => {
 
         if (!opt.value) return;
 
         const label = opt.textContent.trim();
-        
-        const displayLabel = icon ? `<i data-lucide="${icon}" class="icon-sm"></i><span>${label}</span>` : `<span>${label}</span>`;
-       
+
         let icon = '';
 
         // Iconos exclusivos del selector Tipo de ahorro
@@ -208,16 +207,13 @@ if (typeof lucide !== 'undefined') {
         `;
 
         valueMap[opt.value] = label;
-        iconMap[opt.value] = icon;
 
-       
     });
 
     store[id] = {
-    html: finHtml,
-    map: valueMap,
-    icons: iconMap
-};
+        html: finHtml,
+        map: valueMap
+    };
 
     // Renderizar automáticamente los iconos Lucide
     setTimeout(() => {
