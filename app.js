@@ -134,8 +134,21 @@ if (store[id] && store[id].icons && store[id].icons[value]) {
     icon = store[id].icons[value];
 }
 
-valueDisplay.innerHTML = icon + label;
-            if (isPlaceholder) {
+           
+if (icon) {
+    valueDisplay.innerHTML = `
+        <i data-lucide="${icon}" class="icon-sm" style="margin-right:10px;"></i>
+        <span>${label}</span>
+    `;
+} else {
+    valueDisplay.textContent = label;
+}
+
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+}
+
+              if (isPlaceholder) {
                 valueDisplay.classList.add('placeholder');
                 valueDisplay.classList.remove('has-value');
             } else {
