@@ -810,3 +810,191 @@ input[type="range"].chromatic-slider::-moz-range-thumb {
     -moz-appearance:none;
 
 }
+
+/* ==========================================================================
+   FIN UI - DATE PICKER (v1)
+   ========================================================================== */
+
+.fin-datepicker{
+
+    position:absolute;
+
+    z-index:99999;
+
+    display:none;
+
+    opacity:0;
+
+    transform:translateY(8px);
+
+    transition:.22s;
+
+    width:320px;
+
+    background:var(--bg2);
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    box-shadow:0 18px 50px rgba(0,0,0,.28);
+
+    overflow:hidden;
+
+}
+
+.fin-datepicker.show{
+
+    display:block;
+
+    opacity:1;
+
+    transform:translateY(0);
+
+}
+
+.fin-date-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:16px;
+
+    border-bottom:1px solid var(--border);
+
+    background:var(--bg3);
+
+}
+
+.fin-date-title{
+
+    font-size:15px;
+
+    font-weight:700;
+
+    color:var(--text);
+
+}
+
+.fin-date-btn{
+
+    width:34px;
+
+    height:34px;
+
+    border:none;
+
+    background:transparent;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:var(--text2);
+
+    transition:.20s;
+
+}
+
+.fin-date-btn:hover{
+
+    background:var(--bg);
+
+    color:var(--accent);
+
+}
+
+.fin-date-grid{
+
+    padding:16px;
+
+}
+
+.fin-week{
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    gap:8px;
+
+    margin-bottom:10px;
+
+}
+
+.fin-week span{
+
+    text-align:center;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    color:var(--text3);
+
+}
+
+.fin-days{
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    gap:8px;
+
+}
+
+.fin-day{
+
+    width:36px;
+
+    height:36px;
+
+    border-radius:10px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:var(--text);
+
+    transition:.20s;
+
+}
+
+.fin-day:hover{
+
+    background:var(--bg3);
+
+}
+
+.fin-day.active{
+
+    background:var(--accent);
+
+    color:#fff;
+
+}
+
+.fin-day.today{
+
+    border:1px solid var(--accent);
+
+}
