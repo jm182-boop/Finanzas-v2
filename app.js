@@ -203,6 +203,51 @@ if (id === 'ahorro-tipo') {
     };
 })();
 
+/* ==========================================================================
+   FIN UI - DATE PICKER (v1)
+   ========================================================================== */
+
+window.FIN = window.FIN || {};
+window.FIN.Date = {
+
+    inputActivo: null,
+
+    iniciar() {
+
+        document.addEventListener("focusin",(e)=>{
+
+            if(!e.target.classList.contains("input-fecha")) return;
+
+            e.preventDefault();
+
+            this.inputActivo = e.target;
+
+            this.abrir(e.target);
+
+        });
+
+    },
+
+    abrir(input){
+
+        console.log("Abrir calendario:",input.id);
+
+    },
+
+    cerrar(){
+
+        this.inputActivo = null;
+
+    }
+
+};
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+    window.FIN.Date.iniciar();
+
+});
+
 
 // ==========================================
 // app.js - SPRINT 1.5 FINAL (RESTAURACIÓN Y DECIMALES)
