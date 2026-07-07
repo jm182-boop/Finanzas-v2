@@ -780,3 +780,33 @@ input[type="range"].chromatic-slider::-moz-range-thumb {
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
+
+/* ======================================================
+   FECHA AHORROS
+====================================================== */
+
+.input-fecha::-webkit-calendar-picker-indicator{
+
+    opacity:0;
+
+    cursor:pointer;
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+
+    height:100%;
+
+}
+
+.input-fecha{
+
+    appearance:none;
+
+    -webkit-appearance:none;
+
+    -moz-appearance:none;
+
+}
