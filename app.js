@@ -367,15 +367,17 @@ render(){
 },
    
 
-    cerrar(){
+    /* ==========================================================================
+   FIN UI - CERRAR CALENDARIO
+   ========================================================================== */
+
+cerrar(){
 
     const calendario = document.getElementById("fin-datepicker");
 
-    if(calendario){
+    if(!calendario) return;
 
-        calendario.classList.remove("show");
-
-    }
+    calendario.classList.remove("show");
 
     this.inputActivo = null;
 
