@@ -266,17 +266,23 @@ window.FIN.Date = {
 
     iniciar() {
 
-        document.addEventListener("focusin",(e)=>{
+   /* ==========================================================================
+   FIN UI - EVENTO ABRIR CALENDARIO
+   ========================================================================== */
 
-            if(!e.target.classList.contains("input-fecha")) return;
+document.addEventListener("click",(e)=>{
 
-            e.preventDefault();
+    const input = e.target.closest(".input-fecha");
 
-            this.inputActivo = e.target;
+    if(!input) return;
 
-            this.abrir(e.target);
+    e.preventDefault();
 
-        });
+    this.inputActivo = input;
+
+    this.abrir(input);
+
+});
 
     },
 
@@ -292,19 +298,38 @@ window.FIN.Date = {
 
     this.render();
 
-    const rect = input.getBoundingClientRect();
+    /* ==========================================================================
+   FIN UI - POSICIONAR CALENDARIO
+   ========================================================================== */
 
-    calendario.style.left = rect.left + "px";
+const rect = input.getBoundingClientRect();
 
-    calendario.style.top = (rect.bottom + window.scrollY + 6) + "px";
+const anchoCalendario = 320;
 
-    calendario.classList.add("show");
+let left = rect.left + (rect.width / 2) - (anchoCalendario / 2);
+
+// Evita que salga de la pantalla por la izquierda
+if(left < 12){
+
+    left = 12;
+
+}
+
+// Evita que salga por la derecha
+if(left + anchoCalendario > window.innerWidth - 12){
+
+    left = window.innerWidth - anchoCalendario - 12;
+
+}
+
+calendario.style.left = left + "px";
+
+calendario.style.top = (rect.bottom + window.scrollY + 8) + "px";
+
+calendario.classList.add("show");
 
 },
 
-   /* ==========================================================================
-   FIN UI - RENDER DEL CALENDARIO
-   ========================================================================== */
 
 /* ==========================================================================
    FIN UI - RENDER DEL CALENDARIO
