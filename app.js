@@ -280,11 +280,17 @@ window.FIN.Date = {
 
     },
 
+    /* ==========================================================================
+   FIN UI - ABRIR CALENDARIO
+   ========================================================================== */
+
     abrir(input){
 
     const calendario = document.getElementById("fin-datepicker");
 
     if(!calendario) return;
+
+    this.render();
 
     const rect = input.getBoundingClientRect();
 
@@ -295,6 +301,29 @@ window.FIN.Date = {
     calendario.classList.add("show");
 
 },
+
+   /* ==========================================================================
+   FIN UI - RENDER DEL CALENDARIO
+   ========================================================================== */
+
+render(){
+
+    const dias = document.querySelector("#fin-datepicker .fin-days");
+
+    if(!dias) return;
+
+    dias.innerHTML = "";
+
+    for(let i=1;i<=30;i++){
+
+        dias.innerHTML += `
+            <button class="fin-day">${i}</button>
+        `;
+
+    }
+
+},
+   
 
     cerrar(){
 
