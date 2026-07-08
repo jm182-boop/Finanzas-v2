@@ -212,6 +212,58 @@ window.FIN.Date = {
 
     inputActivo: null,
 
+   crear(){
+
+    if(document.getElementById("fin-datepicker")) return;
+
+    const html = `
+    <div id="fin-datepicker" class="fin-datepicker">
+
+        <div class="fin-date-header">
+
+            <button class="fin-date-btn">
+                <i data-lucide="chevron-left"></i>
+            </button>
+
+            <div class="fin-date-title">
+                Junio 2026
+            </div>
+
+            <button class="fin-date-btn">
+                <i data-lucide="chevron-right"></i>
+            </button>
+
+        </div>
+
+        <div class="fin-date-grid">
+
+            <div class="fin-week">
+                <span>L</span>
+                <span>M</span>
+                <span>X</span>
+                <span>J</span>
+                <span>V</span>
+                <span>S</span>
+                <span>D</span>
+            </div>
+
+            <div class="fin-days"></div>
+
+        </div>
+
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend",html);
+
+    if(typeof lucide!=="undefined"){
+
+        lucide.createIcons();
+
+    }
+
+},
+
     iniciar() {
 
         document.addEventListener("focusin",(e)=>{
@@ -230,19 +282,39 @@ window.FIN.Date = {
 
     abrir(input){
 
-        console.log("Abrir calendario:",input.id);
+    const calendario = document.getElementById("fin-datepicker");
 
-    },
+    if(!calendario) return;
+
+    const rect = input.getBoundingClientRect();
+
+    calendario.style.left = rect.left + "px";
+
+    calendario.style.top = (rect.bottom + window.scrollY + 6) + "px";
+
+    calendario.classList.add("show");
+
+},
 
     cerrar(){
 
-        this.inputActivo = null;
+    const calendario = document.getElementById("fin-datepicker");
+
+    if(calendario){
+
+        calendario.classList.remove("show");
 
     }
+
+    this.inputActivo = null;
+
+}
 
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
+
+    window.FIN.Date.crear();
 
     window.FIN.Date.iniciar();
 
