@@ -306,21 +306,63 @@ window.FIN.Date = {
    FIN UI - RENDER DEL CALENDARIO
    ========================================================================== */
 
+/* ==========================================================================
+   FIN UI - RENDER DEL CALENDARIO
+   ========================================================================== */
+
 render(){
 
     const dias = document.querySelector("#fin-datepicker .fin-days");
+    const titulo = document.querySelector("#fin-datepicker .fin-date-title");
 
-    if(!dias) return;
+    if(!dias || !titulo) return;
+
+    const fecha = (this.inputActivo && this.inputActivo.value)
+        ? new Date(this.inputActivo.value + "T12:00:00")
+        : new Date();
+
+    const año = fecha.getFullYear();
+    const mes = fecha.getMonth();
+
+    const meses = [
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ];
+
+    titulo.textContent = `${meses[mes]} ${año}`;
 
     dias.innerHTML = "";
 
-    for(let i=1;i<=30;i++){
+    const ultimoDia = new Date(año, mes + 1, 0).getDate();
+
+    for(let d = 1; d <= ultimoDia; d++){
 
         dias.innerHTML += `
-            <button class="fin-day">${i}</button>
+            <button class="fin-day" data-day="${d}">
+                ${d}
+            </button>
         `;
 
     }
+
+    dias.querySelectorAll(".fin-day").forEach(btn=>{
+
+        btn.onclick = ()=>{
+
+            const dia = btn.dataset.day;
+
+            const fechaFinal =
+                año + "-" +
+                String(mes + 1).padStart(2,"0") + "-" +
+                String(dia).padStart(2,"0");
+
+            this.inputActivo.value = fechaFinal;
+
+            this.cerrar();
+
+        };
+
+    });
 
 },
    
